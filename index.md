@@ -1,37 +1,17 @@
 ## The Kitchen Sink and Other Oddities
 
-You can use the [editor on GitHub](https://github.com/kaygun/kaygun.github.io/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+### Python Lectures
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+#### A Short Crash-Course in Python
 
-### Markdown
+Here are the [jupyter][1] notebooks for a short series of [python](https://python.org) lectures
+I gave to a buch of undergrads back in 2015.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+* [Lecture 1](https://github.com/kaygun/Python_Lectures/blob/master/Lecture1.ipynb)
+* [Lecture 2](https://github.com/kaygun/Python_Lectures/blob/master/Lecture2.ipynb)
+* [Lecture 3](https://github.com/kaygun/Python_Lectures/blob/master/Lecture3.ipynb)
 
-```markdown
-Syntax highlighted code block
+If you'd like to play with these lectures, first install [jupyter][1] then dowload these jupyter notebooks and 
+run them through.
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/kaygun/kaygun.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+[1]: https://jupyter.org
