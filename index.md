@@ -1,10 +1,10 @@
 ## The Kitchen Sink and Other Oddities
 
-### Python Lectures
+### Python Stuff 
 
-#### A Short Crash-Course in Python
+#### A Short Crash-Course on Python
 
-Here are the [jupyter][1] notebooks for a short series of [python](https://python.org) lectures
+Here are the [jupyter][1] notebooks for a short series of [python][2] lectures
 I gave to a buch of undergrads back in 2015.
 
 * [Lecture 1](https://github.com/kaygun/Python_Lectures/blob/master/Lecture1.ipynb)
@@ -14,4 +14,25 @@ I gave to a buch of undergrads back in 2015.
 If you'd like to play with these lectures, first install [jupyter][1] then dowload these jupyter notebooks and 
 run them through.
 
+### Clojure Stuff
+
+#### A Short Crash-Course on Clojure
+
+[Clojure][3] is a language within the [lisp][4] family of languages.  Here are some
+[Gorilla-REPL][5] notebooks I prepared for a series of lectures on clojure for a group
+of computer engineering undergrads.  
+
+* [Lecture 1](http://viewer.gorilla-repl.org/view.html?source=github&user=kaygun&repo=Clojure_Lectures&path=Lecture1.clj)
+* [Lecture 2](http://viewer.gorilla-repl.org/view.html?source=github&user=kaygun&repo=Clojure_Lectures&path=Lecture2.clj)
+* [Lecture 3](http://viewer.gorilla-repl.org/view.html?source=github&user=kaygun&repo=Clojure_Lectures&path=Lecture3.clj)
+
+[Gorilla-REPL][5] allows one to use notebook interface to present clojure code together with narrative.  I like 
+it because it is easier to install compared to [jupyter][1].  But unfortunately, it works only for clojure as opposed to 
+[jupyter][2] which has plugins for [a wide range of languages][6]
+
 [1]: https://jupyter.org
+[2]: https://python.org
+[3]: https://clojure.org
+[4]: https://en.wikipedia.org/wiki/Lisp_(programming_language)
+[5]: http://gorilla-repl.org
+[6]: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
