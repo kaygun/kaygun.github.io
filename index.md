@@ -1,4 +1,4 @@
-## Welcome to GitHub Pages
+## The Kitchen Sink and Other Oddities
 
 You can use the [editor on GitHub](https://github.com/kaygun/kaygun.github.io/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
 
