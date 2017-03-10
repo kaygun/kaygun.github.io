@@ -30,9 +30,21 @@ of computer engineering undergrads.
 it because it is easier to install compared to [jupyter][1].  But unfortunately, it works only for clojure as opposed to 
 [jupyter][2] which has plugins for [a wide range of languages][6]
 
+### Data Stuff
+
+#### A Short Course on Data Science
+
+I prepared a series of short lectures on best practices in data science and basic algorithms for a [conference][7]
+but I couldn't make it at the time. Friends from [miletos][8] did the presentations for me.  The lecture notes are below:
+
+* [Lecture 1](http://web.itu.edu.tr/kaygun/Programming/data.html)
+* [Lecture 2](http://web.itu.edu.tr/kaygun/Programming/ml.html)
+
 [1]: https://jupyter.org
 [2]: https://python.org
 [3]: https://clojure.org
 [4]: https://en.wikipedia.org/wiki/Lisp_(programming_language)
 [5]: http://gorilla-repl.org
 [6]: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
+[7]: http://ab.org.tr/ab16/
+[8]: http://miletos.co/en/
