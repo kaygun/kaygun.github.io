@@ -40,6 +40,9 @@ but I couldn't make it at the time. Friends from [miletos][8] did the presentati
 * [Lecture 1](http://web.itu.edu.tr/kaygun/Programming/data.html)
 * [Lecture 2](http://web.itu.edu.tr/kaygun/Programming/ml.html)
 
+I used [org-mode][9] with [babel][11] on [emacs][10] to prepare the notes. As much as I like [jupyter][1] and 
+[gorilla-repl][5] for teaching purposes, my regular work flow uses emacs heavily.  
+
 [1]: https://jupyter.org
 [2]: https://python.org
 [3]: https://clojure.org
@@ -48,3 +51,6 @@ but I couldn't make it at the time. Friends from [miletos][8] did the presentati
 [6]: https://github.com/jupyter/jupyter/wiki/Jupyter-kernels
 [7]: http://ab.org.tr/ab16/
 [8]: http://miletos.co/en/
+[9]: http://orgmode.org/
+[10]: https://www.gnu.org/software/emacs/
+[11]: http://orgmode.org/worg/org-contrib/babel/
