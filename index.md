@@ -5,7 +5,7 @@
 #### A Short Crash-Course on Python
 
 Here are the [jupyter][1] notebooks for a short series of [python][2] lectures
-I gave to a buch of undergrads back in 2015.
+I gave to a bunch of undergrads back in 2015.
 
 * [Lecture 1](https://github.com/kaygun/Python_Lectures/blob/master/Lecture1.ipynb)
 * [Lecture 2](https://github.com/kaygun/Python_Lectures/blob/master/Lecture2.ipynb)
