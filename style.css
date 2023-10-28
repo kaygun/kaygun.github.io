@@ -43,9 +43,10 @@ div.navigate a {
 }
 
 div.navigate a:hover {
+  width: 110%;
   background-color: black;
   color: #ffe500;
-  text-align: right;
+  text-align: left;
 }
 
 div.navigate ul.none {
@@ -61,7 +62,7 @@ div.navigate ul.circle {
 }
 
 div.navigate h3 {
-  width: 101%;
+  width: 110%;
   color: #ffe500;
   padding: 0.25em;
   background-color: black;
