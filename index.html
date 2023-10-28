@@ -23,6 +23,39 @@ MathJax.Hub.Config({
 </div>
 
 <div class="navigate">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>index</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
 <h3 id="older-posts">Older Posts</h3>
 <p>[<strong>2023-07-24</strong>] <a
 href="clean/2023-07-24-a_collatz-like_conjecture_for_the_projective_line.html">A
@@ -542,7 +575,7 @@ href="clean/2014-06-12-entropy_of_truncated_md5_hashing.html">Entropy of
 truncated MD5 hashing</a></p>
 <p>[<strong>2014-06-08</strong>] <a
 href="clean/2014-06-08-hexadecimal_digits_of_\pi.html">Hexadecimal
-digits of <span class="math inline"><em>π</em></span></a></p>
+digits of <span class="math inline">\(\pi\)</span></a></p>
 <p>[<strong>2014-02-11</strong>] <a
 href="clean/2014-02-11-information_content_of_n-grams.html">Information
 content of n-grams</a></p>
@@ -703,7 +736,8 @@ href="clean/2012-09-26-transitive_closure_of_a_directed_graph.html">Transitive
 closure of a directed graph</a></p>
 <p>[<strong>2012-09-26</strong>] <a
 href="clean/2012-09-26-solving_linear_equations_in_\mathbb_n.html">Solving
-linear equations in <span class="math inline">ℕ</span></a></p>
+linear equations in <span class="math inline">\({\mathbb
+N}\)</span></a></p>
 <p>[<strong>2012-09-26</strong>] <a
 href="clean/2012-09-26-listing_partitions.html">Listing
 partitions</a></p>
@@ -713,38 +747,42 @@ formal power series</a></p>
 <p>[<strong>2012-09-26</strong>] <a
 href="clean/2012-09-26-hasse_subgraph_of_a_directed_graph.html">Hasse
 subgraph of a directed graph</a></p>
+</body>
+</html>
 </div>
 <div class="content">
 <p>I decided to move my math/machine learning/computation blog from <a href="https://kaygun.tumblr.com">tumblr</a> to 
-<a href="https://kaygun.github.io">here</a>.  When I started this, github.io wasn't an option. Hence the odd tumblr choice. Anyway... </p>
-
-<p>Below you'll find the latest post, and on the right you'll find my old posts.</p>
+<a href="https://kaygun.github.io">here</a>.  When I started this, github.io wasn't an option. Hence the odd tumblr choice. Anyway... 
+Below you'll find the latest post, and on the right you'll find my old posts.</p>
 
 <h1 id="a-collatz-like-conjecture-for-the-projective-line">A
 Collatz-like Conjecture for the Projective Line</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Consider the following self-map of the <a
 href="https://en.wikipedia.org/wiki/Projective_line_over_a_ring">projective
-line over integers</a> <span
-class="math inline">\(\mathbb{P}(\mathbb{Z})\)</span>: <span
-class="math display">\[ T(a:b) =
-\left(\frac{a}{ord_2(a)}:\frac{3b+a}{ord_2(3b+a)}\right) \]</span> where
-<span class="math inline">\(ord_2(a)\)</span> is the largest power of
-<span class="math inline">\(2\)</span> that divides <span
-class="math inline">\(a\)</span>. The question is the following:</p>
+line over integers</a> <span class="math inline">ℙ(ℤ)</span>: <span
+class="math display">$$ T(a:b) =
+\left(\frac{a}{ord_2(a)}:\frac{3b+a}{ord_2(3b+a)}\right) $$</span> where
+<span
+class="math inline"><em>o</em><em>r</em><em>d</em><sub>2</sub>(<em>a</em>)</span>
+is the largest power of <span class="math inline">2</span> that divides
+<span class="math inline"><em>a</em></span>. The question is the
+following:</p>
 <blockquote>
-<p>If we define <span class="math inline">\(x_{n+1} = T(x_n)\)</span>
-for an initial point <span class="math inline">\(x_0 =
-(a_0:b_0)\)</span> do we always get a cycle. That is, for every inital
-point <span class="math inline">\((a_0:b_0)\)</span> is there a <span
-class="math inline">\(k\&gt;0\)</span> and <span
-class="math inline">\(N\&gt;0\)</span> such that <span
-class="math inline">\(x_{N+k} = x_N\)</span>?</p>
+<p>If we define <span
+class="math inline"><em>x</em><sub><em>n</em> + 1</sub> = <em>T</em>(<em>x</em><sub><em>n</em></sub>)</span>
+for an initial point <span
+class="math inline"><em>x</em><sub>0</sub> = (<em>a</em><sub>0</sub>:<em>b</em><sub>0</sub>)</span>
+do we always get a cycle. That is, for every inital point <span
+class="math inline">(<em>a</em><sub>0</sub>:<em>b</em><sub>0</sub>)</span>
+is there a <span class="math inline"><em>k</em> 0</span> and <span
+class="math inline"><em>N</em> 0</span> such that <span
+class="math inline"><em>x</em><sub><em>N</em> + <em>k</em></sub> = <em>x</em><sub><em>N</em></sub></span>?</p>
 </blockquote>
 <h2 id="implementation">Implementation</h2>
 <p>Let us start with the order function. Rather, let me implement a
 function that returns a number divided by the <span
-class="math inline">\(p\)</span>-part of that number</p>
+class="math inline"><em>p</em></span>-part of that number</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> reduction </span>(n p)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">if</span> (<span class="kw">zerop</span> (<span class="kw">mod</span> n p))</span>
