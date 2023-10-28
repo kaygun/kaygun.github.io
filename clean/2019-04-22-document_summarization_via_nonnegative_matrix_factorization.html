@@ -124,9 +124,9 @@ error function is <span class="math display">\[ err(B,C) =
 \|a_{ij}-b_{i\ell}c_{\ell j}\| \]</span> with a postivity constraint on
 the entries of <span class="math inline">\(B\)</span> and <span
 class="math inline">\(C\)</span>. I wrote about this before <a
-href="2018-10-30-non-negative_matrix_decomposition_in_scala.html">here</a>
+href="clean/2018-10-30-non-negative_matrix_decomposition_in_scala.html">here</a>
 and <a
-href="2018-10-31-nonnegative_matrix_decomposition_in_clojure.html">here</a>.
+href="clean/2018-10-31-nonnegative_matrix_decomposition_in_clojure.html">here</a>.
 Today, I am going to apply this to a problem coming from natural
 language processing.</p>
 <h2
@@ -155,10 +155,11 @@ class="math inline">\(C\)</span> measures the same thing for each
 word.</p>
 <h2 id="an-implementation">An Implementation</h2>
 <p>I am going to re-cycle the code I wrote in my earlier posts: one for
-<a href="2019-04-20-latent_semantic_analysis_in_clojure.html">Latent
+<a
+href="clean/2019-04-20-latent_semantic_analysis_in_clojure.html">Latent
 Semantic Analysis</a> to get the relevant matrix from a document, and
 another for <a
-href="2018-10-31-nonnegative_matrix_decomposition_in_clojure.html">Nonnegative
+href="clean/2018-10-31-nonnegative_matrix_decomposition_in_clojure.html">Nonnegative
 Matrix Decomposition</a> in clojure:</p>
 <p>First, let us define our namespace with the necessary libraries:</p>
 <div class="sourceCode" id="cb1"><pre

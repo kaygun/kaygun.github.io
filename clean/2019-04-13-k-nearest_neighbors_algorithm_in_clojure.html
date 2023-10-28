@@ -157,8 +157,8 @@ class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a 
 class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">:a</span></span></code></pre></div>
 <h2 id="a-larger-example">A larger example</h2>
 <p>I am going to recycle the code I wrote for the <a
-href="2019-04-06-k-means_implemented_in_clojure.html">k-means</a> code I
-wrote few days ago.</p>
+href="clean/2019-04-06-k-means_implemented_in_clojure.html">k-means</a>
+code I wrote few days ago.</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> random-vector </span>[xs sigma]</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">map</span> #(<span class="kw">+</span> (<span class="kw">-</span> (<span class="kw">rand</span> (<span class="kw">*</span> <span class="dv">2</span> sigma)) sigma) <span class="va">%</span>) xs))</span>

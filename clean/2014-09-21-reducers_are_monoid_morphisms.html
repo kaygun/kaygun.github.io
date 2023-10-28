@@ -36,15 +36,16 @@
 <body>
 <h1 id="reducers-are-monoid-morphisms">Reducers are Monoid
 Morphisms</h1>
-<p><a href="2014-09-07-cons_is_your_friend.html">Last week</a> I wrote
-about <a href="http://en.wikipedia.org/wiki/Guy_L._Steele,_Jr.">Guy
-Steele’s</a> talk <a href="http://vimeo.com/6624203">“<code>foldl</code>
-and <code>foldr</code> are considered slightly harmful”</a> which I
-first heard from <a href="http://vimeo.com/45561411">Rich Hickey</a>.
-Steele’s conclusion was that for truly parallel data structures and
-algorithms <code>cons</code> was not a good basis. I disagree, and still
-think that one can use <code>cons</code> in an effective way to do what
-Steele wants to do.</p>
+<p><a href="clean/2014-09-07-cons_is_your_friend.html">Last week</a> I
+wrote about <a
+href="http://en.wikipedia.org/wiki/Guy_L._Steele,_Jr.">Guy Steele’s</a>
+talk <a href="http://vimeo.com/6624203">“<code>foldl</code> and
+<code>foldr</code> are considered slightly harmful”</a> which I first
+heard from <a href="http://vimeo.com/45561411">Rich Hickey</a>. Steele’s
+conclusion was that for truly parallel data structures and algorithms
+<code>cons</code> was not a good basis. I disagree, and still think that
+one can use <code>cons</code> in an effective way to do what Steele
+wants to do.</p>
 <p>Yesterday, I was watching Rich Hickey’s <a
 href="http://youtu.be/6mTbuzafcII">talk on Transducers</a> he gave at <a
 href="http://thestrangeloop.com/">StrangeLoop</a>. This again reminded
@@ -113,7 +114,7 @@ of <code>map-reduce</code> that Steele describes instead of a sequential
 container.</p>
 <p>Here is a simplified version of the implementation I gave for
 <code>map-reduce</code> <a
-href="2014-09-07-cons_is_your_friend.html">last week</a></p>
+href="clean/2014-09-07-cons_is_your_friend.html">last week</a></p>
 <pre><code>(defun map-reduce (tree reducer mapper)
    (if (atom tree) 
       (funcall mapper tree)

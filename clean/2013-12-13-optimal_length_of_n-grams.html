@@ -32,7 +32,8 @@
 <body>
 <h1 id="optimal-length-of-n-grams">Optimal length of n-grams</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>The <a href="2013-12-02-patterns_separating_large_texts.html">other
+<p>The <a
+href="clean/2013-12-02-patterns_separating_large_texts.html">other
 day</a> I was looking at a problem of determining how long a string one
 needs to use to identify a large text. As we increase the length of the
 substring, the chances of an accidental match reduces. However, there
@@ -72,7 +73,7 @@ table for a given length n-gram.</p>
 
 GET-NGRAMS</code></pre>
 <p>And then we calculate the entropy in a modified form. See <a
-href="2013-11-11-entropy_and_approximately_one-to-one_maps.html">here</a>
+href="clean/2013-11-11-entropy_and_approximately_one-to-one_maps.html">here</a>
 on why I do that.</p>
 <pre><code>(defun temperature (hash)
   (let ((result 0.0d0))

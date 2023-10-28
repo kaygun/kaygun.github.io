@@ -101,8 +101,9 @@
 Graphs with a Prescribed Degree Sequence</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p><a
-href="2020-12-12-havelhakimi_algorithm_in_common-lisp.html">Here</a> and
-<a href="2020-12-13-havelhakimi_algorithm_in_clojure.html">here</a> I
+href="clean/2020-12-12-havelhakimi_algorithm_in_common-lisp.html">Here</a>
+and <a
+href="clean/2020-12-13-havelhakimi_algorithm_in_clojure.html">here</a> I
 dealt with the problem that whether a given non-increasing sequence of
 positive integers can be realized as the <a
 href="https://en.wikipedia.org/wiki/Degree_(graph_theory)">degree
@@ -165,7 +166,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a 
 <p>Finally, our implementation. Notice the built-in <a
 href="https://en.wikipedia.org/wiki/Memoization#:~:text=In%20computing%2C%20memoization%20or%20memoisation,the%20same%20inputs%20occur%20again.">memoization</a>
 and the <a
-href="2014-09-23-a_memoization_macro_for_common_lisp.html">thread-last</a>
+href="clean/2014-09-23-a_memoization_macro_for_common_lisp.html">thread-last</a>
 macro I stole from <a href="https://clojure.org/">clojure</a>:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>

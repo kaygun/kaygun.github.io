@@ -39,7 +39,7 @@ Topic Analysis</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>This is my second post on the subject, but you can read it
 independently of my <a
-href="2015-10-16-document_summarization_via_markov_chains.html">first
+href="clean/2015-10-16-document_summarization_via_markov_chains.html">first
 post</a>.</p>
 <p>On the most abstract terms: Given a text, or a corpora, I’d like to
 create a discrete <a
@@ -68,9 +68,9 @@ I bag them.</p>
 <code>merge-with</code> function and the <code>-&gt;&gt;</code> macro,
 that I got used to working with from clojure. I explained why and how I
 use them in two earlier posts <a
-href="2015-09-28-merging_association_lists_in_common_lisp.html">here</a>
+href="clean/2015-09-28-merging_association_lists_in_common_lisp.html">here</a>
 and <a
-href="2015-05-03-threading_macros_in_common_lisp.html">here</a>.</p>
+href="clean/2015-05-03-threading_macros_in_common_lisp.html">here</a>.</p>
 <p>Now, the function that returns bag of words for a given sentence:</p>
 <pre><code>(defun bag-of-words (sentence)
    (let ((junk (coerce &quot;\@#$%^&amp;*[]_+-=(){}\&#39;\:\&quot;,/&lt;&gt;“”’‘–—&quot; &#39;list)))

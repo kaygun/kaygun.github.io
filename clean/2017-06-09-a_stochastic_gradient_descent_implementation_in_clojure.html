@@ -39,8 +39,8 @@ Descent</a> is an algorithm that finds local extremum points of a real
 valued function with several variables.  As such it is a go-to algorithm
 for many optimization problems that appear in the context of machine
 learning.  I wrote <a
-href="2013-08-10-logistic_regression_in_lisp.html">an implementation</a>
-optimizing <a
+href="clean/2013-08-10-logistic_regression_in_lisp.html">an
+implementation</a> optimizing <a
 href="https://en.wikipedia.org/wiki/Linear_regression">Linear
 Regression</a> and <a
 href="https://en.wikipedia.org/wiki/Logistic_regression">Logistic
@@ -56,8 +56,8 @@ Gradient Descent</a>.</p>
 <h2 id="an-implementation">An implementation<a
 href="#file:///home/kaygun/local/tmp/Untitled.html#An-implementation"></a></h2>
 <p>The following is a faithful clojure translation of <a
-href="2013-08-10-logistic_regression_in_lisp.html">the code I wrote in
-Common Lisp</a>.</p>
+href="clean/2013-08-10-logistic_regression_in_lisp.html">the code I
+wrote in Common Lisp</a>.</p>
 <pre><code>(defn descent [f xs error rate epochs]
   (let [ns (range (count xs))
         r (/ rate error 2)]        
@@ -81,8 +81,8 @@ Common Lisp</a>.</p>
 <p>Let me test this on the ordinary linear regression cost function.  I
 am not going to explain the theory behind it.  If you are so inclined,
 you should check <a
-href="2013-08-10-logistic_regression_in_lisp.html">my previous post</a>
-where I explained why we need the following function (sans the
+href="clean/2013-08-10-logistic_regression_in_lisp.html">my previous
+post</a> where I explained why we need the following function (sans the
 sampling/stochastic bits) for our optimization routine.</p>
 <pre><code>(defn least-sq [data sample-rate]
   (letfn [(dot [ys zs] (reduce + (map * ys zs)))

@@ -38,8 +38,9 @@
 Uniformly Random Connected Graphs</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I’d like to expand on an <a
-href="2014-08-07-generating_uniformly_random_trees.html">old post</a>.
-In <a href="2014-08-07-generating_uniformly_random_trees.html">that
+href="clean/2014-08-07-generating_uniformly_random_trees.html">old
+post</a>. In <a
+href="clean/2014-08-07-generating_uniformly_random_trees.html">that
 post</a> I gave a simple algorithm and the corresponding lisp code that
 generates a uniformly random tree on nn vertices. Today, I’ll extend the
 code to generate a uniformly random connected graph on n vertices.</p>
@@ -66,8 +67,8 @@ sorts them.</p>
                  :key #&#39;car)))
 GET-THE-POOL</code></pre>
 <p>I am re-using the following code from my earlier <a
-href="2014-08-07-generating_uniformly_random_trees.html">random tree
-post</a>:</p>
+href="clean/2014-08-07-generating_uniformly_random_trees.html">random
+tree post</a>:</p>
 <pre><code>(defun random-tree (n)
   (loop for i from 1 below n collect
        (list (random i) i)))

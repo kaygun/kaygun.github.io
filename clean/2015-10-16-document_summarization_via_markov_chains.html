@@ -39,10 +39,10 @@ language agnostic method to do just that.</p>
 <h2 id="sentences-overlaps-and-markov-chains.">Sentences, overlaps and
 Markov chains.</h2>
 <p>In my <a
-href="2015-10-07-computational_literary_analysis.html">previous post</a>
-I described a method to measure the overlap between two sentences in
-terms of common words. Today, we will use the same measure, or a
-variation, to develop a <a
+href="clean/2015-10-07-computational_literary_analysis.html">previous
+post</a> I described a method to measure the overlap between two
+sentences in terms of common words. Today, we will use the same measure,
+or a variation, to develop a <a
 href="https://en.wikipedia.org/wiki/Markov_chain">discrete Markov
 chain</a> whose nodes are labeled by individual sentences appearing in
 our text. This is essentially <a
@@ -73,7 +73,7 @@ Begin
 End</code></pre>
 <h2 id="implementation">Implementation</h2>
 <p>I am going to recycle most of the code from my <a
-href="2015-10-07-computational_literary_analysis.html">previous
+href="clean/2015-10-07-computational_literary_analysis.html">previous
 post</a></p>
 <pre><code>(defun slurp (filename)
    (with-open-file (input filename :direction :input)

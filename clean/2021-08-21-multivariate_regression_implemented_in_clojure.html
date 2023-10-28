@@ -98,13 +98,13 @@ Regression Implemented in Clojure</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I am going to write an implementation of multivariate
 regression in clojure with all statistical bells and whistles.</p>
-<h3 id="dependencies">Dependencies</h3>
+<h2 id="dependencies">Dependencies</h2>
 <p>Here are the dependencies I have for this implementation:</p>
 <pre><code>:deps { net.mikera/core.matrix {:mvn/version &quot;0.62.0&quot;}
         net.mikera/vectorz-clj {:mvn/version &quot;0.48.0&quot;}
         org.apache.commons/commons-math3 {:mvn/version &quot;3.5&quot;}
 }</code></pre>
-<h3 id="namespace">Namespace</h3>
+<h2 id="namespace">Namespace</h2>
 <p>With the dependencies above, I will put everything I need into my
 namespace.</p>
 <div class="sourceCode" id="cb2"><pre
@@ -115,7 +115,7 @@ class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb2-1"><a 
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>           NormalDistribution</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>           TDistribution</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>           FDistribution]))</span></code></pre></div>
-<h3 id="implementation">Implementation</h3>
+<h2 id="implementation">Implementation</h2>
 <p>Here is my implementation. The first term in the coefficients is the
 intercept.</p>
 <div class="sourceCode" id="cb3"><pre
@@ -149,7 +149,7 @@ class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a 
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>     <span class="at">:RSquare</span> R2}))</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;regression/regression</span></span></code></pre></div>
-<h3 id="test">Test</h3>
+<h2 id="test">Test</h2>
 <p>Let us test it on random data. The coefficients are -2 and 1 with
 intercept being 4.</p>
 <div class="sourceCode" id="cb5"><pre

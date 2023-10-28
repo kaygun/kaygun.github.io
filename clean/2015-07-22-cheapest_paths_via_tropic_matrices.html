@@ -37,7 +37,7 @@
 <h1 id="cheapest-paths-via-tropic-matrices">Cheapest Paths via Tropic
 Matrices</h1>
 <p>I wrote another <a
-href="2014-11-17-tropic_calculation_of_cheapest_paths.html">blog
+href="clean/2014-11-17-tropic_calculation_of_cheapest_paths.html">blog
 post</a> on the following problem but I have slight improvements. It is
 worth another post.</p>
 <h2 id="description-of-the-problem">Description of the problem</h2>
@@ -64,12 +64,12 @@ class="math inline">\(n+1\)</span> are calculated by <span
 class="math display">\[ c^{(n+1)}_{ij}
 = c^{(n)}_{ij}\wedge \bigwedge_{k\in V} c^{(n)}_{ik} +
 \omega_{kj} \]</span> If you have seen my previous post on <a
-href="2015-07-21-hidden_markov_models_via_tropic_matrices.html">Hidden
+href="clean/2015-07-21-hidden_markov_models_via_tropic_matrices.html">Hidden
 Markov Models</a> you will realize that I am doing matrix multiplication
 in the tropic ring over the positive real numbers.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>I will take the tropic matrix multiplication I defined in my <a
-href="2014-11-17-tropic_calculation_of_cheapest_paths.html">previous
+href="clean/2014-11-17-tropic_calculation_of_cheapest_paths.html">previous
 post</a> but I need to modify the function since minimum must be taken
 of paths of shorter lengths too.</p>
 <pre><code>(defun tropic-mult (a b)

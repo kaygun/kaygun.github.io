@@ -40,15 +40,15 @@ implementation of the fixed-radius near neighbor clustering algorithm in
 lisp</h1>
 <h2 id="descriptionoftheproblemandthealgorithm">Description of the
 problem and the algorithm</h2>
-<p>The setup is the same as in my <a href="2012-10-10-an.html">k-means
-clustering post</a>. I have a metric space <span
-class="math inline">\((X,d)\)</span> and a finite collection of points
-<span class="math inline">\(D = {x_1,\ldots,x_N}\)</span> which I would
-like to write as a union of disjoint subsets <span
-class="math display">\[ D = D_1 \sqcup \cdots \sqcup D_k \]</span> This
-time, unlike the k-means algorithm, the number k is not fixed at the
-beginning. This time we feed the algorithm a number which I will call
-<em>cluster diameter</em>.</p>
+<p>The setup is the same as in my <a
+href="clean/2012-10-10-an.html">k-means clustering post</a>. I have a
+metric space <span class="math inline">\((X,d)\)</span> and a finite
+collection of points <span class="math inline">\(D =
+{x_1,\ldots,x_N}\)</span> which I would like to write as a union of
+disjoint subsets <span class="math display">\[ D = D_1 \sqcup \cdots
+\sqcup D_k \]</span> This time, unlike the k-means algorithm, the number
+k is not fixed at the beginning. This time we feed the algorithm a
+number which I will call <em>cluster diameter</em>.</p>
 <p>The diameter of a set of points in a metric space is defined by <span
 class="math display">\[
 diam© = \sup_{x,y\in C} d(x,y) \]</span> If <span
@@ -106,9 +106,9 @@ first element in the dataset. I should have get an element randomly then
 <code>copy</code> list should be obtained from <code>data</code> by
 deleting the chosen element <code>p</code>.</p>
 <p>Let us test this algorithm on the dataset we used to test our <a
-href="2012-10-10-an.html">k-means clustering algorithm</a>. I will copy
-the code I used there below together with the utility functions I used
-to load the data.</p>
+href="clean/2012-10-10-an.html">k-means clustering algorithm</a>. I will
+copy the code I used there below together with the utility functions I
+used to load the data.</p>
 <pre><code>(require :cl-ppcre)
 NIL
 

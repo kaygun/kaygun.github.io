@@ -46,12 +46,12 @@ numbers between 0 and 1. Problem reduces to check if these bags differ
 statistically.</p>
 <h2 id="implementation">Implementation</h2>
 <p>I will re-use two of my earlier posts: The first <a
-href="2016-01-25-kolmogorov-smirnov_test.html">post</a> I am going to
-re-use was on implementing <a
+href="clean/2016-01-25-kolmogorov-smirnov_test.html">post</a> I am going
+to re-use was on implementing <a
 href="https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test">Kolmogorov-Smirnov
 test</a> to test if two bags of real numbers differ in their
 distribution. The <a
-href="2015-04-05-hamming_distance_and_hashing_functions.html">second</a>
+href="clean/2015-04-05-hamming_distance_and_hashing_functions.html">second</a>
 post I am going to re-use was about calculating Hamming derivatives of
 two hash functions.</p>
 <p>Let us start with our package description, and libraries I am going
@@ -92,8 +92,9 @@ function</a></p>
      (reduce #&#39;+ (map &#39;list (lambda (i j) (calc i j)) x y))))
 HAMMING-DISTANCE</code></pre>
 <p>Next, I am going to need an implementation for the KS-test. I will
-lift the code from <a href="2016-01-25-kolmogorov-smirnov_test.html">my
-earlier post on KS-test</a> as is:</p>
+lift the code from <a
+href="clean/2016-01-25-kolmogorov-smirnov_test.html">my earlier post on
+KS-test</a> as is:</p>
 <pre><code>(cffi:load-foreign-library 
    &quot;/home/kaygun/src/lisp/kolmogorov-smirnov/ks.so&quot;)
 #&lt;FOREIGN-LIBRARY KS.SO-705 &quot;ks.so&quot;&gt;
