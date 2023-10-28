@@ -1,44 +1,90 @@
-body {
-font: 18px Helvetica, Arial, sans-serif;
-width: 700px;
-margin: 50px auto;
+div.container {
+  width:100%;
+  argin:0px;
+}
+
+div.header,div.footer {
+  text-align: right;
+  color: #ffe500;
+  padding: 1em;
+  font-family: Arial;
+  background-color: black;
+}
+
+div.header a {
+  text-decoration:none;
+  color: #ffe500;
+}
+
+div.navigate {
+  float:left;
+  width:20%;
+  font: 75%;
+  color: black;
+  border: 1px solid black;
+  padding-left: 5px;
+}
+
+div.content {
+  padding-left: 24%;
+}
+
+div.navigate p {
+ adding-left: 0.1em;
+}
+
+div.navigate a {
+  display: block;
+  text-decoration: none;
+  color: black;
+}
+
+div.navigate a:hover {
+  background-color: black;
+  color: #ffe500;
+}
+
+div.navigate ul.none {
+  color: black;
+  list-style-type: none;
+  padding-left: 0.25em;
+}
+
+div.navigate ul.circle {
+  color: black;
+  list-style-type: none;
+  padding-left: 0.25em;
+}
+
+div.navigate h3 {
+  width: 101%;
+  color: #ffe500;
+  padding: 0.25em;
+  background-color: black;
+  font: 125% bold;
+  font-family: Arial;
+  text-align: right;
+}
+
+h2 {
+  font: 175% bold; 
+  padding: 0.25em;
+  font-family: Arial;
+  color: #ffe500;
+  background-color: black;
+}
+
+h3 {
+  text-align: right;
+  font: 150%; 
+  padding: 0.25em;
+  font-family: Arial;
+  color: #ffe500;
+  background-color: black;
 }
 
 a {
-color: inherit;
+  text-decoration: none; 
+  color: #115500; 
 }
 
-body img {
-max-width: 100%;
-}
-
-blockquote {
-margin: 10px 0px 10px 10px;
-padding-left: 15px;
-border-left: 4px solid #dcdcdc;
-}
-
-.caption {
-margin-top: 20px;
-font-size: 14px;
-}
-
-#reblog_info {
-margin: 20px 0;
-padding: 10px 0;
-font: 11px 'Lucida Grande', Arial, sans-serif;
-color: #888;
-}
-
-#footer {
-margin: 20px 0;
-padding: 10px 0;
-font: 11px 'Lucida Grande', Arial, sans-serif;
-color: #888;
-}
-
-#footer #timestamp,
-#footer .tag {
-    display: inline-block;
-    margin-right: 10px;
-}"
