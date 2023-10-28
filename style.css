@@ -32,7 +32,7 @@ div.content {
 
 div.navigate p {
  padding-left: 0.1em;
- text-align: right;
+ text-align: left;
 }
 
 div.navigate a {
@@ -43,7 +43,7 @@ div.navigate a {
 }
 
 div.navigate a:hover {
-  width: 110%;
+  width: 102%;
   background-color: black;
   color: #ffe500;
   text-align: left;
@@ -61,7 +61,7 @@ div.navigate ul.circle {
   padding-left: 0.25em;
 }
 
-div.navigate h3 {
+div.navigate h2 {
   width: 110%;
   color: #ffe500;
   padding: 0.25em;
