@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-08-05-solving_linear_equations_in_natural_numbers</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="solving-linear-equations-in-natural-numbers">Solving Linear
+Equations in Natural Numbers</h1>
+<h2 id="description-of-the-problem">Description of the problem </h2>
+<p>Here is a classical problem:</p>
+<p>Given that you have dominations of 1, 5, 10, 25 and 100 cent change,
+find the combination with fewest number of coins that sums up to a given
+amount N.</p>
+<p>I will rephrase the problem as follows: given N , minimize <span
+class="math inline">\(x+y+z+t+u\)</span> subject to the condition <span
+class="math inline">\(x+5y+10z+25t+100u=N\)</span>.</p>
+<p>Second part of this problem, namely, finding a subsequence from given
+a sequence of numbers <span class="math inline">\(x_1,...,x_m\)</span>
+that sums up to a given number <span class="math inline">\(N\)</span> is
+called <a
+href="http://mathworld.wolfram.com/SubsetSumProblem.html">subset sum
+problem</a>, and it is an NP complete problem.</p>
+<p>I will give a minimally smart brute force solution: I will list all
+possible solutions and then take the one which satisfy the minimality
+condition.</p>
+<h2 id="stumbling-towards-a-solution">Stumbling towards a solution</h2>
+<p>At the first go, one can set a naive upper bound on each of the
+variables: xx can’t be larger than N, while <span
+class="math inline">\(y\)</span> can’t be larger than <span
+class="math inline">\(⌊N/5⌋\)</span> etc. If you think about it, since
+we want to minimize the number of coins, there is another sequence of
+upper bounds: why would I use five 1 cents if I can use one nickel? So,
+the upper bound for <span class="math inline">\(x\)</span> is <span
+class="math inline">\(min(5,N)\)</span> while for <span
+class="math inline">\(y\)</span> we have <span
+class="math inline">\(min(2,N)\)</span> etc.</p>
+<p>In general, if we need to minimize <span
+class="math inline">\(x_1+⋯+x_m\)</span> subject to the condition <span
+class="math display">\[a_1x_1+⋯+a_mx_m=N\]</span> we are going to have
+<span class="math display">\[\
+x_i &lt;
+\min\left(\left\lceil\frac{N}{a_i}\right\rceil,\frac{lcm(a_i,a_j)}{a_i}\mid\
+j\neq i\right) \]</span> where <span
+class="math inline">\(lcm(a,b)\)</span> denotes the least common
+multiple of two numbers <span class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span>.</p>
+<p>Then we search for a solution within that search space.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>I am going to need the following helper routines: The first is a
+macro I got used to using from clojure:</p>
+<pre><code>(defmacro -&gt;&gt; (x &amp;rest forms)
+  (dolist (f forms x)
+    (if (listp f)
+        (setf x (append f (list x)))
+        (setf x (list f x)))))
+
+-&gt;&gt;</code></pre>
+<p>The second is something I got used to using from R:</p>
+<pre><code>(defun rep (k n &amp;optional acc)
+  (if (&gt; n 0)
+      (rep k (1- n) (cons k acc))
+      acc))
+
+REP</code></pre>
+<p>The following function generates the list of upper bounds I talked
+about above. It returns a list of coins.</p>
+<pre><code>(defun generate-pool (amount coins)
+  (-&gt;&gt; coins
+       (maplist (lambda (xs)
+                  (let ((x (car xs))
+                        (ys (cdr xs)))
+                    (reduce #&#39;min
+                            (cons (floor amount x)
+                                  (mapcar (lambda (y) (1- (/ (lcm x y) x))) ys))))))
+       (mapcan #&#39;rep coins)
+       (remove-if #&#39;null)))
+
+GENERATE-POOL</code></pre>
+<p>The main engine is a recursive function. If all dominations are
+greater than the amount, then there is no solution. If the amount is
+equal to one of the dominations, then that’s the solution. Otherwise
+remove each coins one by one, and search for a solution.</p>
+<pre><code>(defun engine (amount pool &amp;optional (acc &#39;(nil)))
+  (cond ((or (null pool) (&lt; amount (car pool))) nil)
+        ((= amount (car pool)) (mapcar (lambda (xs) (cons amount xs)) acc))
+        (t (append (engine (- amount (car pool))
+                           (cdr pool)
+                           (mapcar (lambda (xs) (cons (car pool) xs)) acc))
+                   (engine amount (cdr pool) acc)))))
+
+ENGINE</code></pre>
+<p>Finally, the entry point:</p>
+<pre><code>(defun change (amount coins)
+  (remove-duplicates (engine amount (generate-pool amount coins))
+                     :test #&#39;equal))
+
+CHANGE</code></pre>
+<p>Let us test:</p>
+<pre><code>(format nil &quot;~{~a~%~}&quot; (change 49 &#39;(1 5 10 25 100)))
+(format nil &quot;~{~a~%~}&quot; (change 63 &#39;(1 5 10 21 100)))
+(format nil &quot;~{~a~%~}&quot; (change 999 &#39;(1 2 5 10 20 50 100)))
+
+(10 10 10 10 5 1 1 1 1)
+(25 10 10 1 1 1 1)
+
+(10 10 10 10 10 10 1 1 1)
+(21 10 10 10 10 1 1)
+(21 21 10 10 1)
+(21 21 21)
+
+(100 100 100 100 100 100 100 100 100 20 20 20 20 10 2 2 2 2 1)
+(100 100 100 100 100 100 100 100 100 50 20 20 2 2 2 2 1)
+(100 100 100 100 100 100 100 100 100 20 20 20 20 10 5 2 2)
+(100 100 100 100 100 100 100 100 100 50 20 20 5 2 2)</code></pre>
+<h2 id="analysis">Analysis</h2>
+<p>The solution is an inefficient brute force solution. Just don’t.</p>
+<div id="footer">
+<p><span id="timestamp">August 5th, 2017 1:40am</span></p>
+</div>
+</body>
+</html>

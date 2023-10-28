@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-09-04-uniform_sampling_from_parametrized_submanifolds</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="uniform-sampling-from-parametrized-submanifolds">Uniform
+Sampling from Parametrized Submanifolds</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Assume we have a compact region <span
+class="math inline">\(\Omega\)</span> defined in <span
+class="math inline">\(\mathbb{R}^n\)</span> via an inequality of the
+form <span class="math inline">\(g(x_1,\ldots,x_n)\leq r\)</span> where
+<span class="math inline">\(g(x_1,\ldots,x_n)\)</span> is some nice
+function defined on <span class="math inline">\(\mathbb{R}^n\)</span>,
+For non-mathematicians out there, assume that the region I am talking
+about is bounded within a rectangular box, or that <span
+class="math inline">\(0\leq x_i\leq 1\)</span> for <span
+class="math inline">\(i=1,\ldots,n\)</span>. Then we can sample points
+from <span class="math inline">\(\Omega\)</span> uniformly by using an
+accept/reject algorithm:</p>
+<ol type="1">
+<li><p>we sample a sequence of numbers <span
+class="math inline">\((x_1,\ldots,x_n)\)</span> where each <span
+class="math inline">\(x_i\)</span> is a uniformly random number chosen
+in the unit interval,</p></li>
+<li><p>if <span class="math inline">\(g(x_1,\ldots,x_n)\leq r\)</span>
+accept it otherwise reject it.</p></li>
+</ol>
+<p>This algorithm has a nice after-effect: if we record the accept rate
+then we can <a
+href="http://web.bahcesehir.edu.tr/atabey_kaygun/other/monte-carlo.html">estimate
+the volume of the region <span
+class="math inline">\(\Omega\)</span></a>. The downside is that if the
+region is small then it is difficult to get points in <span
+class="math inline">\(\Omega\)</span>. And if the dimension of <span
+class="math inline">\(\Omega\)</span> is strictly smaller than <span
+class="math inline">\(n\)</span> (say you are trying to sample points on
+a curve embedded in the 3 dimensional space) then it is really really
+difficult (read <em>almost impossible</em>) to sample points using the
+accept/reject algorithm as the measure of <span
+class="math inline">\(\Omega\)</span> within <span
+class="math inline">\(\mathbb{A}^n\)</span> is 0.</p>
+<h2 id="samplingfromequidimensionalregions">Sampling from
+equidimensional regions</h2>
+<p>If the dimension of the region <span
+class="math inline">\(\Omega\)</span> is the same as the ambient space
+then the accept/reject algorithm I described above works just fine. Here
+is an implementation is lisp</p>
+<pre><code>(defun sample (n test-fn)
+   (let (test res)
+      (do ()
+          ((not (null test)) res)
+        (setf res (loop repeat n collect (random 1.0d0)))
+        (setf test (funcall test-fn res)))))
+
+
+SAMPLE</code></pre>
+<p>We pass the dimension of the ambient space as well as a test function
+which describes our region. This function will return a uniformly random
+point from the region defined by the test function. Here is an
+example:</p>
+<pre><code>(defun sample-from-ellipse (a b)
+   (sample 2 (lambda (v) 
+                 (let ((x (elt v 0))
+                       (y (elt v 1)))
+                    (&lt;= (+ (expt (/ x a) 2) (expt (/ y b) 2)) 1.0d0)))))
+
+(sample-from-ellipse 0.1 9.0)
+
+
+(0.011914196085003548d0 0.3981536986031673d0)</code></pre>
+<p>In the example above, we picked a uniformly random point within the
+ellipse <span class="math inline">\(100 x^2 + \frac{y^2}{81}\leq
+1\)</span>.</p>
+<p>Let me modify the function <code>sample</code> so that we see how
+many tries it took to get a sample point:</p>
+<pre><code>(defun sample (n test-fn)
+   (let (test res)
+      (do ((i 0 (1+ i)))
+          ((not (null test)) (cons i res))
+        (setf res (loop repeat n collect (random 1.0d0)))
+        (setf test (funcall test-fn res)))))
+
+(sample-from-ellipse 0.01 0.01)
+
+
+(1225 0.002715773271653177d0 0.006181148622634192d0)</code></pre>
+<p>I was trying to sample a point from <span class="math inline">\(x^2 +
+y^2 \leq 10^{-4}\)</span> the disk of radius <span
+class="math inline">\(0.01\)</span>, and it took some about 1000 tries
+before we hit a point within our region.</p>
+<p>There is an alternative method: if our region <span
+class="math inline">\(\Omega\)</span> is parametrized over the unit
+cube, that is, if there is a nice function (bijective and
+differentiable) <span class="math inline">\(f\colon \[0,1\]^n\to
+\Omega\)</span> then we can sample points directly from <span
+class="math inline">\(\Omega\)</span>. The argument goes like this:
+calculate <span class="math inline">\(J(f)\)</span> the Jacobian of
+<span class="math inline">\(f\)</span> which is the determinant of the
+<span class="math inline">\(n\times n\)</span>-matrix <span
+class="math inline">\(\left(\frac{\partial f_i}{\partial
+x_j}\right)\)</span> where <span class="math inline">\(f_i\)</span> is
+the i-th coordinate of the function <span
+class="math inline">\(f\)</span>. Consider the integral <span
+class="math display">\[ F(a_1,\ldots,a_n) =
+\int_0^{a_1}\cdots \int_0^{a_n} J(f) dx_1\cdots dx_n \]</span> Then
+<span
+class="math inline">\(F(a_1,\ldots,a_{i-1},x,a_{i+1},\ldots,a_n)\)</span>
+must be a uniform random variable obeying the uniform distribution for
+every <span class="math inline">\(i=1,\ldots,n\)</span> and <span
+class="math inline">\(a_1,\ldots,a_{i-1},a_{i+1},\ldots,a_n\in
+\[0,1\]\)</span>.</p>
+<h2 id="anequidimensionalexample">An equidimensional example</h2>
+<p>Let be demonstrate this with an example: consider the right triangle
+<span class="math inline">\(y\leq x\)</span> with <span
+class="math inline">\(0\leq x\leq 1\)</span>. There is a parametrization
+of the region given by <span class="math display">\[ f(x,y) = (x,yx)
+\]</span> If we map the uniformly chosen points <span
+class="math inline">\((x,y)\)</span> from the unit square directly into
+our right triangle we would see</p>
+<pre><code>(with-open-file (res &quot;sampling-data1.csv&quot; 
+                     :direction :output 
+                     :if-exists :supersede)
+    (loop repeat 400 do
+          (let ((x (random 1.0d0))
+                (y (random 1.0d0)))
+             (format res &quot;~4,3F ~4,3F~%&quot; x (* y x)))))
+
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_0.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<p>This is not what we want as we can see the condensation of points
+around the origin. The Jacobian of the parametrization is <span
+class="math display">\[
+\left\|\begin{matrix} 1 &amp; y\\ 0 &amp; x \end{matrix}\right\| = x
+\]</span> then <span class="math display">\[ F(a,b) = \int_0^a \int_0^b
+x dx dy = \frac{a^2 b}{2}
+\]</span> must be a random number between 0 and ½. For <span
+class="math inline">\(a=1\)</span>, the expression <span
+class="math inline">\(\frac{b}{2}\)</span> must produce uniformly random
+numbers in the interval <span class="math inline">\(\[0,½\]\)</span>. In
+other words, <span class="math inline">\(b\)</span> is a uniformly
+random number between 0 and 1. For <span
+class="math inline">\(b=1\)</span> we get <span
+class="math inline">\(\frac{a^2}{2}\)</span> must be a uniformly random
+variable between 0 and ½ as <span class="math inline">\(a\)</span> must
+be in <span class="math inline">\(\[0,1\]\)</span>. If <span
+class="math inline">\(x\)</span> is a uniform random variable in the
+interval <span class="math inline">\(\[0,½\]\)</span> then <span
+class="math display">\[ \frac{a^2}{2} = x \quad \implies \quad a =
+\sqrt{2x} \]</span> An implementation of the sampling a uniformly random
+point in the region we are interested in would look like</p>
+<pre><code>(defun sample-triangle ()
+   (let ((x (sqrt (random 1.0d0)))
+         (y (random 1.0d0)))
+     (list x (* x y))))
+
+(with-open-file (res &quot;sampling-data2.csv&quot; 
+                     :direction :output 
+                     :if-exists :supersede)
+    (loop repeat 400 do
+             (format res &quot;~{~5,3F ~}~%&quot; (sample-triangle))))
+
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_1.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<p>Notice that in the implementation I chose <span
+class="math inline">\(x\)</span> in the interval <span
+class="math inline">\(\[0,1\]\)</span> because if originally <span
+class="math inline">\(x\)</span> is in <span
+class="math inline">\(\[0,½\]\)</span> then <span
+class="math inline">\(2x\)</span> would be in <span
+class="math inline">\(\[0,1\]\)</span>.</p>
+<h2 id="anotherequidimensionalexample">Another equidimensional
+example</h2>
+<p>This time, I will take my region to be the unit ball in the
+3-dimensional space. I will use a modified version of the spherical
+coordinates: <span class="math display">\[ x =
+\rho\cos(2\pi\theta)\sin(\pi\varphi),
+\quad y = \rho\sin(2\pi\theta)\sin(\pi\varphi), \quad z =
+\rho\cos(\pi\varphi) \]</span> so that we can take <span
+class="math inline">\(\rho\in\[0,1\]\)</span>, <span
+class="math inline">\(\theta\in\[0,1\]\)</span> and <span
+class="math inline">\(\varphi\in\[0,1\]\)</span>. The Jacobian is <span
+class="math display">\[
+J(f) = \left\|\begin{matrix} \cos(2\pi\theta)\sin(\pi\varphi) &amp;
+\sin(2\pi\theta)\sin(\pi\varphi) &amp; \sin(\pi\varphi) \\
+-2\pi\rho\sin(2\pi\theta)\sin(\pi\varphi) &amp;
+2\pi\rho\cos(2\pi\theta)\sin(\pi\varphi) &amp; 0 \\
+\pi\rho\cos(2\pi\theta)\cos(\pi\varphi) &amp;
+\pi\rho\cos(2\pi\theta)\cos(\pi\varphi) &amp;
+-\pi\rho\sin(\pi\varphi) \end{matrix}\right\| =
+2\pi^2\rho^2\sin(\pi\varphi) \]</span> Then <span
+class="math display">\[ F(a,b,c) =
+2\pi^2\int_0^c\int_0^b\int_0^a \rho^2\sin(\pi\varphi)
+d\rho d\theta d\varphi = \frac{2\pi}{3} a^3 b (1-\cos(\pi c))
+\]</span> would generate random numbers between 0 and <span
+class="math inline">\(\frac{4\pi}{3}\)</span>, or equivalently <span
+class="math display">\[ G(a,b,c) = \frac{3}{2\pi}\cdot 2\pi^2
+\int_c^{½}\int_0^b\int_0^a \rho^2\sin(\pi\varphi) d\rho
+d\theta d\varphi = a^3 b \cos(\pi c) \]</span> is a random number
+between 0 and 1 for every <span class="math inline">\(a\in
+\[0,1\]\)</span>, <span class="math inline">\(b\in\[0,1\]\)</span> and
+<span class="math inline">\(c\in \[0,½\]\)</span>. Using a similar
+argument as the previous example, we get <span class="math display">\[ a
+= \sqrt\[3\]{x}. \quad b = y,\quad c =
+\frac{\arccos(z)}{\pi} \]</span> where <span
+class="math inline">\(x\)</span> and <span
+class="math inline">\(y\)</span> are uniformly random numbers in the
+unit interval, and <span class="math inline">\(z\)</span> is a uniformly
+chosen number in <span class="math inline">\(\[-1,1\]\)</span>.</p>
+<p>Here is an implementation</p>
+<pre><code>(defun sample-sphere ()
+   (let* ((rho (expt (random 1.0d0) (/ 3.0d0)))
+          (theta (random 1.0d0))
+          (phi (/ (acos (- (random 2.0d0) 1.0d0)) pi))
+          (x (* rho (cos (* 2 pi theta)) (sin (* pi phi))))
+          (y (* rho (sin (* 2 pi theta)) (sin (* pi phi))))
+          (z (* rho (cos (* pi phi)))))
+     (list x y z)))
+
+(with-open-file (res &quot;sampling-data3.csv&quot; 
+                     :direction :output 
+                     :if-exists :supersede)
+    (loop repeat 1200 do
+          (format res &quot;~{~5,3F ~}~%&quot; (sample-sphere))))
+
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_2.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<h2 id="whathappensiftheregionhasstrictlysmallerdimension">What happens
+if the region has strictly smaller dimension?</h2>
+<p>Say you’d like to sample points from a surface in the 3-dimensional
+space because you’d like to approximate it with a collection of
+triangles of approximately same size. How would you go about uniformly
+sample points? I will demonstrate this over the standard simplex <span
+class="math display">\[
+x+y+z=1 \quad\text{ with }\quad x,y,z\geq 0 \]</span> in the
+3-dimensional space. I will consider the following parametrization <span
+class="math display">\[
+(x,y,z) = f(a,b) = (ab,b-ab,1-b) \]</span> where both <span
+class="math inline">\(s\)</span> and <span
+class="math inline">\(t\)</span> are numbers in the unit interval. The
+surface element of the parametrization is <span class="math display">\[
+\left\|\begin{matrix} \mathbf{i} &amp; \mathbf{j} &amp;
+\mathbf{k}\\ b &amp; -b &amp; 0 \\ a &amp; 1-a &amp; -1
+\end{matrix}\right\|
+da\,db = \|b\mathbf{i} + b\mathbf{j} + b\mathbf{k}\| da\, db=
+b\sqrt{3}da\, db \]</span> Then we get <span class="math display">\[
+F(u,v) = \int_0^u\int_0^v
+b\sqrt{3}da\,db = \frac{\sqrt{3}}{2} u^2 v \]</span> From this equality
+we see that <span class="math inline">\(v\)</span> must come from a
+uniformly random varible in the unit interval while <span
+class="math inline">\(u = \sqrt{x}\)</span> where <span
+class="math inline">\(x\)</span> is a uniformly random variable again in
+the unit interval.</p>
+<pre><code>(defun sample-simplex ()
+   (let ((u (sqrt (random 1.0d0)))
+         (v (random 1.0d0)))
+      (list (* u v) (- u (* u v)) (- 1.0d0 u))))
+
+(with-open-file (res &quot;sampling-data4.csv&quot; 
+                     :direction :output 
+                     :if-exists :supersede)
+    (loop repeat 400 do
+             (format res &quot;~{~5,3F ~}~%&quot; (sample-simplex))))
+
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_3.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+For the next example, I will choose the torus <span
+class="math display">\[ (x,y,z) =
+f(\theta,\phi) =
+((a+b\cos(\theta))\sin(\phi),(a+b\cos(\theta))\cos(\phi),b\sin(\theta))
+\]</span> where <span class="math inline">\(\theta\in\[0,2\pi)\)</span>
+and <span class="math inline">\(\phi\in \[0,\pi\]\)</span>. The jacobian
+is
+<p>Then <span class="math display">\[
+\int_0^u\int_0^v J(f)d\theta\,d\phi\
+= \int_0^u b\, d\phi\,\int_0^v (a + b\sin(v))d\theta = bu(av -
+b\cos(v) + b) \]</span> assuming <span class="math inline">\(a \pi + 2b
+&lt; 2 a \pi\)</span> which is equivalent to <span
+class="math inline">\(2b &lt; a \pi\)</span> or <span
+class="math inline">\(\displaystyle\frac{2}{\pi} &lt;
+\frac{a}{b}\)</span>. This equality allows us to conclude that <span
+class="math inline">\(u\)</span> must be a uniform random variable and
+<span class="math inline">\(g(v) = av + b - b\cos(v)\)</span> must be
+another uniform random variable. Now, we have an obvious problem of
+inverting the function <span class="math inline">\(g(v)\)</span>. If we
+choose <span class="math inline">\(a\)</span> sufficiently larger than
+<span class="math inline">\(b\)</span> then this function is close to
+<span class="math inline">\(h(v) = av\)</span>. For example for <span
+class="math inline">\(a=6.0\)</span> and <span
+class="math inline">\(b=1.0\)</span> we get the following graph for
+<span class="math inline">\(g(v)\)</span></p>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_4.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<p>which isn’t much different than <span
+class="math inline">\(h(v)=6v\)</span>. This means, <span
+class="math inline">\(\theta\)</span> although obeys a different
+probability distribution than the uniform distribution, is not that much
+different. So, using this simplification we get:</p>
+<pre><code>(defun sample-torus (a b)
+   (let* ((theta (random (* 2.0d0 pi)))
+          (phi   (random (* 2.0d0 pi)))
+          (rho   (+ a (* b (cos theta))))
+          (x     (* rho (sin phi)))
+          (y     (* rho (cos phi)))
+          (z     (* b (sin theta))))
+      (list x y z)))
+
+(with-open-file (res &quot;sampling-data6.csv&quot; 
+                     :direction :output 
+                     :if-exists :supersede)
+    (loop repeat 1600 do
+             (format res &quot;~{~5,3F ~}~%&quot; (sample-torus 6.0 1.0))))
+
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_5.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<p>This is an approximation, of course. If we choose <span
+class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span> closer, say <span
+class="math inline">\(a=1.2\)</span> and <span
+class="math inline">\(b=1.0\)</span> the situation will look much
+different (notice the condensation on the inner walls):</p>
+<pre><code>(with-open-file (res &quot;sampling-data7.csv&quot; 
+                     :direction :output 
+                     :if-exists :supersede)
+    (loop repeat 1600 do
+             (format res &quot;~{~5,3F ~}~%&quot; (sample-torus 1.2 1.0))))
+
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-09-04-uniform_sampling_from_parametrized_submanifolds_6.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<h2 id="endnote">End note</h2>
+<p>Theoretically speaking, the result seems to be straight-forward: you
+must have a parametrized (over the unit cube) manifold embedded in <span
+class="math inline">\(\mathbb{R}^n\)</span>. Get the Jacobian, integrate
+it over any sub-cube and the resulting number must be a product of (as
+many as the dimension of the parametrized manifold) uniform random
+variables. If we are lucky, the result separates: that is the result is
+a product of separate functions one for each dimension. If we are
+extremely lucky, each of these functions is easily invertible [<a
+href="#fn:footnote" id="fnref:footnote" class="footnote">1</a>] then we
+can apply the inverse functions to a sequence of uniformly random
+variables to obtain a distribution on the unit cube so that we get a
+uniformly distributed random points on our submanifold.</p>
+<p>There is something missing in the argument above: I should really
+test that the points I get are truly uniformly random. That will be the
+subject matter of another post.</p>
+<div class="footnotes">
+<hr />
+<ol type="1">
+<li><div id="fn:footnote">
+<p>The fact that the functions are invertible is guaranteed because each
+of these functions must have positive derivative. The issue is that if
+the function is a function whose inverse is easily calculable. Remember
+what I had to do with the torus example above.<a href="#fnref:footnote"
+class="reversefootnote"> ↩︎</a></p>
+</div></li>
+</ol>
+</div>
+<div id="footer">
+<p><span id="timestamp">September 4th, 2013 5:05am</span></p>
+</div>
+</body>
+</html>

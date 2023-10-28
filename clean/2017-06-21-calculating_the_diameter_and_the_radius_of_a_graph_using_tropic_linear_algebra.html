@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-06-21-calculating_the_diameter_and_the_radius_of_a_graph_using_tropic_linear_algebra</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="calculating-the-diameter-and-the-radius-of-a-graph-using-tropic-linear-algebra">Calculating
+the Diameter and the Radius of a Graph Using Tropic Linear Algebra</h1>
+<h2 id="description-of-the-problem">Description of the problem: </h2>
+<p>There is a well-defined notion of distance on a connected graph:</p>
+<p>Given two vertices x and y on a graph, the distance between x and y
+is the length of the shortest path between x and y.</p>
+<p>Then we define the eccentricity of a vertex x as the maximum of all
+possible distances from x</p>
+<p><span class="math display">\[ Ecc(x)=max_{y\in V}d(x,y) \]</span></p>
+<p>Then the diameter and radius of the graph is defined as </p>
+<p><span class="math display">\[ Diam(G) = max_{x\in V} Ecc(x) =
+max_{x,y\in V} d(x,y) \]</span></p>
+<p>and</p>
+<p><span class="math display">\[ Rad(G) = min_{x\in V} Ecc(x) =
+min_{x\in V} max_{y\in V}
+d(x,y) \]</span></p>
+<p>Today’s post is a amalgamation of my two previous posts: <a
+href="2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited.html">one
+on eccentricity, radius and diameter of a graph</a> and <a
+href="2015-07-22-cheapest_paths_via_tropic_matrices.html">one on
+shortest path on a graph using tropic linear algebra</a>. Recall from
+that post, in tropic linear algebra one replaces multiplication of
+scalars with addition, and addition of scalars with minimum. So, today’s
+question is</p>
+<blockquote>
+<p>How do we find the eccentricity of a vertex in a graph using tropic
+linear algebra?</p>
+</blockquote>
+<h2 id="tropic-multiplication-of-matrices">Tropic multiplication of
+matrices</h2>
+<p>Given two matrices of the correct dimensions, say <span
+class="math inline">\(a=(a_{ij})\)</span> and <span
+class="math inline">\(b=(b_{ij})\)</span>, their tropic product is
+computed as </p>
+<p><span class="math display">\[ c_{ij}=min_{k=1,...,N} a_{ik}+b_{kj}
+\]</span></p>
+<h2 id="adjacency-matrix-of-a-graph">Adjacency matrix of a graph</h2>
+<p>Given a graph G=(V,E) where |V|=n, one can represent G using an n×n
+matrix <span class="math inline">\(a=(a_{ij})\)</span> as follows: for
+every vertex i,j=1,…,n, if there is an edge between i and j then set the
+<span class="math inline">\(a_{ij}=a_{ji}=1\)</span>, and set it +∞ if
+there is no such an edge. Loops (self connecting edges) have weight
+0.</p>
+<h2 id="the-tropic-powers-of-the-adjacency-matrix">The tropic powers of
+the adjacency matrix</h2>
+<p>If we multiply the adjacency matrix <span
+class="math inline">\(a\)</span> with itself tropically, we find the
+price of length 2 paths between vertices. Here the price of each edge is
+1. If we multiply <span class="math inline">\(a\)</span> with itself
+(n−1) times we would find the length of the cheapest path between any
+two vertices. This is an easy application of the <a
+href="https://en.wikipedia.org/wiki/Pigeonhole_principle">pigeon hole
+principle</a>: the longest path one can write without loops or cycles
+can be of length n−1 in a graph with n vertices.</p>
+<p>So, maximum of each colon in the (n−1)-st tropic power of <span
+class="math inline">\(a\)</span> will give us the eccentricity of the
+corresponding vertex.</p>
+<h2 id="an-implementation-in-common-lisp">An implementation in Common
+Lisp</h2>
+<p>First, I am going to need a function that converts a graph given as a
+list of edges to an adjacency matrix:</p>
+<pre><code>(defun vertices (G)
+   (remove-duplicates (sort (reduce #&#39;append G) #&#39;&lt;)))
+   
+(defun adjacency-matrix (G)
+   (let* ((n (1+ (reduce #&#39;max (vertices G))))
+          (a (make-array (list n n) :initial-element SB-EXT:SINGLE-FLOAT-POSITIVE-INFINITY)))
+      (dolist (edge G)
+          (setf (aref a (car edge) (cadr edge)) 1)
+          (setf (aref a (cadr edge) (car edge)) 1))
+      (dotimes (i n a)
+          (setf (aref a i i) 0))))
+
+VERTICES
+ADJACENCY-MATRIX</code></pre>
+<p>Now, here is the code for the tropic product of two matrices.</p>
+<pre><code>(defun tropic-mm (xs ys)
+  (let* ((n (array-dimension xs 1))
+         (m (array-dimension ys 1))
+         (k (array-dimension ys 0))
+         (r (make-array (list n m) :initial-element 0)))
+     (dotimes (i n r)
+        (dotimes (j m)
+           (setf (aref r i j)
+                 (loop for ell from 0 below k minimizing
+                     (+ (aref xs i ell) (aref ys ell j))))))))
+
+TROPIC-MM</code></pre>
+<p>As for taking powers, we are going to need</p>
+<pre><code>(defun tropic-pow (xs n &amp;optional carry)
+   (cond ((= n 1) (reduce #&#39;tropic-mm (cons xs carry)))
+         ((evenp n) (tropic-pow (tropic-mm xs xs) (/ n 2) carry))
+         (t (tropic-pow (tropic-mm xs xs) (floor n 2) (cons xs carry)))))
+
+TROPIC-POW</code></pre>
+<p>The function below returns the eccentricities of vertices as a
+list:</p>
+<pre><code>(defun eccentricities (G)
+   (let* ((A (adjacency-matrix G))
+          (n (array-dimension A 0))
+          (result (tropic-pow A (1- n))))
+      (loop for i from 0 below n collect
+          (loop for j from 0 below n maximizing
+              (aref result i j)))))
+
+ECCENTRICITIES</code></pre>
+<p>The radius and the diameter then are given by the following
+function:</p>
+<pre><code>(defun diam-rad (G)
+  (let ((r (eccentricities G)))
+     (cons (reduce #&#39;max r) (reduce #&#39;min r))))
+
+DIAM-RAD</code></pre>
+<p>Let us test it on a random graph</p>
+<pre><code>(defun random-graph (n m k)
+    (remove-if
+     (lambda (x) (= (car x) (cadr x)))
+     (remove-duplicates 
+      (mapcar (lambda (x) (sort x #&#39;&lt;))
+                  (loop repeat (floor m k) append
+                      (loop repeat k collect
+                          (list (random n) (+ (random n) k)))))
+      :test #&#39;equal)))
+  
+(defvar G (random-graph 12 45 5))
+
+RANDOM-GRAPH
+G</code></pre>
+<figure class="tmblr-full" data-orig-width="840" data-orig-height="468">
+<img src="../media/2017-06-21-calculating_the_diameter_and_the_radius_of_a_graph_using_tropic_linear_algebra_0.png" data-orig-width="840"
+data-orig-height="468" alt="image" />
+</figure>
+<p>Here are the eccentricities, the diameter and the radius:</p>
+<pre><code>(mapcar #&#39;cons (vertices G) (eccentricities G))
+
+(diam-rad G)
+
+((0 . 4) (1 . 3) (2 . 4) (3 . 3) (4 . 4) (5 . 2) (6 . 2) (7 . 3) (8 . 3)
+ (9 . 3) (10 . 3) (11 . 3) (12 . 3) (13 . 4) (14 . 3) (15 . 4) (16 . 3))
+(4 . 2)</code></pre>
+<div id="footer">
+<p><span id="timestamp">June 21st, 2017 7:43pm</span></p>
+</div>
+</body>
+</html>

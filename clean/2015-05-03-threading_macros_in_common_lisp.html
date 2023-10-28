@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-05-03-threading_macros_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="threading-macros-in-common-lisp">Threading Macros in Common
+Lisp</h1>
+<p>I have been doing some <a href="http://clojure.org">clojure</a>
+programming for a <a
+href="http://web.bahcesehir.edu.tr/atabey_kaygun/Lectures">series of
+lectures</a> for some of my students introducing them clojure, lisps and
+functional programming in general. One of things I was explaining was
+the thread macros <code>-&gt;</code> and <code>-&gt;&gt;</code>.  I
+thought it might be good idea to implement them in Common Lisp. So, here
+it goes:<br />
+</p>
+<h2 id="implementation">Implementation</h2>
+<p>There really isn’t much to talk about the code. So, I am going to
+give it here. First, the thread-last macro <code>-&gt;&gt;</code> which
+was easier to implement.</p>
+<pre><code>(defmacro -&gt;&gt; (x &amp;rest forms)
+   (dolist (f forms x)
+      (setf x 
+            (if (listp f)
+               (append f (list x))
+               (list f x)))))
+-&gt;&gt;</code></pre>
+<p>(* I slightly refactored the macros using a suggestion from <a
+href="https://twitter.com/simendiferlerin">@simendiferlerin</a>.)<br />
+</p>
+<p>And here is a test:</p>
+<pre><code>(-&gt;&gt; &#39;(1 3) (append &#39;(4 3 -1)) (mapcar (lambda (x) (* x x))))
+(16 9 1 1 9)</code></pre>
+<p>This macro takes a form <code>x</code> and list of partially
+evaluated forms <code>f1</code>, <code>f2</code>, … , <code>fj</code> as
+an argument. It recursively goes over the list as follows:</p>
+<ul>
+<li>If the form <code>f</code> is the name of a function evaluates
+<code>(f x)</code></li>
+<li>If the form <code>f</code> is a list of expression then appends
+<code>x</code> to <code>f</code> and evaluates the new form</li>
+</ul>
+<p>In either case, the result is fed into the next step as an input.</p>
+<p>Now, the thread-first macro <code>-&gt;</code> which was a little
+more complicated.</p>
+<pre><code>(defmacro -&gt; (x &amp;rest forms)
+   (dolist (f forms x)
+      (setf x
+            (if (listp f)
+               (append (list (car f) x) (cdr f))
+               (list f x)))))
+-&gt;</code></pre>
+<p>It is similar to <code>-&gt;</code>. But this time if <code>f</code>
+is a list, the input is inserted into <code>f</code> as the second item
+right after its <code>car</code> then evaluated.</p>
+<p>And another test:</p>
+<pre><code>(-&gt; 2 (cons &#39;(-2 -1 0)) (append &#39;(-10 -20)))
+(2 -2 -1 0 -10 -20)</code></pre>
+<div id="footer">
+<p><span id="timestamp">May 3rd, 2015 2:48pm</span></p>
+</div>
+</body>
+</html>

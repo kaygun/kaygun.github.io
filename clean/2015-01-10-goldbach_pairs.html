@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-01-10-goldbach_pairs</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="goldbach-pairs">Goldbach Pairs</h1>
+<h2 id="description">Description of the Problem</h2>
+<p>The famous <a
+href="http://en.wikipedia.org/wiki/Goldbach%27s_conjecture">Goldbach
+Conjecture</a> states that every even integer is a sum of two odd
+primes. Today, I will write a small program to split an even number into
+a sum of two odd primes. The conjecture states that this function I am
+about to define <strong>always</strong> returns a non-trivial pair of
+primes splitting the given even integer.</p>
+<h2 id="code">Code</h2>
+<p>First a simple function to test whether a given number is prime:</p>
+<pre><code>(defun primep (n)
+   (if (oddp n)
+       (let ((m (floor (sqrt n))))
+          (do ((i 3 (+ i 2)))
+              ((or (&gt; i m) (zerop (mod n i)))
+               (and (&gt; i m) n))))))
+PRIMEP</code></pre>
+<p>The function will return <code>nil</code> if the number is composite,
+otherwise returns the number <code>n</code> which is prime.</p>
+<p>Next, I have a function which will return the first prime number
+coming after a given integer.</p>
+<pre><code>(defun next-prime (n)
+   (cond ((&lt; n 2) 2)
+         ((= n 2) 3)
+         (t (let ((m (if (evenp n) (1+ n) (+ n 2))))
+               (or (primep m)
+                   (next-prime m))))))
+NEXT-PRIME</code></pre>
+<p>Now, a function which returns the first Goldbach pair</p>
+<pre><code>(defun goldbach-pair (n)
+   (if (evenp n)
+      (do ((i 3 (next-prime i)))
+          ((primep (- n i)) (list i (- n i))))))
+GOLDBACH-PAIR</code></pre>
+<p>Let us test:</p>
+<pre><code>(goldbach-pair (expt 2 40))
+(167 1099511627609)</code></pre>
+<p>Finally, a function which returns <em>all</em> Goldbach pairs:</p>
+<pre><code>(defun all-goldbach-pairs (n)
+   (if (evenp n)
+       (let ((m (/ n 2))
+             (res nil))
+          (do ((i 3 (next-prime i)))
+              ((&gt; i m) (reverse res))
+              (if (primep (- n i))
+                  (push (list i (- n i)) res))))))
+ALL-GOLDBACH-PAIRS</code></pre>
+<p>And its test</p>
+<pre><code>(all-goldbach-pairs (expt 2 10))
+((3 1021) (5 1019) (11 1013) (41 983) (47 977) (53 971) (71 953) (83 941)
+ (113 911) (137 887) (167 857) (197 827) (227 797) (251 773) (263 761)
+ (281 743) (347 677) (383 641) (431 593) (461 563) (467 557) (503 521))</code></pre>
+<div id="footer">
+<p><span id="timestamp">January 10th, 2015 6:25am</span></p>
+</div>
+</body>
+</html>

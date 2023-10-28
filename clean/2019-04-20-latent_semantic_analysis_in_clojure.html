@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2019-04-20-latent_semantic_analysis_in_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="latent-semantic-analysis-in-clojure">Latent Semantic Analysis in
+Clojure</h1>
+<p><a
+href="https://en.wikipedia.org/wiki/Latent_semantic_analysis">Latent
+Semantic Analysis</a> (LSA) is a very neat application of <a
+href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular
+Value Decomposition</a> (SVD) in <a
+href="https://en.wikipedia.org/wiki/Natural_language_processing">Natural
+Language Processing</a> (NLP).</p>
+<p>Let us start with declaring a namespace and importing stuff we
+need.</p>
+<pre><code>(ns lda
+  (:import opennlp.tools.sentdetect.SentenceDetector
+           opennlp.tools.sentdetect.SentenceDetectorME
+           opennlp.tools.sentdetect.SentenceModel
+           opennlp.tools.stemmer.PorterStemmer
+           java.io.File)
+  (:require [clojure.string :as st]
+            [clatrix.core :as cc]))</code></pre>
+<p>If you are running this at home, put a <code>deps.edn</code> file in
+the directory you are going to run this and put the following inside the
+file:</p>
+<pre><code>{:deps {org.apache.opennlp/opennlp-tools {:mvn/version &quot;1.9.1&quot;}
+        clatrix {:mvn/version &quot;0.5.0&quot;}}}</code></pre>
+<p>In order to do what I need to do, I am going to need a sentence
+detector which needs a pre-trained sentence model. You can find sentence
+models needed at <a
+href="http://opennlp.sourceforge.net/models-1.5/">OpenNLP’s
+website</a>.</p>
+<pre><code>(def detector (SentenceDetectorME. (SentenceModel. (File. &quot;resources/en-sent.bin&quot;))))</code></pre>
+<p>A sentence detector extracts a sentence from a given text. This is
+not a trivial task. Consider the following example:</p>
+<pre><code>(def example-text &quot;This is a sentence with acronyms such as I.B.M. that can be used in combination with things like Mr. Smith, M.D. and Mrs. Smith, Ph.D.  And this is another sentence.&quot;)
+
+(into [] (.sentDetect detector example-text))
+
+#&#39;lda/example-text
+[&quot;This is a sentence with acronyms such as I.B.M. that can be used in combination with things like Mr. Smith, M.D. and Mrs. Smith, Ph.D.&quot; &quot;And this is another sentence.&quot;]</code></pre>
+<p>Next, I need a <a
+href="https://en.wikipedia.org/wiki/Stemming">stemmer</a>. A stemmer is
+a language specific tool that reduces a word to its root. OpenNLP has
+several stemmers for the English language. One of the simplest ones is
+the <a href="https://tartarus.org/martin/PorterStemmer/">Porter
+Stemmer</a>.</p>
+<pre><code>(def stemmer (PorterStemmer.))
+   (-&gt;&gt; [&quot;triangulation&quot; &quot;contributing&quot; &quot;terminated&quot; &quot;trees&quot; &quot;deliciousness&quot;]
+        (map #(.stem stemmer %))
+        (into []))
+
+#&#39;lda/stemmer
+[&quot;triangul&quot; &quot;contribut&quot; &quot;termin&quot; &quot;tree&quot; &quot;delici&quot;]</code></pre>
+<p>We are going to represent sentences as <a
+href="https://en.wikipedia.org/wiki/Bag-of-words_model">bags of
+words</a>. In this representation, we disregard the word order and
+consider a sentence just an unordered collection of words appearing in
+that sentence. Let us write a function for that</p>
+<pre><code>(defn bag-of-words [sentence stemmer stop-words]
+   {sentence (as-&gt; sentence $
+                   (st/lower-case $)
+                   (st/replace $ #&quot;[^\s\p{Isletter}]&quot; &quot;&quot;)
+                   (st/split $ #&quot;\s+&quot;)
+                   (filter #(not (stop-words %)) $)
+                   (map #(.stem stemmer %) $)
+                   (into #{} $))})
+
+#&#39;lda/bag-of-words</code></pre>
+<p>The function takes a sentence, a stemmer and a collection of <a
+href="https://en.wikipedia.org/wiki/Stop_words">stop-words</a> and
+returns a bag-of-words representation of the sentence. A stop word is a
+word that appears so frequently in a text that it loses any significance
+for the overall structure of a text. I am going to need a collection of
+stop words which I already collected for an earlier project:</p>
+<pre><code>(def stop-words
+     (as-&gt; (slurp &quot;resources/remove-en&quot;) $
+           (st/replace $ #&quot;\p{IsPunctuation}&quot; &quot;&quot;)
+           (st/split $ #&quot;\s+&quot;)
+           (into #{} $)))
+stop-words
+
+#&#39;lda/stop-words
+#{&quot;else&quot; &quot;itself&quot; &quot;us&quot; &quot;more&quot; &quot;hers&quot; &quot;since&quot; &quot;isnt&quot; &quot;im&quot; &quot;got&quot; &quot;his&quot; &quot;him&quot; &quot;couldnt&quot; &quot;hadnt&quot; &quot;thing&quot; &quot;none&quot; &quot;are&quot; &quot;ive&quot; &quot;very&quot; &quot;under&quot; &quot;who&quot; &quot;which&quot; &quot;ones&quot; &quot;of&quot; &quot;this&quot; &quot;after&quot; &quot;once&quot; &quot;up&quot; &quot;off&quot; &quot;she&quot; &quot;among&quot; &quot;nor&quot; &quot;three&quot; &quot;youll&quot; &quot;two&quot; &quot;etc&quot; &quot;yours&quot; &quot;not&quot; &quot;hes&quot; &quot;every&quot; &quot;it&quot; &quot;over&quot; &quot;wouldnt&quot; &quot;however&quot; &quot;cant&quot; &quot;also&quot; &quot;by&quot; &quot;something&quot; &quot;is&quot; &quot;although&quot; &quot;why&quot; &quot;onto&quot; &quot;ever&quot; &quot;about&quot; &quot;they&quot; &quot;you&quot; &quot;thus&quot; &quot;without&quot; &quot;its&quot; &quot;than&quot; &quot;those&quot; &quot;where&quot; &quot;id&quot; &quot;just&quot; &quot;for&quot; &quot;should&quot; &quot;theres&quot; &quot;cannot&quot; &quot;my&quot; &quot;again&quot; &quot;yes&quot; &quot;whom&quot; &quot;because&quot; &quot;any&quot; &quot;most&quot; &quot;hed&quot; &quot;whether&quot; &quot;can&quot; &quot;were&quot; &quot;shell&quot; &quot;did&quot; &quot;was&quot; &quot;that&quot; &quot;if&quot; &quot;let&quot; &quot;both&quot; &quot;another&quot; &quot;always&quot; &quot;youve&quot; &quot;had&quot; &quot;must&quot; &quot;what&quot; &quot;oh&quot; &quot;an&quot; &quot;nothing&quot; &quot;even&quot; &quot;or&quot; &quot;youre&quot; &quot;have&quot; &quot;am&quot; &quot;their&quot; &quot;a&quot; &quot;so&quot; &quot;them&quot; &quot;didnt&quot; &quot;upon&quot; &quot;never&quot; &quot;many&quot; &quot;almost&quot; &quot;on&quot; &quot;but&quot; &quot;when&quot; &quot;until&quot; &quot;anything&quot; &quot;be&quot; &quot;hasnt&quot; &quot;out&quot; &quot;and&quot; &quot;whod&quot; &quot;do&quot; &quot;myself&quot; &quot;i&quot; &quot;shes&quot; &quot;here&quot; &quot;too&quot; &quot;one&quot; &quot;might&quot; &quot;between&quot; &quot;such&quot; &quot;youd&quot; &quot;how&quot; &quot;other&quot; &quot;from&quot; &quot;would&quot; &quot;wasnt&quot; &quot;these&quot; &quot;while&quot; &quot;no&quot; &quot;with&quot; &quot;around&quot; &quot;now&quot; &quot;some&quot; &quot;will&quot; &quot;himself&quot; &quot;all&quot; &quot;then&quot; &quot;could&quot; &quot;through&quot; &quot;has&quot; &quot;thats&quot; &quot;much&quot; &quot;being&quot; &quot;our&quot; &quot;dont&quot; &quot;shall&quot; &quot;before&quot; &quot;only&quot; &quot;your&quot; &quot;yet&quot; &quot;to&quot; &quot;into&quot; &quot;unless&quot; &quot;get&quot; &quot;may&quot; &quot;we&quot; &quot;as&quot; &quot;he&quot; &quot;me&quot; &quot;at&quot; &quot;the&quot; &quot;though&quot; &quot;theyre&quot; &quot;her&quot; &quot;theyd&quot; &quot;been&quot; &quot;there&quot; &quot;in&quot; &quot;shed&quot;}</code></pre>
+<p>Let us test our <code>bag-of-words</code> function:</p>
+<pre><code>(into {} (mapcat #(bag-of-words % stemmer stop-words) (into [] (.sentDetect detector example-text))))
+
+{&quot;This is a sentence with acronyms such as I.B.M. that can be used in combination with things like Mr. Smith, M.D. and Mrs. Smith, Ph.D.&quot; #{&quot;us&quot; &quot;thing&quot; &quot;smith&quot; &quot;md&quot; &quot;like&quot; &quot;acronym&quot; &quot;phd&quot; &quot;sentenc&quot; &quot;ibm&quot; &quot;mr&quot; &quot;combin&quot;}, &quot;And this is another sentence.&quot; #{&quot;sentenc&quot;}}</code></pre>
+<p>Now that we have bag-of-words representation, next we need to
+construct a matrix from a text. The columns of the matrix are going to
+be labeled with the sentences appearing in the text while the rows are
+labeled with the words appearing in the sentence. The entries are going
+to be either 0 or 1. For a (word, sentence) pair, the corresponding
+entry in the matrix is 1 if the word appears in the sentence, and 0
+otherwise. The interesting thing about this matrix <span
+class="math inline">\(A\)</span> is the following: If we look at <span
+class="math inline">\(A^t A\)</span> we get a matrix whose rows and
+columns are labeled with sentences appearing in our text. Each entry
+labeled with a pair <span
+class="math inline">\((sentence_1,sentence_2)\)</span> counts the number
+of words common to both sentences. On the other hand, <span
+class="math inline">\(A A^t\)</span> is another matrix whose rows and
+columns are labeled with words and each entry labeled with a pair <span
+class="math inline">\((word_1,word_2)\)</span> count the number of
+sentences that these words appeared together.</p>
+<p>In the next step we use <a
+href="https://en.wikipedia.org/wiki/Singular_value_decomposition">SVD</a>
+to decompose the matrix as a product <span class="math display">\[ A =
+U\Sigma V^t \]</span> where <span class="math inline">\(\Sigma\)</span>
+is a diagonal matrix consisting of singular values of <span
+class="math inline">\(A\)</span>. Then the largest singular value
+corresponds to the dominant topic of the document. From the point of
+view of LDA, a topic is a probability distribution over the set of
+words. So, we take the first column of the singular matrix as this
+probability distribution below:</p>
+<pre><code>(defn score [text detector stemmer stop-words]
+   (let [ss (into [] (.sentDetect detector text))
+         raw (into {} (mapcat #(bag-of-words % stemmer stop-words) ss))
+         ws (-&gt;&gt; (vals raw) (reduce concat) (into #{}) (into []))
+         n (count ss)
+         m (count ws)
+         A (cc/zeros m n)]
+      (doseq [i (range n)]
+         (doseq [w (get raw (nth ss i))]
+            (cc/set A (.indexOf ws w) i 1)))
+      (let [topic (-&gt; A cc/svd :left cc/cols first cc/t)]
+         (map (fn [s v] {:sentence s :position (.indexOf ss s) :value (Math/abs (cc/dot v topic))}) ss (cc/cols A)))))
+
+#&#39;lda/score</code></pre>
+<p>Let us test:</p>
+<pre><code>(def test-text (slurp &quot;data/textc&quot;))
+(def res (score test-text detector stemmer stop-words))
+
+#&#39;lda/test-text
+#&#39;lda/res</code></pre>
+<p>Here is a summary. For this one, I am displaying all those sentences
+whose weights are greater than or equal to 2.2. One has to determine the
+filter parameter heuristically for the text at hand.</p>
+<blockquote>
+<p>The Obama administration has backed down in its bitter dispute with
+Silicon Valley over the encryption of data on iPhones and other digital
+devices, concluding that it is not possible to give American law
+enforcement and intelligence agencies access to that information without
+also creating an opening that China, Russia, cybercriminals and
+terrorists could exploit. With its decision, which angered the FBI and
+other law enforcement agencies, the administration essentially agreed
+with Apple, Google, Microsoft and a group of the nation’s top
+cryptographers and computer scientists that millions of Americans would
+be vulnerable to hacking if technology firms and smartphone
+manufacturers were required to provide the government with “back doors,”
+or access to their source code and encryption keys. In the paper,
+released in July, Mr Neumann and other top cryptographers and computer
+scientists argued that there was no way for the government to have a
+back door into encrypted communications without creating an opening that
+would be exploited by Chinese and Russian intelligence agents,
+cybercriminals and terrorist groups. Mr Obama and his aides had come to
+fear that the United States could set a precedent that China and other
+nations would emulate, requiring Apple, Google and the rest of America’s
+technology giants to provide them with the same access, officials said. 
+According to government officials and industry executives, Mr Cook told
+Mr Obama that the Chinese were waiting for an opportunity to seize on
+administration action to insist that Apple devices, which are also
+encrypted in China, be open to Beijing’s agents.</p>
+</blockquote>
+<p>and here is the full text:</p>
+<blockquote>
+<p>The Obama administration has backed down in its bitter dispute with
+Silicon Valley over the encryption of data on iPhones and other digital
+devices, concluding that it is not possible to give American law
+enforcement and intelligence agencies access to that information without
+also creating an opening that China, Russia, cybercriminals and
+terrorists could exploit.</p>
+<p>With its decision, which angered the FBI and other law enforcement
+agencies, the administration essentially agreed with Apple, Google,
+Microsoft and a group of the nation’s top cryptographers and computer
+scientists that millions of Americans would be vulnerable to hacking if
+technology firms and smartphone manufacturers were required to provide
+the government with “back doors,” or access to their source code and
+encryption keys.</p>
+<p>Companies like Apple say they are protecting their customers’
+information by resisting government demands for access to text messages.
+A standoff has grown between the sides as the companies have embraced
+tougher encryption. Peter G Neumann, a computer security pioneer, says
+“there are more vulnerabilities than ever. Security experts like Richard
+A. Clarke, the former White House counterterrorism czar, also signed the
+letter to Obama. That would enable the government to see messages,
+photographs and other data now routinely encrypted on smartphones.
+Current technology puts the keys for access to the information in the
+hands of the individual user, not the companies.</p>
+<p>The first indication of the retreat came on Thursday, when the FBI
+director, James B Comey, told the Senate Homeland Security and
+Governmental Affairs Committee that the administration would not seek
+legislation to compel the companies to create such a portal.</p>
+<p>But the decision, made at the White House a week ago, goes
+considerably beyond that.</p>
+<p>While the administration said it would continue to try to persuade
+companies like Apple and Google to assist in criminal and national
+security investigations, it determined that the government should not
+force them to breach the security of their products. In essence,
+investigators will have to hope they find other ways to get what they
+need, from data stored in the cloud in unencrypted form or transmitted
+over phone lines, which are covered by a law that affects
+telecommunications providers but not the technology giants.</p>
+<p>Mr Comey had expressed alarm a year ago after Apple introduced an
+operating system that encrypted virtually everything contained in an
+iPhone. What frustrated him was that Apple had designed the system to
+ensure that the company never held on to the keys, putting them entirely
+in the hands of users through the codes or fingerprints they use to get
+into their phones. As a result, if Apple is handed a court order for
+data — until recently, it received hundreds every year — it could not
+open the coded information.</p>
+<p>Mr Comey compared that system to the creation of a door no law
+officers could enter, or a car trunk they could not unlock. His concern
+about what the FBI calls the “going dark” problem received support from
+the director of the National Security Agency and other intelligence
+officials.</p>
+<p>But after a year of study and extensive White House debate, President
+Obama and his advisers have reached a broad conclusion that an effort to
+compel the companies to give the government access would fail, both
+politically and technologically.</p>
+<p>“This looks promising, but there’s still going to be tremendous
+pressure from law enforcement,” said Peter G Neumann, one of the
+nation’s leading computer scientists and a co-author of a paper that
+examined the government’s proposal for special access. “The N.S.A. is
+capable of dealing with the cryptography for now, but law enforcement is
+going to have real difficulty with this. This is never a done deal.”</p>
+<p>In the paper, released in July, Mr Neumann and other top
+cryptographers and computer scientists argued that there was no way for
+the government to have a back door into encrypted communications without
+creating an opening that would be exploited by Chinese and Russian
+intelligence agents, cybercriminals and terrorist groups.</p>
+<p>Inside the White House, the Office of Science and Technology Policy
+came largely to the same conclusion. Those determinations surprised the
+FBI and local law enforcement officials, who had believed just months
+ago that the White House would ultimately embrace their efforts.</p>
+<p>The intelligence agencies were less vocal, which may reflect their
+greater capability to search for and gather information. The National
+Security Agency spends vast sums to get around digital encryption, and
+it has tools and resources that local law enforcement officials still do
+not have and most likely never will.</p>
+<p>Disclosures by the former N.S.A. contractor Edward J. Snowden showed
+the extent of the agency’s focus on cracking and circumventing the
+encryption of digital communications, including those of Apple,
+Facebook, Google and Yahoo users.</p>
+<p>There were other motivations for the administration’s decision. Mr
+Obama and his aides had come to fear that the United States could set a
+precedent that China and other nations would emulate, requiring Apple,
+Google and the rest of America’s technology giants to provide them with
+the same access, officials said.</p>
+<p>Timothy D Cook, the chief executive of Apple, sat at the head table
+with Mr Obama and Xi Jinping, the Chinese president, at a state dinner
+at the White House last month. According to government officials and
+industry executives, Mr Cook told Mr Obama that the Chinese were waiting
+for an opportunity to seize on administration action to insist that
+Apple devices, which are also encrypted in China, be open to Beijing’s
+agents.</p>
+<p>In January, three months after Mr Comey began pressing companies for
+special government access, Chinese officials had threatened to do just
+that: They considered submitting foreign companies to invasive audits
+and requiring them to build back doors into their hardware and software.
+Those rules have not been put into effect.</p>
+<p>The Obama administration’s position was also undercut by officials’
+inability to keep their own data safe from Chinese hackers, as shown by
+the extensive cyberattack at the Office of Personnel Management
+discovered this year. That breach, and its aftermath, called into
+question whether the government could keep the keys to the world’s
+communications safe from its adversaries in cyberspace.</p>
+<p>White House officials said they would continue trying to persuade
+technology companies to help them in investigations, but they did not
+specify how.</p>
+<p>“As the president has said, the United States will work to ensure
+that malicious actors can be held to account, without weakening our
+commitment to strong encryption,” said Mark Stroh, a spokesman for the
+National Security Council. “As part of those efforts, we are actively
+engaged with private companies to ensure they understand the public
+safety and national security risks that result from malicious actors’
+use of their encrypted products and services. However, the
+administration is not seeking legislation at this time.”</p>
+<p>But here in Silicon Valley, executives did not think the government’s
+announcement went far enough.</p>
+<p>According to administration officials and technology executives, Mr
+Cook of Apple has pressed the White House for a clear statement that it
+will never seek a back door in any form, legislative or technical — a
+statement he hoped to take to Beijing, Moscow and even London. Prime
+Minister David Cameron of Britain has threatened to ban encrypted
+devices and services, like the iPhone and Facebook’s popular WhatsApp
+messaging service, but has done nothing so far to make good on that
+threat.</p>
+<p>Technology executives are determined to reassure customers abroad
+that American intelligence agencies are not reading their digital
+communications. It is an effort driven by economics: 64 percent of
+Apple’s revenue originates overseas.</p>
+<p>Apple, Google, Facebook and Microsoft argue that people put not only
+their conversations but their entire digital lives — medical records,
+tax returns, bank accounts — into a device that slips into their pocket.
+While Mr Obama has repeatedly said he is sympathetic to the concerns of
+law enforcement officials, he made clear during a visit to Silicon
+Valley in February that he was also aware of privacy concerns and that
+he sought to balance both interests.</p>
+<p>Technologists responded that, with regard to encryption, no such
+balance existed. “The real problem is, I don’t see any middle ground for
+dumbing down everything to make special access possible and having the
+secure systems we need for commerce, government and everything else,” Mr
+Neumann said.</p>
+</blockquote>
+<div id="footer">
+<p><span id="timestamp">April 20th, 2019 11:56am</span></p>
+</div>
+</body>
+</html>

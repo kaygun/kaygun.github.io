@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-12-12-dual_graphs</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="dual-graphs">Dual Graphs</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have a graph G=(V,E) where V is just a finite set of
+vertices and E is just a collection of (unordered) pairs of vertices we
+call edges. From this graph, we form a new graph G′ as follows: the set
+of vertices is the set E of edges of G. We put an edge between e and f
+if e and f share a common vertex in G. Today I am going to give you a
+lisp program which calculates the dual graph of a given graph.</p>
+<p>There is a notion of a <a
+href="http://mathworld.wolfram.com/DualGraph.html">dual graph of a
+planar graph</a> which is different than this dual.</p>
+<h2 id="implementation">Implementation</h2>
+<p>I have been using a list of pairs of vertices to denote graphs. I
+will continue to do so. So, given a graph G we will use a pair of nested
+loops over the list of edges to form the new graph.</p>
+<pre><code>(defun dual (G)
+   (let (res
+         (n (length G)))
+      (dotimes (i (1- n) res)
+         (dotimes (j (- n i 1))
+            (let ((e (nth i G))
+                  (f (nth (+ i j 1) G)))
+               (if (intersection e f)
+                  (push (list e f) res)))))))
+DUAL</code></pre>
+<p>Let us test. But before the test, I am going to need a random
+graph.</p>
+<pre><code>(defun random-graph (n m k)
+   (remove-duplicates 
+      (loop repeat m collect
+         (let* ((a (random n))
+                (b (+ (random k) a 1)))
+            (list a b)))
+      :test #&#39;equal))
+RANDOM-GRAPH
+(defvar G (random-graph 4 8 3))
+G</code></pre>
+<figure data-orig-width="203" data-orig-height="251">
+<img src="../media/2015-12-12-dual_graphs_0.png" data-orig-width="203"
+data-orig-height="251" alt="image" />
+</figure>
+<p>and our test:</p>
+<pre><code>(defvar H (dual G))
+H</code></pre>
+<figure class="tmblr-full" data-orig-width="416" data-orig-height="708">
+<img src="../media/2015-12-12-dual_graphs_1.png" data-orig-width="416"
+data-orig-height="708" alt="image" />
+</figure>
+<p>How about the double dual?</p>
+<figure class="tmblr-full" data-orig-width="1132" data-orig-height="1511">
+<img src="../media/2015-12-12-dual_graphs_2.png" data-orig-width="1132"
+data-orig-height="1511" alt="image" />
+</figure>
+<p>As you can notice, this is not the original graph. The problem arises
+because in the double dual, vertices are duplicated. The number of
+duplicates in the double dual is exactly as many as the degree of that
+particular vertex.</p>
+<div id="footer">
+<p><span id="timestamp">December 12th, 2015 5:37pm</span></p>
+</div>
+</body>
+</html>

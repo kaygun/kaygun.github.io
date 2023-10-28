@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2021-02-18-listing_all_paths_in_a_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="listing-all-paths-in-a-graph">Listing All Paths in a Graph</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have an undirected graph given as a hash-map of vertices vs
+the set of their neighbors. Today I am going to describe an algorithm
+and a <a href="https://clojure.org">clojure</a> implementation that
+lists all paths between any two vertices.</p>
+<h2 id="an-algorithm">An algorithm</h2>
+<p>This is a variation of <a
+href="https://en.wikipedia.org/wiki/Breadth-first_search">breath first
+search</a>.</p>
+<pre><code>Function AllPaths
+Input: A graph G as a hash-map of vertices and their neighbors.
+       A pair of vertices a and b.
+       A set P of already constructed paths.
+Output: The set of all paths between a and b in G.
+
+Begin
+  If G is empty then
+     Return the empty set
+  End If
+
+  Let Q be the empty set
+  For each alpha in P do
+      Adjoin a to alpha and add newly constructed path to Q
+  End For 
+
+  If a = b then
+     Return Q
+  Else 
+     Let H be the graph from which all edges
+         incident to a is removed
+     Let R be the empty set
+     For each neighbor x of a in G do
+         Add AllPaths(H,x,b,Q) to R
+     End For
+     Return R
+  End If
+End</code></pre>
+<p>The worst case complexity of the algorithm is O(d^D) where d is the
+maximum degree within G and D is the diameter of the graph G. Though the
+average complexity will be much less since recursion works by removing
+all edges incident to a vertex.</p>
+<h2 id="an-implementation-in-clojure">An implementation in Clojure</h2>
+<p>I am going to represent an undirected graph via a hash-map of
+neighbors.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> G </span>{<span class="dv">0</span> #{<span class="dv">1</span> <span class="dv">2</span>}, <span class="dv">1</span> #{<span class="dv">3</span> <span class="dv">4</span>}, <span class="dv">2</span> #{<span class="dv">3</span> <span class="dv">4</span>}, <span class="dv">3</span> #{<span class="dv">5</span>}, <span class="dv">4</span> #{<span class="dv">5</span>}})</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;all-paths/G</span></span></code></pre></div>
+<p>Here is a function that removes all edges incident to a vertex</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> remove-edges </span>[v G]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">-&gt;&gt;</span> (<span class="kw">dissoc</span> G v)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">map</span> (<span class="kw">fn</span> [x] {(<span class="kw">key</span> x) (<span class="kw">-&gt;&gt;</span> (<span class="kw">val</span> x)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                                   (<span class="kw">remove</span> #{v})</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                                   (<span class="kw">into</span> #{}))}))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">into</span> {})))   </span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;all-paths/remove-edges</span></span></code></pre></div>
+<p>Next, my implementation of all-paths:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> all-paths</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  ([a b G] (all-paths a b G #{[]}))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  ([a b G P]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let</span> [Q (<span class="kw">map</span> #(<span class="kw">conj</span> <span class="va">%</span> a) P)]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">cond</span> (<span class="kw">empty?</span> G) #{[]}</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">=</span> a b)    (<span class="kw">into</span> #{} Q)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">:else</span>      (<span class="kw">let</span> [H (remove-edges a G)]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                             (<span class="kw">-&gt;&gt;</span> (<span class="kw">map</span> #(all-paths <span class="va">%</span> b H Q) (G a))</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                                  (<span class="kw">reduce</span> <span class="kw">union</span>)))))))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;all-paths/all-paths</span></span></code></pre></div>
+<p>Let us test:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(all-paths <span class="dv">0</span> <span class="dv">5</span> G)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>#{[<span class="dv">0</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">5</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">5</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">5</span>] [<span class="dv">0</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">5</span>]}</span></code></pre></div>
+<p>Next, I am going test the algorithm with <a
+href="https://en.wikipedia.org/wiki/Complete_graph">the complete graph
+on n vertices</a>.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> complete-graph </span>[n]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [vertices (<span class="kw">into</span> #{} (<span class="kw">range</span> n))]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>     (<span class="kw">-&gt;&gt;</span> (<span class="kw">map</span> (<span class="kw">fn</span> [x] {x (<span class="kw">remove</span> #{x} vertices)}) vertices)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">into</span> {}))))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>(complete-graph <span class="dv">5</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>(all-paths <span class="dv">0</span> <span class="dv">4</span> (complete-graph <span class="dv">5</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;all-paths/complete-graph</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>{<span class="dv">0</span> (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span>), <span class="dv">1</span> (<span class="dv">0</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span>), <span class="dv">4</span> (<span class="dv">0</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">2</span>), <span class="dv">3</span> (<span class="dv">0</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">2</span>), <span class="dv">2</span> (<span class="dv">0</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">3</span>)}</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>#{[<span class="dv">0</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">2</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">0</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span>]}</span></code></pre></div>
+<p>The final test is going to be on a large <a
+href="2017-09-27-expected_value_of_the_diameter_of_a_tree.html">random
+tree</a> where between any two vertices there is only one path.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> random-tree </span>[n]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">-&gt;&gt;</span> (<span class="kw">range</span> <span class="dv">1</span> (<span class="kw">*</span> <span class="dv">2</span> n))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">map</span> (<span class="kw">fn</span> [x] {(<span class="kw">rand-int</span> x) #{x}}))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">reduce</span>  #(<span class="kw">merge-with</span> <span class="kw">union</span> <span class="va">%1</span> <span class="va">%2</span>))</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">into</span> {})))</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>(all-paths <span class="dv">0</span> <span class="dv">9</span> (random-tree <span class="dv">5</span>))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>(all-paths <span class="dv">0</span> <span class="dv">29</span> (random-tree <span class="dv">15</span>))</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>(all-paths <span class="dv">0</span> <span class="dv">199</span> (random-tree <span class="dv">100</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;all-paths/random-tree</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>#{[<span class="dv">0</span> <span class="dv">2</span> <span class="dv">9</span>]}</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>#{[<span class="dv">0</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">18</span> <span class="dv">29</span>]}</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>#{[<span class="dv">0</span> <span class="dv">1</span> <span class="dv">76</span> <span class="dv">91</span> <span class="dv">92</span> <span class="dv">121</span> <span class="dv">199</span>]}</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">February 18th, 2021 8:08am</span></p>
+</div>
+</body>
+</html>

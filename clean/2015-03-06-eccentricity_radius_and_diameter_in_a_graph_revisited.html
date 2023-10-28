@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="eccentricity-radius-and-diameter-in-a-graph-revisited">Eccentricity,
+Radius and Diameter in a Graph, Revisited</h1>
+<p>A previous <a
+href="2012-12-13-eccentricity_radius_and_diameter_in_an_undirected_graph.html">post</a>
+on this blog on radius and diameter of a graph gets a lot of traffic
+consistently. I have been looking at the code and one can refactor it to
+make it more efficient.</p>
+<h2
+id="edge-list-representation-vs-topological-representation">Edge-list
+Representation vs Topological Representation</h2>
+<p>In almost all of my posts on graphs on this blog, I have been
+usingthe set of edges as a representation for a graph. Today, I am going
+to represent graphs topologically, that is, by listing the neighboring
+vertices of a given vertex. For example, the graph whose edge list
+representation is</p>
+<pre><code>(defvar G &#39;((0 1) (1 2) (1 3) (2 4) (3 4) (0 4)))
+G</code></pre>
+<figure data-orig-height="347" data-orig-width="161" data-orig-src="../media/2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited_0.png">
+<img src="../media/2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited_0.png" data-orig-height="347"
+data-orig-width="161" data-orig-src="../media/2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited_0.png" />
+</figure>
+<p>can also be represented by</p>
+<pre><code>((0 1 4) (1 0 2 3) (2 1 4) (3 1 4) (4 0 2 3))</code></pre>
+<p>where each sublist is a <code>cons</code> pair where the
+<code>car</code> is the vertex and <code>cdr</code> is the list of
+vertices adjacent to that vertex.</p>
+<p>I am going to need a function that makes the conversion:</p>
+<pre><code>(defun convert (G)
+  (let ((H (remove-duplicates
+            (union G (mapcar #&#39;reverse G))
+            :test #&#39;equal))
+        (res nil))
+    (dolist (edge H res)
+      (if (assoc (car edge) res)
+          (push (cadr edge) (cdr (assoc (car edge) res)))
+          (push (copy-list edge) res)))))
+CONVERT
+
+(defvar H (convert G))
+
+((4 0 3 2) (1 0 2 3) (2 1 4) (3 1 4) (0 1 4))</code></pre>
+<p>Since lists are ordered and I want an undirected graph, you see in
+the code that I take the union of edges and reverse edges.</p>
+<p>Now, a utility function that returns the list of vertices of a given
+graph.</p>
+<pre><code>(defun vertices (G)
+   (remove-duplicates (reduce #&#39;append G)))
+VERTICES</code></pre>
+<p>The beauty of this function lies in the fact that it returns the
+correct set for both representations:</p>
+<pre><code>(vertices G)
+(1 2 3 0 4)
+
+(vertices H)
+(2 3 0 1 4)</code></pre>
+<p>And now the eccentricity function:</p>
+<pre><code>(defun eccentricity (x G)
+  (let* ((A (vertices G))
+         (size (length A)))
+    (labels ((vicinity (u) (assoc u G)))
+      (do ((n 0 (1+ n))
+           (V A (set-difference V W))
+           (W (vicinity x)
+              (intersection V (reduce #&#39;append (mapcar #&#39;vicinity W)))))
+          ((or (null V) (&gt; n size)) n)))))
+ECCENTRICITY</code></pre>
+<p>This function comes with a warning: the return value is not correct
+for disconnected graphs. The eccentricity of a graph can not be greater
+than the number of edges. So, if you see this function returning number
+of vertices plus 1, understand that the graph was disconnected.</p>
+<pre><code>(eccentricity 0 H)
+2</code></pre>
+<p>Once we have that, the radius and the diameter function is defined
+the same way:</p>
+<pre><code>(defun radius-and-diameter (G)
+   (let* ((H (convert G))
+          (base (mapcar (lambda (x) (eccentricity x H)) (vertices H))))
+      (list (apply #&#39;min base) (apply #&#39;max base))))
+RADIUS-AND-DIAMETER</code></pre>
+<p>and we get</p>
+<pre><code>(radius-and-diameter G)
+(2 2)</code></pre>
+<p>And if you recall, the distance function is very similar to the
+eccentricity function:</p>
+<pre><code>(defun dist (x y G)
+  (let* ((A (vertices G))
+         (size (length A)))
+    (labels ((vicinity (u) (assoc u G)))
+      (do ((n 1 (1+ n))
+           (V A (set-difference V W))
+           (W (vicinity x)
+              (intersection V (reduce #&#39;append (mapcar #&#39;vicinity W)))))
+          ((or (member y W) (&gt; n size)) n)))))
+DIST</code></pre>
+<p>and we get</p>
+<pre><code>(loop for i from 0 below 4 append
+   (loop for j from (1+ i) to 4 collect
+       (list i j (dist i j H))))
+((0 1 1) (0 2 2) (0 3 2) (0 4 1) (1 2 1) (1 3 1) (1 4 2) (2 3 2) (2 4 1)
+ (3 4 1))</code></pre>
+<div id="footer">
+<p><span id="timestamp">March 6th, 2015 6:21am</span></p>
+</div>
+</body>
+</html>

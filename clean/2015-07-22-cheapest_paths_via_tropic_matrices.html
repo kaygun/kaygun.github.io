@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-07-22-cheapest_paths_via_tropic_matrices</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="cheapest-paths-via-tropic-matrices">Cheapest Paths via Tropic
+Matrices</h1>
+<p>I wrote another <a
+href="2014-11-17-tropic_calculation_of_cheapest_paths.html">blog
+post</a> on the following problem but I have slight improvements. It is
+worth another post.</p>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have an undirected graph <span
+class="math inline">\(G=(V,E)\)</span> where each edge is associated
+with a cost <span class="math inline">\(\omega :E \to
+\[0,\infty)\)</span>. Given two vertices <span
+class="math inline">\(a,b\in V\)</span>, our aim today is to find the
+cheapest path between <span class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span>.</p>
+<h2 id="tropic-matrices">Tropic matrices</h2>
+<p>Consider the symmetric square matrix <span
+class="math inline">\(\Omega = (\omega(v,w))_{vw}\)</span> whose rows
+and columns are labeled by vertices. Then the minimal costs of 1-step
+paths between vertices is given by <span
+class="math inline">\(\Omega\)</span> itself. If we were to think of the
+minimal costs of 2-step paths between vertices then we would need <span
+class="math display">\[ c^{(2)}_{ij}=ω_{ij} \wedge \bigwedge_{k\in V}
+\omega_{ik} + \omega_{kj}\]</span> where I use the notation <span
+class="math inline">\(a\wedge b\)</span> for <span
+class="math inline">\(\min(a,b)\)</span>. Inductively, the costs of
+cheapest paths of length less or equal to <span
+class="math inline">\(n+1\)</span> are calculated by <span
+class="math display">\[ c^{(n+1)}_{ij}
+= c^{(n)}_{ij}\wedge \bigwedge_{k\in V} c^{(n)}_{ik} +
+\omega_{kj} \]</span> If you have seen my previous post on <a
+href="2015-07-21-hidden_markov_models_via_tropic_matrices.html">Hidden
+Markov Models</a> you will realize that I am doing matrix multiplication
+in the tropic ring over the positive real numbers.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>I will take the tropic matrix multiplication I defined in my <a
+href="2014-11-17-tropic_calculation_of_cheapest_paths.html">previous
+post</a> but I need to modify the function since minimum must be taken
+of paths of shorter lengths too.</p>
+<pre><code>(defun tropic-mult (a b)
+   (let ((n (array-dimension a 0))
+         (m (array-dimension b 1))
+         (o (array-dimension a 1)))
+      (make-array
+         (list n m)
+         :initial-contents 
+            (loop for i from 0 below n collect
+               (loop for j from 0 below m collect
+                  (car (sort (cons (aref a i j)
+                                   (loop for k from 0 below o collect
+                                      (cons (append (car (aref a i k))
+                                                    (cdar (aref b k j)))
+                                            (+ (cdr (aref a i k))
+                                               (cdr (aref b k j))))))
+                             (lambda (x y) (&lt; (cdr x) (cdr y))))))))))
+TROPIC-MULT</code></pre>
+<p>The function assumes that each entry is of the form
+<code>(path . cost)</code> and when it multiplies two such matrices, it
+will concatenate paths and evaluate costs tropically. It will also
+include <code>a</code> in the comparisons to look at paths of shorter
+lengths.</p>
+<p>I will represent a graph with weighted edges as a list of cons pairs
+of the form <code>(edge . cost)</code></p>
+<pre><code>(defvar graph1
+   (loop for i from 0 below 21 append
+      (loop for j from (1+ i) below 22 collect
+          (cons (list j i) (if (zerop (random 8))
+                              (1+ (random 10)))))))
+GRAPH1</code></pre>
+<figure class="tmblr-full" data-orig-width="738" data-orig-height="691">
+<img src="../media/2015-07-22-cheapest_paths_via_tropic_matrices_0.png" data-orig-width="738"
+data-orig-height="691" alt="image" />
+</figure>
+<p>First, I will need a function that converts such a list to a matrix:
+I will set the weights non-existing edges to a prohibitively large
+number (in this case it is 10000) which depends on the set of possible
+weights for the graph at hand.</p>
+<pre><code>(defun convert (G)
+   (let ((n (length (reduce #&#39;union (mapcar #&#39;car G)))))
+      (make-array    
+          (list n n)
+          :initial-contents
+            (loop for i from 0 below n collect
+               (loop for j from 0 below n collect
+                  (let ((x (or (cdr (assoc (list i j) G :test #&#39;equal))
+                               (cdr (assoc (list j i) G :test #&#39;equal)))))
+                     (cons (list i j) (or x 10000))))))))
+CONVERT</code></pre>
+<p>Now, the following function returns the cheapest path between two
+vertices <code>i</code> and <code>j</code> of length less than or equal
+to <code>n</code> in a weighted graph <code>G</code>:</p>
+<pre><code>(defun cheapest-path (i j n G)
+   (let ((m (convert G)))
+      (aref (reduce #&#39;tropic-mult (loop repeat n collect m)) i j)))
+CHEAPEST-PATH
+(cheapest-path 5 21 7 graph1)
+((5 8 18 13 21) . 24)</code></pre>
+<div id="footer">
+<p><span id="timestamp">July 22nd, 2015 7:29pm</span></p>
+</div>
+</body>
+</html>

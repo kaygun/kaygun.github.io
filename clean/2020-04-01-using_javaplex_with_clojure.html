@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-04-01-using_javaplex_with_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="using-javaplex-with-clojure">Using JavaPlex with Clojure</h1>
+<p>Java isn’t great when it comes to heavy numerical computations unless
+it gets aid from native libraries. But, nevertheless, I am going to show
+you an example of using the <a
+href="https://en.wikipedia.org/wiki/Topological_data_analysis">topological
+data analysis</a> java library <a
+href="http://appliedtopology.github.io/javaplex/">JavaPlex</a> developed
+by the applied topology group at Stanford University. My example code
+below is written in <a href="https://clojure.org/">Clojure</a>.</p>
+<h2 id="topological-data-analysis">Topological Data Analysis</h2>
+<p>Topologists have known a very important fact since the inception of
+topology back in the beginning of the 20th Century: one can effectively
+approximate continuous structures, such as manifolds (surfaces and
+embedded bodies in the 3d space if you are so-inclined), using discrete
+structures and calculate their continuous invariants (such as dimension,
+number of holes etc.) using the said discrete approximations. So, why
+not do the same thing with collection data points?</p>
+<p>Here is a mathematician’s way of describing the fundamental
+problematic of topological data analysis:</p>
+<blockquote>
+<p>Assume we have an embedded manifold <span
+class="math inline">\(M\)</span> in <span
+class="math inline">\(\mathbb{R}^n\)</span>, and a finite sample of
+points <span class="math inline">\(X\)</span> taken from from <span
+class="math inline">\(M\)</span>. Can one calculate topological
+invariants of <span class="math inline">\(M\)</span> from <span
+class="math inline">\(X\)</span>.</p>
+</blockquote>
+<p>The topological invariants we are after are called <a
+href="https://en.wikipedia.org/wiki/Betti_number">Betti numbers</a>. For
+example, the 0-th betti number calculates the number of connected
+components, 1-st betti number calculates the number of circle-like
+features, 2-nd betti number calculates the number of sphere-like
+features, and so on…</p>
+<h2 id="no-free-lunch">No Free Lunch</h2>
+<p>In theory, topology, unlike geometry, is insensitive to small changes
+to the underlying metric (distance function). However, how these finite
+cloud of points are chosen (sampling) does effect the results. This
+means, if sampled carefully (dare I say <em>correctly</em>),
+calculations would give almost correct answers. So far so good.</p>
+<p>But, unfortunately, <a
+href="https://en.wikipedia.org/wiki/There_ain%27t_no_such_thing_as_a_free_lunch">there
+is no such a thing as a free lunch</a>. In order to calculate the betti
+numbers we need to construct a <a
+href="https://en.wikipedia.org/wiki/Simplicial_complex">simplicial
+complex</a> and then construct its <a
+href="https://en.wikipedia.org/wiki/Singular_homology">singular
+complex</a>. The size of the simplicial complex on <span
+class="math inline">\(n\)</span> points (in the worst case scenario) is
+<span class="math inline">\(n!\approx n^n\)</span> (worse than
+exponential!) which makes calculations tricky to say the least.</p>
+<h2 id="barcodes">Barcodes</h2>
+<p>From our cloud of points we first construct a gradually growing
+network of points depending on their proximity. One key point here is
+that even though we need a notion of proximity of points in constructing
+the network, the topological invariants we are going to calculate at the
+end, are independent of any choices we make in the process.</p>
+<p>In the process of enlarging the network, some topological features
+might appear (new polygonal features) and some might disappear (some
+polygons features might fill-up and disappear). These features are
+encoded with things called <a
+href="https://mathworld.wolfram.com/HomologyClass.html">homology
+classes</a>, and betti numbers count how many homology classes of a
+certain degree there are.</p>
+<p><a
+href="https://www.ams.org/journals/bull/2008-45-01/S0273-0979-07-01191-3/">Barcodes</a>
+are records of homology classes appearing (their <em>birth</em>) and
+disappearing (their <em>death</em>) as a pair of time-stamps.</p>
+<figure>
+<img
+src="https://www.researchgate.net/publication/269876798/figure/fig4/AS:340483126644737@1458188911436/Example-of-the-topological-barcode-of-a-Vietoris-Rips-complex-The-top-four-figures_W640.jpg"
+alt="img" />
+<figcaption aria-hidden="true">img</figcaption>
+</figure>
+<p>[<a
+href="https://www.researchgate.net/publication/269876798_Topological_Data_Analysis_of_Biological_Aggregation_Models/figures?lo=1">Source</a>]</p>
+<p>If you’d like to learn more, I would recommend the lectures by <a
+href="https://geometrica.saclay.inria.fr/team/Fred.Chazal/MVA2019.html">Frédéric
+Chazal and Julien Tierny</a> at <a
+href="https://www.inria.fr/fr">INRIA</a>.</p>
+<h2 id="javaplex-and-clojure">JavaPlex and Clojure</h2>
+<p>There is an excellent <a
+href="https://github.com/appliedtopology/javaplex/wiki/Tutorial">tutorial</a>
+on how to use JavaPlex, you should read it. What I do down here is
+somewhat different, but you can adjust the examples there for the code
+below. Biggest difference is that I did write my own sampling code.</p>
+<p>Let’s do some coding! Unfortunately, the jar files of the <a
+href="http://appliedtopology.github.io/javaplex/">JavaPlex</a> library
+are not on <a href="https://search.maven.org/">Maven</a>. So, you would
+have to download it. You have two options:</p>
+<ol type="1">
+<li>You can declare it a local resource in your project.clj file,</li>
+<li>You can <a
+href="https://stackoverflow.com/questions/4955635/how-to-add-local-jar-files-to-a-maven-project">add
+it to your local maven repository</a>.</li>
+</ol>
+<p>I went with the second option.</p>
+<p>Let me start with the namespace stuff:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> tda.core</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:import</span> edu.stanford.math.plex4.api.Plex4)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:import</span> java.util.Random)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:gen-class</span>))</span></code></pre></div>
+<p>In order to test the code, I need sample points from a nice
+topological object. In my case this is the n-sphere</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> sample-from-Sn </span>[dim n r epsilon]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [rng (Random.)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        rs (<span class="kw">take</span> n (<span class="kw">repeatedly</span> (<span class="kw">fn</span> [] (<span class="kw">+</span> r (<span class="kw">*</span> epsilon (.nextGaussian rng))))))]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">loop</span> [m dim</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>           points (<span class="kw">take</span> n (<span class="kw">repeatedly</span> (<span class="kw">fn</span> [] [(<span class="kw">rand-nth</span> [-<span class="dv">1</span> <span class="dv">1</span>])])))]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">if</span> (<span class="kw">zero?</span> m)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">map</span> (<span class="kw">fn</span> [xs r] (<span class="kw">map</span> (<span class="kw">fn</span> [x] (<span class="kw">*</span> x r)) xs)) points rs)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">let</span> [thetas (<span class="kw">take</span> n (<span class="kw">repeatedly</span> (<span class="kw">fn</span> [] (<span class="kw">*</span> Math/PI (.nextDouble rng)))))]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">recur</span> (<span class="kw">dec</span> m)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">map</span> (<span class="kw">fn</span> [point theta]</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                          (<span class="kw">conj</span> (<span class="kw">map</span> (<span class="kw">fn</span> [x] (<span class="kw">*</span> x (Math/cos theta))) point)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                (Math/sin theta)))</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                        points thetas)))))))</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;tda.core/sample-from-Sn</span></span></code></pre></div>
+<p>Parameter <code>dim</code> controls the dimension of the sphere,
+<code>n</code> tells the size of the sample, <code>r</code> controls the
+radius of the sphere and <code>epsilon</code> controls the variance of
+the error I added to the radius. I must warn: my samples are not
+uniformly distributed. If you plot this for the 2-dimensional sphere,
+you will see accumulation on the poles. But, it will do here.</p>
+<p>Okay, let me sample some points from <span
+class="math inline">\(S^2\)</span> embedded in <span
+class="math inline">\(\mathbb{R}^3\)</span>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> S2-clojure </span>(sample-from-Sn <span class="dv">2</span> <span class="dv">60</span> <span class="fl">1.0</span> <span class="fl">0.05</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">into</span> [] S2-clojure)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;tda.core/S2-clojure</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>[(<span class="fl">0.9694257845977597</span> <span class="fl">0.2565225846251115</span> <span class="fl">0.149693530313045</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.3160506015340551</span> -<span class="fl">0.08420911142786046</span> -<span class="fl">0.9730145781728613</span>) </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.2441359514617179</span> -<span class="fl">0.6387846652366139</span> -<span class="fl">0.7411718962603825</span>) </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.17159371543720592</span> -<span class="fl">0.9472605873221599</span> -<span class="fl">0.5206384637048138</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8191247892843844</span> -<span class="fl">0.5051582258691645</span> -<span class="fl">0.15355993023272338</span>) </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.08761606749846149</span> -<span class="fl">1.0593979203996742</span> -<span class="fl">0.18669956905276947</span>) </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.0351699217914776</span> -<span class="fl">0.16973081443032012</span> -<span class="fl">0.05548596986325099</span>) </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.6321192170240967</span> -<span class="fl">0.4463243263048794</span> -<span class="fl">0.6331108910818303</span>) </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.44110576960908393</span> <span class="fl">0.7901333222386744</span> -<span class="fl">0.17699391506183906</span>) </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.6664362117540702</span> -<span class="fl">5.182362640554818E-4</span> -<span class="fl">0.7878044433470869</span>) </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.23099494868770934</span> <span class="fl">1.0035143441460654</span> <span class="fl">0.15219310831575988</span>) </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.3793772572961613</span> <span class="fl">0.9211308061484103</span> <span class="fl">0.3368188034751347</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9391765946251789</span> -<span class="fl">0.5149998723423344</span> <span class="fl">0.00951410804395951</span>) </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.5850653567514654</span> -<span class="fl">0.1440059217893346</span> <span class="fl">0.7914547828690756</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.3508641770888623</span> -<span class="fl">0.8216806863532357</span> <span class="fl">0.3210694225742778</span>) </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.365271058828488</span> <span class="fl">0.467372201564975</span> -<span class="fl">0.7477195994475816</span>) </span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9998784904968095</span> -<span class="fl">0.2504306059505103</span> <span class="fl">0.17057029208945632</span>) </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.37153553168598225</span> -<span class="fl">0.8371234147021953</span> -<span class="fl">0.4039289385911284</span>) </span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.1880595946327987</span> <span class="fl">0.872119289752966</span> -<span class="fl">0.25457609711238316</span>) </span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9078318321103805</span> <span class="fl">0.11443429289075147</span> <span class="fl">0.30985628091744377</span>) </span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.2753178550631587</span> <span class="fl">0.5522157044155734</span> <span class="fl">0.724835568584973</span>) </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7276416387195462</span> <span class="fl">0.43091836672710043</span> -<span class="fl">0.5955978441028754</span>) </span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.928458266429133</span> <span class="fl">0.34186663945326023</span> <span class="fl">0.05966688766915473</span>) </span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9483252756222065</span> <span class="fl">0.03997832071469546</span> -<span class="fl">0.03415491558412182</span>) </span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.039819688540467</span> -<span class="fl">0.0029375076770020523</span> -<span class="fl">0.05596330134040296</span>) </span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.018988746613726758</span> -<span class="fl">0.8139128755155158</span> <span class="fl">0.5399992866645357</span>) </span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.75171740780237</span> -<span class="fl">0.38526794255364827</span> <span class="fl">0.17028688698667463</span>) </span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7046546908705352</span> <span class="fl">0.45716437242694546</span> -<span class="fl">0.38071293516071086</span>) </span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9672486476322995</span> <span class="fl">0.04443394765956402</span> <span class="fl">0.13088126355371188</span>) </span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.814551798395074</span> -<span class="fl">0.4884786291897059</span> -<span class="fl">0.41141139951264294</span>) </span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8059618509573785</span> <span class="fl">0.2578346913295543</span> <span class="fl">0.4784906568264699</span>)</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.5851445796338018</span> <span class="fl">0.17210563813682658</span> -<span class="fl">0.729820796773424</span>) </span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.022865088634098</span> -<span class="fl">0.06132159806564196</span> -<span class="fl">0.22144052975566123</span>) </span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8019568682509614</span> <span class="fl">0.058094639441568514</span> -<span class="fl">0.6154093307097448</span>) </span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8749755458384921</span> <span class="fl">0.1779446617970637</span> -<span class="fl">0.5069180924762302</span>) </span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7561408596423005</span> <span class="fl">0.6209311431238985</span> <span class="fl">0.3056639783082412</span>)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.020146319348906944</span> -<span class="fl">0.620716247392654</span> <span class="fl">0.8449959844580252</span>) </span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7308601008956529</span> <span class="fl">0.08219526175260423</span> -<span class="fl">0.790211858586775</span>) </span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.43137452712078234</span> -<span class="fl">0.37506259931597696</span> -<span class="fl">0.8054673920079827</span>) </span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8410469276246595</span> -<span class="fl">0.4552426709132372</span> -<span class="fl">0.014705503002436397</span>) </span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.0196327878770284</span> <span class="fl">0.017668451272742396</span> <span class="fl">0.13452291759828935</span>) </span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7881072022617578</span> -<span class="fl">0.40181778621391795</span> -<span class="fl">0.23440165612318994</span>) </span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9407412796388347</span> -<span class="fl">0.015940593773706064</span> <span class="fl">0.030361770156930493</span>) </span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.958641455522085</span> -<span class="fl">0.04760662629066117</span> <span class="fl">0.037604490626258216</span>)</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7975644193823939</span> <span class="fl">0.07790949438593872</span> -<span class="fl">0.4407502726054776</span>) </span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8723001721910031</span> -<span class="fl">0.18197209769171202</span> <span class="fl">0.3734974136910884</span>) </span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.0075286251968685</span> -<span class="fl">0.07024816367980981</span> <span class="fl">0.0012243200449112126</span>) </span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8914068849160154</span> -<span class="fl">0.16636570799712203</span> <span class="fl">0.09751276054119445</span>) </span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7248253421185545</span> -<span class="fl">0.7441517660417161</span> -<span class="fl">0.009518393915065062</span>) </span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.46741625025217876</span> <span class="fl">0.5982647783111011</span> -<span class="fl">0.4012345471412837</span>) </span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9395881922522764</span> -<span class="fl">0.28054294602773683</span> -<span class="fl">0.13171366106619273</span>) </span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.6550895775349393</span> -<span class="fl">0.6990611847238194</span> <span class="fl">0.467956330584316</span>)</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.48736324839252215</span> <span class="fl">0.09402215688413616</span> -<span class="fl">0.9338551699907922</span>)</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.9589695669528585</span> <span class="fl">0.16568955031112448</span> -<span class="fl">0.09542644569897873</span>) </span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.8726612994318831</span> -<span class="fl">0.010564243542695102</span> <span class="fl">0.6340352123016327</span>) </span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.0292743257857333</span> -<span class="fl">0.18881987244771503</span> <span class="fl">0.11154210093830234</span>) </span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.7993825384808707</span> <span class="fl">0.3512141469954968</span> -<span class="fl">0.5124549756863521</span>) </span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.47595730072279946</span> <span class="fl">0.9016441364280734</span> -<span class="fl">0.18816975248168527</span>) </span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.6220383817799092</span> -<span class="fl">0.29058614371905445</span> <span class="fl">0.6718158125861152</span>) </span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.5954384246793762</span> -<span class="fl">0.4642050574372491</span> -<span class="fl">0.6583431440198491</span>)]</span></code></pre></div>
+<p>Since this is a java library, we need to play nice and convert the
+data point cloud into a java array:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> into-java </span>[xs]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">into-array</span> (<span class="kw">map</span> <span class="kw">double-array</span> xs)))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> S2 </span>(into-java S2-clojure))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;tda.core/into-java</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;tda.core/S2</span></span></code></pre></div>
+<p>Next, we need to construct a simplicial complex. JavaPlex has a
+built-in functions for that. Below, I chose to construct a <a
+href="https://en.wikipedia.org/wiki/Vietoris%E2%80%93Rips_complex">Rips
+complex</a> which is computationally cheaper to other alternatives such
+a <a href="https://en.wikipedia.org/wiki/%C4%8Cech_complex">Čech
+complex</a>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> rips </span>(Plex4/createVietorisRipsStream S2 <span class="dv">3</span> <span class="fl">2.25</span> <span class="dv">100</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;tda.core/rips</span></span></code></pre></div>
+<p>The second parameter controls the maximum dimension of the simplicial
+complex, and the last parameter controls the upper bound for the
+proximity parameters in the filtration.</p>
+<p>Next, we have a java-ism: we need to instantiate a class for the
+algorithm that calculates the barcodes.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> algo </span>(Plex4/getRationalSimplicialAlgorithm <span class="dv">3</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;tda.core/algo</span></span></code></pre></div>
+<p>The parameter we pass to the function tells us the upper bound for
+the dimension it needs to check.</p>
+<p>Now, moment of truth. Calculate the barcodes. Recall that these are
+collections of time-stamps of births and deaths of homology classes
+along with the dimension of the homology class.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(.computeIntervals algo rips)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>Dimension: <span class="dv">0</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.0225</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.045</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.045</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.045</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.0675</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.09</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.09</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.09</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.135</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.135</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.135</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.135</span>)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.135</span>)</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.135</span>)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.1575</span>)</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.1575</span>)</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.1575</span>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.18</span>)</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.20249999999999999</span>)</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.20249999999999999</span>)</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.20249999999999999</span>)</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.22499999999999998</span>)</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.22499999999999998</span>)</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.22499999999999998</span>)</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2475</span>)</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2475</span>)</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2475</span>)</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2475</span>)</span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.27</span>)</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.27</span>)</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.27</span>)</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2925</span>)</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2925</span>)</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.2925</span>)</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.315</span>)</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.33749999999999997</span>)</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.33749999999999997</span>)</span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.33749999999999997</span>)</span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.36</span>)</span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.36</span>)</span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.36</span>)</span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.3825</span>)</span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.3825</span>)</span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.40499999999999997</span>)</span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.4275</span>)</span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.4275</span>)</span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.54</span>)</span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, infinity)</span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a>Dimension: <span class="dv">1</span></span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.09</span>, <span class="fl">0.11249999999999999</span>)</span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.22499999999999998</span>, <span class="fl">0.2475</span>)</span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.2475</span>, <span class="fl">0.2925</span>)</span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.2925</span>, <span class="fl">0.33749999999999997</span>)</span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.315</span>, <span class="fl">0.33749999999999997</span>)</span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.315</span>, <span class="fl">0.33749999999999997</span>)</span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.40499999999999997</span>, <span class="fl">0.4275</span>)</span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.44999999999999996</span>, <span class="fl">0.5175</span>)</span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.33749999999999997</span>, <span class="fl">0.5625</span>)</span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.5175</span>, <span class="fl">0.5625</span>)</span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.4725</span>, <span class="fl">0.6975</span>)</span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.6074999999999999</span>, <span class="fl">0.72</span>)</span></code></pre></div>
+<h2 id="analysis">Analysis</h2>
+<p>As the proximity parameter grows, eventually we get one large blob.
+So, there is always a 0-class with infinite life span. The life spans of
+higher classes are always finite. Thus one has to pay attention to how
+long these classes survive, and make a judgement call as to which of
+those are real-features and which are ghost-artifacts.</p>
+<p>The topological space 2-sphere has a very specific homology: one
+class at degree 0, and one class at degree 2. The calculation above,
+depending on the sampling, most often cannot capture the top degree
+class. Bummer! If I increase the number of points, my laptop becomes a
+lap-heating-device without much gain. Yet another bummer!</p>
+<div id="footer">
+<p><span id="timestamp">April 1st, 2020 2:13pm</span></p>
+</div>
+</body>
+</html>

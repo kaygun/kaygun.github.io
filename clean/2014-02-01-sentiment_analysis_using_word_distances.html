@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-02-01-sentiment_analysis_using_word_distances</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="sentiment-analysis-using-word-distances">Sentiment analysis
+using word distances</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>A <em>thesaurus</em> is a dictionary which gives a list of somewhat
+equivalent words. A <em>thesaurus path</em> is a sequence of words</p>
+<blockquote>
+<p>word1, word2, word3, … , wordn</p>
+</blockquote>
+<p>such that any two consecutive words appear in the list of entries of
+a third word, or of either word in a given thesaurus. I will define the
+thesaurus distance of a pair of words is the length of the shortest
+thesaurus path connecting one word to the other.</p>
+<p>Today, I will implement the thesaurus distance.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Any implementation of the thesaurus distance depends on the thesaurus
+one uses. I am going to use the English thesaurus of <a
+href="http://icon.shef.ac.uk/Moby/">Moby Project</a>. The data consists
+of words separated by commas in which each line is a collection of words
+which are synonymous.</p>
+<p>The data I am going to use is a hash-map indexed by individual words
+storing the list of synonyms for that word. Essentially, I am creating a
+undirected graph whose vertices are marked by words and two words are
+connected by an edge if and only if these two words are synonymous.</p>
+<pre><code>(require :cl-ppcre)
+
+NIL
+
+(defvar data 
+   (let ((res (make-hash-table :test &#39;equal))
+         (vertex &quot;&quot;))
+      (with-open-file (infil &quot;../data/moby-thesarus.csv&quot; :direction :input)
+         (do ((line (ppcre:split #\, (read-line infil nil))
+                (ppcre:split #\, (read-line infil nil))))
+             ((null line) res)
+           (setf vertex (car line))
+           (dolist (word (cdr line))
+              (push word (gethash vertex res))
+              (push vertex (gethash word res))))
+         (maphash 
+            (lambda (x y)
+               (setf (gethash x res) (remove-duplicates y :test &#39;equal)))
+            res)
+      res)))
+
+DATA</code></pre>
+<p>By the way, I am using a lot of memory to load the data up. You might
+need to increase the stack size limit in your lisp implementation. I
+also tried this in scala, but it didn’t work because of insufficient
+memory. I was lazy to dig in to figure out how to fix it. Besides, lisp
+version works just fine :)</p>
+<p>Now comes my implementation of the distance function.</p>
+<pre><code>(defun dist (x y)
+   (let ((res (list x))
+         (i 0)
+         (temp nil))
+      (loop while (and (not (member y res :test &#39;string-equal)) (&lt; i 5)) do
+         (incf i)
+         (setf temp (loop for j in res append (gethash j data)))
+         (setf res temp))
+      i))
+
+DIST</code></pre>
+<p>Let me test it</p>
+<pre><code>(dist &quot;terrified&quot; &quot;cold&quot;)
+
+2</code></pre>
+<h2 id="sentimentanalysis">Sentiment analysis</h2>
+<p>Here is a an experiment. There are six basic emotions: anger, fear,
+disgust, sadness, surprise and happiness. Assuming the thesaurus
+distance of a word <span class="math inline">\(w\)</span> to, say
+“fear”, indicates the emotional content of the word <span
+class="math inline">\(w\)</span> in the fear dimension, can we analyze a
+text using this metric? Below, I will also trow in few extra words along
+with these six basic emotions.</p>
+<pre><code>(defvar categories (list &quot;anger&quot; &quot;fear&quot; &quot;disgust&quot; &quot;sad&quot; 
+                         &quot;guilt&quot; &quot;embarrassment&quot; &quot;shame&quot; &quot;pride&quot; 
+                         &quot;surprise&quot; &quot;happy&quot;))
+
+CATEGORIES
+
+(defvar test (list &quot;death&quot; &quot;sickness&quot; &quot;doctor&quot; &quot;ugly&quot; &quot;beauty&quot; 
+                   &quot;mother&quot; &quot;father&quot; &quot;family&quot; &quot;marriage&quot; &quot;child&quot; 
+                   &quot;hunger&quot; &quot;snake&quot; &quot;cat&quot; &quot;cold&quot; &quot;sea&quot; &quot;debt&quot; &quot;kale&quot;
+                   &quot;government&quot; &quot;police&quot; &quot;violence&quot; &quot;rape&quot; &quot;murder&quot;))
+
+TEST
+
+(defun measure(x)
+   (cons x (mapcar (lambda (u) (dist u x)) categories)))
+
+MEASURE</code></pre>
+<p>The results are shown below. The smaller the number the better the
+score is in that dimension.</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">anger</th>
+<th style="text-align: center;">fear</th>
+<th style="text-align: center;">disgust</th>
+<th style="text-align: center;">sad</th>
+<th style="text-align: center;">guilt</th>
+<th style="text-align: center;">embarrassment</th>
+<th style="text-align: center;">shame</th>
+<th style="text-align: center;">pride</th>
+<th style="text-align: center;">surprise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>death</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>sickness</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>doctor</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>ugly</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>beauty</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="even">
+<td>mother</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>father</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>family</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>marriage</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>child</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>hunger</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="even">
+<td>snake</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="odd">
+<td>cat</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="even">
+<td>cold</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>sea</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>debt</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>kale</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>government</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="odd">
+<td>police</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+</tr>
+<tr class="even">
+<td>violence</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="odd">
+<td>rape</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="even">
+<td>murder</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="analysis">Analysis</h2>
+<p>The method may not be very practical on large bulks of text as the
+memory requirements are big and the distance algorithm is not very
+efficient.</p>
+<div id="footer">
+<p><span id="timestamp">February 1st, 2014 6:39am</span></p>
+</div>
+</body>
+</html>

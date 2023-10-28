@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2018-10-31-nonnegative_matrix_decomposition_in_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="nonnegative-matrix-decomposition-in-clojure">Nonnegative Matrix
+Decomposition in Clojure</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I did a <a
+href="2018-10-30-non-negative_matrix_decomposition_in_scala.html">scala
+implementation</a> of <a
+href="https://en.wikipedia.org/wiki/Non-negative_matrix_factorization">non-negative
+matrix decomposition</a> yesterday. Today, I am going to implement it in
+clojure.</p>
+<h2 id="an-implementation-in-clojure">An implementation in Clojure</h2>
+<p>For this post (as I did in my other posts in Clojure) I use <a
+href="http://boot-clj.com/">boot</a>. We declare our dependencies:</p>
+<pre><code>(set-env! :dependencies 
+          &#39;[[net.mikera/vectorz-clj &quot;0.48.0&quot;]
+            [net.mikera/core.matrix &quot;0.62.0&quot;]])
+
+(ns nonnegative.core
+    (:gen-class)
+    (:require [clojure.core.matrix :as cm]))</code></pre>
+<p><a href="https://github.com/mikera/core.matrix">core.matrix</a> has
+several backends to perform matrix calculations. Today, we are going to
+use <a href="https://github.com/mikera/vectorz-clj">vectorz</a>.</p>
+<pre><code>(clojure.core.matrix.implementations/set-current-implementation :vectorz)</code></pre>
+<p>We are going to need two utility functions:</p>
+<pre><code>(defn random-matrix [n m]
+  (as-&gt; (repeatedly rand) $
+    (take (* n m) $)
+    (cm/reshape $ [n m])))
+
+(defn cost-fn [A B]
+  (-&gt;&gt; (cm/sub A B) 
+       (cm/to-vector)
+       (map (fn [x] (* x x)))
+       (reduce +)))</code></pre>
+<p>and here is our implementation:</p>
+<pre><code>(defn nnmd [D k epocs tol rate flag]
+  (let [n (cm/row-count D)
+        m (cm/column-count D)
+        s (* n m)]
+    (loop [W (random-matrix n k)
+           H (random-matrix k m)
+           i epocs
+           c tol]
+      (if (or (= i 0) (&lt; c tol)) 
+        [W H i c]
+        (let [u (cm/reshape (take s (repeat 1)) [n m])
+              Wt (cm/transpose W)
+              Ht (cm/transpose H)
+              et (cm/mul rate (cm/div W (cm/mmul u Ht)))
+              mu (cm/mul rate (cm/div H (cm/mmul Wt u)))
+              temp (cm/sub (cm/div D (cm/mmul W H)) u)]
+          (if (and flag (= 0 (mod i 100))) (println i c))
+          (recur (cm/add W (cm/mul et (cm/mmul temp Ht)))
+                 (cm/add H (cm/mul mu (cm/mmul Wt temp)))
+                 (dec i)
+                 (/ (cost-fn D (cm/mmul W H)) s)))))))</code></pre>
+<p>Let us test:</p>
+<pre><code>(let [D (cm/scale 1e-4 (random-matrix 300 150))
+     [W H i c] (nnmd D 50 3500 1e-2 1e-2 true)]
+  (println i c))
+
+3500 0.01
+3400 2.967546510137647    
+3300 0.05326918311432456
+3258 0.009844411644088693</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 31st, 2018 7:53pm</span></p>
+</div>
+</body>
+</html>

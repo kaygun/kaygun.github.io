@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="feed-forward-and-back-propagation-in-neural-networks-as-left--and-right-fold">Feed-forward
+and back-propagation in neural networks as left- and right-fold</h1>
+<h2 id="description-of-the-problem">Description of the problem:</h2>
+<p>Today’s post is about something (trivial) I realized a few days ago:
+one can reconceptualize feed-forward and back-propagation operations in
+a neural network as instances of <a
+href="https://en.wikipedia.org/wiki/Fold_(higher-order_function)">left-fold
+and right-fold</a> operations.  Most of this post will be theoretical,
+and at the end, I will write some code in scala.</p>
+<h2
+id="feed-forward-and-back-propagation-in-a-neural-network">Feed-forward
+and Back-propagation in a Neural Network</h2>
+<p>A neural network is composed of <a
+href="https://en.wikipedia.org/wiki/Perceptron">perceptrons</a>
+connected via a computation graph. <img
+src="neural-networks-graph1.png" /><img
+src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_0.png"
+alt="image" /></p>
+<p>A perceptron on the other hand is a computation unit which takes a
+vector <span class="math inline">\(\mathbf{x}\)</span> as an input and
+produces a scalar output</p>
+<p><span class="math display">\[ f(\mathbf{w}\cdot\mathbf{x} + b)
+\]</span></p>
+<p>Here <span class="math inline">\(f\)</span> is a function of type
+signature <span class="math inline">\(f\colon\mathbb{R}\to
+\mathbb{R}\)</span> and <span class="math inline">\(\mathbf{w}\)</span>
+and <span class="math inline">\(b\)</span> are parameters of the
+underlying perceptron.</p>
+<p>In the simplest version of the neural networks, the network consists
+of layers of perceptrons where input propagates from one layer to the
+next. Then depending on the error produced, we back-propagate the error
+adjusting the weights of the perceptrons to produce the correct output.
+I wrote about perceptrons and <a
+href="https://en.wikipedia.org/wiki/Backpropagation">back-propagation</a>
+before (2018-05-18-online_regression.html), <a
+href="2018-05-26-online_perceptron.html">here</a> and <a
+href="2018-05-28-online_perceptron_in_common_lisp.html">here</a></p>
+<p>The observation I made is this feed-forward is a left fold, while
+back-propagation is a right-fold operation. In pseudo-code we can
+express these operations as follows:</p>
+<pre><code> FeedForward(xs,nss)
+ Input: a vector xs, and a list of layers nss where
+        a layer is an ordered list of perceptron and each
+        perceptron is a quintuple (w,b,f,eta,ys) where w is a
+        vector, b is a real number, f is and activation function,
+        eta is the learning rate of the perceptron and zs is the
+        last input processed by the node.
+ Output: a vector ys
+ Begin
+   If nss is empty
+      Return xs
+   Else
+      Let ns &lt;- head of nss
+      Let ys &lt;- ()
+      For each node=(w,f,b,zs) in ns
+          Update zs &lt;- xs
+          Append f(&lt;w,xs&gt; + b) to ys
+      End 
+      Call FeedForward(ys, tail of nss)
+   End
+ End
+
+
+ BackPropagations(ds,nss)
+ Input: a vector of errors, and a list of layers as before.
+ Output: a vector
+ Begin
+   If nss is empty
+      Return ds
+   Else
+      Let ns &lt;- tail of nss
+      Let zsum &lt;- 0
+      For each ((w,b,f,eta,xs),d) in (ns,ds)
+          Let zs &lt;- (eta * d / f&#39;(&lt;w,xs&gt; + b)) * xs
+          Update w &lt;- w - zs
+          Update zsum &lt;- zsum + zs
+      End
+      Call BackPropagation(zsum, all but the last element of nss)
+   End
+ End</code></pre>
+<h2 id="a-scala-implementation">A Scala Implementation</h2>
+<p>You can download the code and run it from my <a
+href="https://github.com/kaygun/scala-perceptron">github repository</a>.
+I am using <a href="https://github.com/lihaoyi/mill">mill</a> instead of
+<a href="https://www.scala-sbt.org/1.x/docs/index.html">sbt</a>.</p>
+<p>The feed-forward part of the algorithm is easy to implement in the
+functional style, i.e. no mutable persistent state, such that the
+network as a computation unit is referentially transparent. However, the
+back-propagation phase requires that we update the weights of each
+perceptron. This means we must capture the whole state of the neural
+network in a data structure and propagate it along each step. As much as
+I like functional style and referential transparency, it is easier and
+cleaner to implement neural networks with mutable persistent state.
+Hence the choices of <code>var</code>s below.</p>
+<pre><code> package perceptron
+ import breeze.linalg._
+
+ object neural {
+
+ case class node(size: Int, fn: Double=&gt;Double, eta: Double) {
+     private var input = DenseVector.rand[Double](size+1)
+     private var calc = 0.0
+     var weights = DenseVector.rand[Double](size+1)
+     def forward(x: Array[Double]): Double = {
+         input = DenseVector(Array(1.0) ++ x)
+         calc = fn(weights.dot(input))
+         calc
+     }
+     def backprop(delta: Double): DenseVector[Double] = {
+         val ider = eta/(fn(calc + eta/2) - fn(calc - eta/2) + eta*Math.random)
+         val res = (-delta*eta*ider)*input
+         weights += res
+         res
+     }
+   }
+
+   case class layer(size: Int, num: Int, fn: Double=&gt;Double, eta: Double) {
+     val nodes = (1 to num).map(i=&gt;node(size,fn,eta)).toArray
+     def forward(xs: Array[Double]) = nodes.map(_.forward(xs))
+     def backprop(ds: Array[Double]) = {
+       val zero = DenseVector.zeros[Double](nodes(0).size+1)
+       (nodes,ds).zipped
+                 .foldRight(zero)({ case((n,d),v) =&gt; v + n.backprop(d) })
+                 .toArray
+     }
+   }
+
+   case class network(shape:Array[(Int, Int, Double=&gt;Double, Double)]) {
+     val layers = shape.map({ case (n,m,fn,eta) =&gt; layer(n,m,fn,eta) })
+     def forward(xs:Array[Double]) = layers.foldLeft(xs)((ys,ns) =&gt; ns.forward(ys))
+     def backprop(ds:Array[Double]) = layers.foldRight(ds)((ns,ys) =&gt; ns.backprop(ys))
+   }
+}    
+`</code></pre>
+<p>The only additional external dependency is the <a
+href="https://github.com/scalanlp/breeze">breeze</a> math and statistics
+package. As for the utility code that we need for training and testing a
+neural network model for a given dataset, we have</p>
+<pre><code> package perceptron
+ import perceptron.neural._
+
+ object Main {
+
+   import scala.util.Random.nextInt
+   import scala.io.Source.fromFile
+
+   def sigmoid(x:Double) = 1.0/(1.0 + math.exp(-x))
+   def relu(x:Double) = math.max(x,0.0)
+
+   def train(net:network, 
+              xs: Array[Array[Double]], 
+              ys: Array[Double], 
+          epochs: Int, 
+       batchSize: Int, 
+             tol: Double):Array[Double] = {
+     val size = xs.length
+     var err = Array[Double]()
+     for(i &lt;- 1 to epochs) {
+        val j = math.abs(nextInt)%size
+        val x = xs(j)
+        val d = net.forward(x)(0) - ys(j)
+        net.backprop(Array(d))
+        if(i % batchSize == 1)
+          err = Array(0.0) ++ err
+        if(math.abs(d)&gt;tol)
+          err(0) += 1.0/batchSize
+     }
+     return(err.reverse)
+   }
+
+
+   def main(args: Array[String]) {
+       val file = fromFile(args(0))
+       val size = args(1).toInt
+       val eta = args(2).toDouble
+       val epochs = args(3).toInt
+       val batchSize = args(4).toInt
+       val tol = args(5).toDouble
+       val data = file.mkString
+                      .split(&quot;\n&quot;)
+                      .map(x=&gt;x.split(&quot;\t&quot;).map(_.toDouble).reverse)
+       val ys = data.map(_.head)
+       val xs = data.map(_.tail)
+       val net = network(Array((size,4,relu,eta),(4,1,sigmoid,eta)))
+       val err = train(net, xs, ys, epochs, batchSize, tol)
+       err.foreach(x=&gt;println(&quot;%4.3f&quot;.format(x)))
+   }
+ }    </code></pre>
+<p>I know that <a href="http://yann.lecun.com/exdb/mnist/">MNIST</a> is
+the de facto standard, but it is PIA to load and process the data.
+Instead, I am going to use <a
+href="http://archive.ics.uci.edu/ml/datasets/connectionist+bench+(sonar,+mines+vs.+rocks)">the
+sonar dataset from UCI</a></p>
+<p>I ran the model with the following parameters:</p>
+<pre><code>mill perceptron.run data/sonar.csv 60 0.0125 1750000 500 0.3 </code></pre>
+<p>In the code above, the neural network has two layers: 60 nodes on the
+input layer, 1 hidden layer with 4 nodes, and a single output node. The
+perceptrons on the input layer use <a
+href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)">RELU</a>
+meanwhile the other layer uses the <a
+href="https://en.wikipedia.org/wiki/Sigmoid_function">sigmoid
+function</a>.</p>
+<p>The best result I received is in the file <code>data/plot.csv</code>
+whose plot is given in <img
+src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_1.png"
+alt="image" /><img src="neural-networks-graph2.png" /></p>
+<div id="footer">
+<p><span id="timestamp">December 4th, 2018 9:32am</span></p>
+</div>
+</body>
+</html>

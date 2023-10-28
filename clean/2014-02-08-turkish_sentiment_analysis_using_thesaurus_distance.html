@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-02-08-turkish_sentiment_analysis_using_thesaurus_distance</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="turkish-sentiment-analysis-using-thesaurus-distance">Turkish
+Sentiment Analysis Using Thesaurus Distance</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>In my <a
+href="2014-02-01-sentiment_analysis_using_word_distances.html">last
+post</a> I implemented a word distance algorithm using a thesaurus for
+English. Today, I will do the same for Turkish. It is difficult to find
+a free Turkish Thesaurus. After some digging around I found one. The <a
+href="https://github.com/maidis/mythes-tr">Turkish Thesarus</a>
+developed by volunteers and maintained by <a
+href="http://anilozbek.blogspot.com.tr/">Anil Ozbek</a>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Let us look at the structure of the thesaurus file:</p>
+<pre><code>aba|2
+(noun)|abla|anne
+(noun)|barak|çuha|çul|keçe|kebe|şayak|palas</code></pre>
+<p>In the file “|” symbol is used to separate fields. The first field is
+the word, the second is the number of distinct senses of the word listed
+here. In this example the word is “aba” and it has 2 senses listed here.
+Then the next two lines are these senses. The first field designates
+which part of speech the sense belongs to followed by each synonym
+separated by “|”.</p>
+<p>Here is the lisp code to load the thesaurus</p>
+<pre><code>(defvar data 
+   (let ((res (make-hash-table :test &#39;equal))
+         (vertex &quot;&quot;))
+      (with-open-file (infil &quot;../data/turkish_thesaurus.txt&quot; :direction :input)
+         (read-line infil nil)
+         (do ((line (read-line infil nil) 
+              (read-line infil nil)))
+             ((null line) res)
+             (if (char= (elt line 0) #$)
+                 (dolist (word (cdr (ppcre:split #\| line)))
+                    (push word (gethash vertex res))
+                    (push vertex (gethash word res)))
+                 (setf vertex (car (ppcre:split #\| line))))))
+         (maphash 
+            (lambda (x y)
+                (setf (gethash x res) (remove-duplicates y :test &#39;equal)))
+            res)
+         res))
+
+DATA</code></pre>
+<p>I will use the same distance function as before</p>
+<pre><code>(defun dist (x y &amp;optional (n 5))
+   (let ((res (gethash x data))
+         (i 0)
+         (temp nil))
+      (loop while (and (not (member y res :test &#39;string-equal)) (&lt; i n)) do
+         (incf i)
+         (setf temp (loop for j in res append (gethash j data)))
+         (setf res temp))
+      i))
+
+DIST</code></pre>
+<p>and a simple test:</p>
+<pre><code>(dist &quot;hastalık&quot; &quot;korku&quot;)
+
+1
+
+(dist &quot;baba&quot; &quot;gurur&quot;)
+
+3</code></pre>
+<h2 id="turkishsentimentanalysisusingthesaurusdistance">Turkish
+sentiment analysis using thesaurus distance</h2>
+<p>As before, I will use the 6 basic emotions and few extra words as my
+basis categories:</p>
+<pre><code>(defvar categories (list &quot;korku&quot; &quot;öfke&quot; &quot;iğrenç&quot; &quot;üzüntü&quot; &quot;mutlu&quot; &quot;şaşkın&quot; &quot;utanç&quot; &quot;gurur&quot;))
+
+CATEGORIES</code></pre>
+<p>and now comes the measuring function:</p>
+<pre><code>(defun measure(x)
+   (cons x (mapcar (lambda (u) (- 5 (dist u x))) categories)))
+
+MEASURE</code></pre>
+<p>I will test my function of a (not-so) random selection of words.
+Unlike last post, this time larger the measured value greater the
+emotional dimension.</p>
+<pre><code>(defvar test (list &quot;adam&quot; &quot;kadın&quot; &quot;çocuk&quot; &quot;aile&quot; &quot;ölüm&quot; &quot;doğum&quot; &quot;düğün&quot; &quot;şiddet&quot; &quot;polis&quot; &quot;devlet&quot; &quot;tecavüz&quot; &quot;dayak&quot; &quot;açlık&quot; &quot;soğuk&quot;))
+
+TEST
+
+        korku   öfke   iğrenç   üzüntü   mutlu   şaşkın   utanç</code></pre>
+<hr />
+<p>adam 1 3 0 2 1 0 0 kadın 1 1 1 1 1 1 1 çocuk 2 1 1 1 1 1 1 aile 2 1 0
+2 1 0 1 ölüm 4 3 1 5 2 0 3 doğum 2 1 1 3 4 1 3 düğün 2 1 0 2 2 1 0
+şiddet 2 1 1 2 1 0 1 polis 3 0 2 2 1 0 2 devlet 3 3 0 2 2 0 2 tecavüz 0
+0 0 0 0 0 0 dayak 2 1 0 3 0 0 1 açlık 2 1 0 2 0 0 0 soğuk 4 2 0 4 2 1
+2</p>
+<div id="footer">
+<p><span id="timestamp">February 8th, 2014 3:55pm</span></p>
+</div>
+</body>
+</html>

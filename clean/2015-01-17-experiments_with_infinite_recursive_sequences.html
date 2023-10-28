@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-01-17-experiments_with_infinite_recursive_sequences</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="experiments-with-infinite-recursive-sequences">Experiments with
+Infinite Recursive Sequences</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>For today’s post, a stream is a potentially infinite sequence of
+objects.</p>
+<ol type="1">
+<li><p>I would like my streams to be functional. That is no internal
+state.</p></li>
+<li><p>I want my streams to be fully recursive. That is a next item
+<span class="math inline">\(a_{n+1}\)</span> in a stream will depend on
+some (and in some cases all) of <span
+class="math inline">\(a_1,\ldots,a_n\)</span>.</p></li>
+</ol>
+<h2 id="implementation">Implementation</h2>
+<p>The requirements I set above force a stream to be a function that
+accepts an ordered list of objects <span
+class="math inline">\((a_n,a_{n-1},\ldots,a_1)\)</span> and returns
+<span class="math inline">\((a_{n+1},a_n,\ldots,a_1)\)</span>. So, for
+example a stream for natural numbers will look like</p>
+<pre><code>(defvar natural
+   (lambda (x)
+      (if (null x)
+         (list 0)
+         (cons (1+ (car x)) x))))
+NATURAL</code></pre>
+<p>Here are two streams for even and odd numbers.</p>
+<pre><code>(defvar even
+   (lambda (x)
+      (if (null x)
+         (list 0)
+         (cons (+ 2 (car x)) x))))
+EVEN
+
+(defvar odd
+   (lambda (x)
+      (if (null x)
+         (list 1)
+         (cons (+ 2 (car x)) x))))
+ODD</code></pre>
+<p>In all of these examples, the next term in the stream depends only on
+the last term in the stream. Here is another example</p>
+<pre><code>(defvar fibonacci
+   (lambda (x)
+      (cond ((null x) (list 1))
+            ((&lt; (length x) 2) (cons 1 x))
+      (t (cons (+ (car x) (cadr x)) x)))))
+FIBONACCI
+
+(defvar prime
+   (lambda (x)
+      (cond ((null x) (list 2))
+            ((= (car x) 2) (cons 3 x))
+            (t (let ((y (reverse x))
+                     (m (1+ (floor (sqrt (car x))))))
+                  (do ((i (+ (car x) 2) (+ i 2)))
+                      ((do ((j y (cdr j)))
+                           ((or (&gt; (car j) m)
+                                (zerop (mod i (car j))))
+                            (&gt; (car j) m)))
+                       (cons i x))))))))
+PRIME</code></pre>
+<p>I am going to need a function that pulls a specific number of items
+from a stream:</p>
+<pre><code>(defun take (stream n &amp;optional (x nil))
+   (if (zerop n)
+       x
+       (take stream (1- n) (funcall stream x))))
+TAKE</code></pre>
+<p>Let us test the streams we defined above:</p>
+<pre><code>(take natural 10)
+(9 8 7 6 5 4 3 2 1 0)
+
+(take even 12)
+(22 20 18 16 14 12 10 8 6 4 2 0)
+
+(take odd 6 &#39;(3 1))
+(15 13 11 9 7 5 3 1)
+
+(take fibonacci 15)
+(610 377 233 144 89 55 34 21 13 8 5 3 2 1 1)
+
+(take prime 10)
+(29 23 19 17 13 11 7 5 3 2)</code></pre>
+<h2 id="filteringastream">Filtering a stream</h2>
+<p>First, I am going to need a function which will pull items from a
+stream until a predicate is satisfied:</p>
+<pre><code>(defun take-until (stream pred &amp;optional (x nil))
+   (let ((i (funcall stream x)))
+      (if (funcall pred (car i))
+         i
+         (take-until stream pred i))))
+TAKE-UNTIL</code></pre>
+<p>Let me test:</p>
+<pre><code>(take-until prime (lambda (i) (&gt; i 40)))
+(41 37 31 29 23 19 17 13 11 7 5 3 2)</code></pre>
+<p>Now, a function that returns a new stream from another stream by
+selecting elements satisfying a predicate</p>
+<pre><code>(defun filter-stream (stream pred)
+   (lambda (y)
+      (take-until stream pred y)))
+FILTER-STREAM</code></pre>
+<p>Let us test. Let me write the first 12 odd numbers in the Fibonacci
+sequence:</p>
+<pre><code>(defvar aa (filter-stream fibonacci #&#39;oddp))
+AA
+
+(take aa 12)
+(1597 987 610 377 233 144 89 55 34 21 13 8 5 3 2 1 1)</code></pre>
+<p>This is clearly not I intended to do. The sequence contains 12 odd
+numbers but it also contains more. We must modify the <code>take</code>
+function:</p>
+<pre><code>(defun take (stream n &amp;optional (x nil))
+   (do* ((run (funcall stream x) (funcall stream run))
+         (res (list (car run)) (cons (car run) res))
+         (i (1- n) (1- i)))
+        ((zerop i) res)))
+TAKE
+
+(take aa 12)
+(1597 987 377 233 89 55 21 13 5 3 1 1)</code></pre>
+<p>Now, let me get the first 9 odd primes from Fibonacci sequence:</p>
+<pre><code>(defun odd-prime-p (n)
+   (if (and (oddp n) (&gt; n 2))
+      (let ((m (floor (sqrt n))))
+         (do ((i 3 (+ i 2)))
+             ((or (&gt; i m) (zerop (mod n i)))
+              (&gt; i m))))))
+ODD-PRIME-P
+
+(take (filter-stream fibonacci #&#39;odd-prime-p) 9)
+(433494437 514229 28657 1597 233 89 13 5 3)</code></pre>
+<p>Now, we define a more interesting predicate:</p>
+<pre><code>(defun decimal-palindrome-p (n)
+   (string-equal
+      (format nil &quot;~d&quot; n)
+      (reverse (format nil &quot;~d&quot; n))))
+DECIMAL-PALINDROME-P</code></pre>
+<p>The following returns the first 100 decimal-palindromic odd
+primes:</p>
+<pre><code>(take (filter-stream (filter-stream odd #&#39;odd-prime-p) #&#39;decimal-palindrome-p) 100)
+(94349 94049 93739 93239 93139 91019 90709 79997 79697 79397 78887 78787
+ 78487 77977 77477 77377 76667 76367 75557 74747 74047 73637 73237 73037
+ 72727 72227 71917 71317 70607 70507 70207 39293 38783 38183 38083 37573
+ 37273 36563 36263 35753 35353 35153 35053 34843 34543 33533 32423 32323
+ 31513 31013 30803 30703 30403 30203 30103 19991 19891 19391 18481 18181
+ 17971 17471 16661 16561 16361 16061 15551 15451 14741 14341 13931 13831
+ 13331 12821 12721 12421 11411 11311 10601 10501 10301 929 919 797 787 757
+ 727 383 373 353 313 191 181 151 131 101 11 7 5 3)</code></pre>
+<p>How about the Fibonacci sequence? What are the first 5
+binary-palindromic numbers in Fibonacci sequence?</p>
+<pre><code>(defun binary-palindrome-p (n)
+   (string-equal
+      (format nil &quot;~b&quot; n)
+      (reverse (format nil &quot;~b&quot; n))))
+BINARY-PALINDROME-P
+
+(take (filter-stream (filter-stream fibonacci #&#39;oddp) #&#39;binary-palindrome-p) 5)
+(21 5 3 1 1)</code></pre>
+<p>I ran the code for 6 but got no answer within 5 minutes. Even if
+there is one, it must be pretty large.</p>
+<div id="footer">
+<p><span id="timestamp">January 17th, 2015 8:29pm</span></p>
+</div>
+</body>
+</html>

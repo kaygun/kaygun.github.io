@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-02-18-math_phd_hiring_network_part_1</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="math-phd-hiring-network-part-1">Math PhD Hiring Network (Part
+1)</h1>
+<p>After playing with <a
+href="2015-02-17-faculty_networks_and_inequality_in_hiring_practices_in_universities.html">faculty
+hiring data yesterday</a>, I needed to play with faculty hiring networks
+for math, but <a href="http://www.ams.org/home/page">AMS</a> does not
+disclose its data for public use. Shame! But there is a proxy data that
+anybody can play with: <a
+href="http://genealogy.math.ndsu.nodak.edu/">Math Genealogy
+database</a>.</p>
+<h2 id="data-aquisition-processing-and-cleaning">Data aquisition,
+processing and cleaning</h2>
+<p>Math Genealogy Project doesn’t disclose its data either, but you can
+scrape it off of its several mirrors. There are some scrapers out there.
+I used <a href="http://skipperkongen.dk/">Konstantin Kefaloukos’</a> <a
+href="https://github.com/skipperkongen/math-genealogy-geocoder">code</a>
+to do that part of the job.</p>
+<p>Next, I generated two tab separated CSV files: <a
+href="https://www.dropbox.com/s/98f7ygn9g68o4eb/all-vertices.csv?dl=0">vertex
+data</a> and <a
+href="https://www.dropbox.com/s/34qlu8sc1e9fkvb/all-edges.csv?dl=0">edge
+data</a>. The vertex data consists of 5 columns: person id of the PhD
+recipient, name of the PhD granting school, school’s country, school’s
+id and the year of the PhD. The edge data consists of advisor id, PhD
+recipient’s id and the year of the PhD.</p>
+<p>Using the edge data, now I can form a link between two schools: the
+school that PhD advisor got his PhD and the school from which PhD is
+granted.</p>
+<p>There are millions of holes in this model, but in the absence of
+publicly available (Yes AMS, I mean you!) anonymized hiring data for
+math PhD’s this will do.</p>
+<h2 id="the-graphs">The graph(s)</h2>
+<p>The unadultrated graph is way too complicated. So, I decided to split
+it historically. For the last two graphs, I have 2 versions: a full
+version and a version from which the US schools are removed (too many
+connections obscuring vertices, too noisy.) I chose time frames that
+made sense to me, but you are free to play with the data as you
+wish.</p>
+<ol type="1">
+<li><a
+href="https://www.dropbox.com/s/mjhkz9o9rxv3qm8/universities-before-1930.svg?dl=0">Hiring
+network in Mathematics before 1930</a>.</li>
+<li><a
+href="https://www.dropbox.com/s/9ncrt388g05cnru/universities-1930-1950.svg?dl=0">Hiring
+network in Mathematics between 1930 and 1950.</a></li>
+<li><a
+href="https://www.dropbox.com/s/0xivscmzix20954/universities-1950-2000.svg?dl=0">Hiring
+network in Mathematics between 1950 and 2000.</a></li>
+<li><a
+href="https://www.dropbox.com/s/738hug5i8csg7q1/universities-1950-2000-us-removed.svg?dl=0">Hiring
+network in Mathematics between 1950 and 2000 (US removed).</a></li>
+<li><a
+href="https://www.dropbox.com/s/d74f0f229ruied7/universities-after-2000.svg?dl=0">Hiring
+network in Mathematics after 2000.</a></li>
+<li><a
+href="https://www.dropbox.com/s/vc7arje2w5pbzp0/universities-after-2000-us-removed.svg?dl=0">Hiring
+network in Mathematics after 2000 (US removed).</a><br />
+</li>
+</ol>
+<div id="footer">
+<p><span id="timestamp">February 18th, 2015 11:36am</span></p>
+</div>
+</body>
+</html>

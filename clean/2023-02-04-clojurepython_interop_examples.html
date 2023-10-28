@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2023-02-04-clojurepython_interop_examples</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="clojurepython-interop-examples">Clojure/Python Interop
+Examples</h1>
+<figure class="tmblr-full" data-orig-width="400" data-orig-height="400">
+<img
+src="../media/2023-02-04-clojurepython_interop_examples_0.png"
+data-orig-width="400" data-orig-height="400" />
+</figure>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Today, I am going to write something that I have been playing around
+with, and found to be extremely useful and fun: deep clojure and python
+interop. This is done via <a
+href="https://github.com/clj-python/libpython-clj">libpython-clj</a>.
+You may find the detailed documentation <a
+href="https://cljdoc.org/d/clj-python/libpython-clj/1.40/doc/readme">here</a>.
+The library is but a small part of a large project called <a
+href="https://scicloj.github.io/docs/resources/libs/">scicloj</a> that
+aims to expand the use of clojure in data science.</p>
+<h2 id="the-dependencies-and-the-namespace">The dependencies and the
+namespace</h2>
+<p>Let us start with the dependencies</p>
+<pre><code>{:deps {clj-python/libpython-clj {:mvn/version &quot;2.024&quot;}}}</code></pre>
+<p>Next, the namespace</p>
+<pre><code>(ns cl-py (:require [libpython-clj2.require :refer [require-python]]
+                    [libpython-clj2.python :refer [py. py.. py.-] :as py]))</code></pre>
+<p>and global imports.</p>
+<pre><code>(require-python &#39;[numpy :as np])
+(require-python &#39;[pandas :as pd])
+(require-python &#39;[matplotlib.pyplot :as plt])</code></pre>
+<h2 id="a-simple-visualization-example">A Simple Visualization
+Example</h2>
+<p>Let me start with a simple matplotlib visualization example. I am
+going to use <a href="https://pypi.org/project/yfinance/">yfinance</a>
+to use [Yahoo Finance API] to download the market data for a ticker then
+visualize it as a time-series. The data will be ingested as a pandas
+dataframe.</p>
+<pre><code>(py/from-import yfinance download)
+
+(plt/figure :figsize [12 4])
+(-&gt; (download &quot;AAPL&quot; :start &quot;2012-01-01&quot;)
+    (py/get-attr :Open) 
+    (py/call-attr :plot))
+(plt/savefig &quot;result.png&quot;)
+
+#&#39;cl-py/download
+Figure(1200x400)
+AxesSubplot(0.125,0.2;0.775x0.68)</code></pre>
+<figure class="tmblr-full" data-orig-width="1200" data-orig-height="400">
+<img
+src="../media/2023-02-04-clojurepython_interop_examples_1.png"
+data-orig-width="1200" data-orig-height="400" />
+</figure>
+<h2 id="a-more-complicated-visualization">A More Complicated
+Visualization</h2>
+<p>In the following example, I am going to pull passenger data from <a
+href="https://data.ibb.gov.tr/en/">Istanbul Municipality Data
+Portal</a>. The specific <a
+href="https://data.ibb.gov.tr/en/dataset/istanbul-deniz-iskeleleri-yolcu-sayilari">dataset</a>
+is about number of passengers taking the sea-route in the year 2022. The
+columns are ‘year’, 'month’, 'company’, 'station’ and 'passenger’. I am
+going to display the monthly sums in order.</p>
+<pre><code>(let [months [&quot;jan&quot; &quot;feb&quot; &quot;mar&quot; &quot;apr&quot; &quot;may&quot; &quot;jun&quot; &quot;jul&quot; &quot;aug&quot; &quot;sep&quot; &quot;oct&quot; &quot;nov&quot; &quot;dec&quot;]
+      passengers (as-&gt; &quot;https://data.ibb.gov.tr/dataset/20f33ff0-1ab3-4378-9998-486e28242f48/resource/6fbdd928-8c37-43a4-8e6a-ba0fa7f767fb/download/istanbul-deniz-iskeleleri-yolcu-saylar.csv&quot; $
+                       (pd/read_csv $ :encoding &quot;iso8859-15&quot;)
+                       (py/call-attr $ :to_numpy)
+                       (py/-&gt;jvm $)
+                       (filter (fn [x] (= (x 0) 2022)) $) ;; select year 2022
+                       (map (fn [x] {(x 1) (x 4)}) $)     ;; select month and passenger number
+                       (apply merge-with + $)             ;; monthly sums
+                       (sort $)                           ;; sort wrt month
+                       (map #(% 1) $))]                   ;; get monthly counts only
+    (plt/figure :figsize [12 6])
+    (plt/bar months passengers)
+    (plt/savefig &quot;passengers.png&quot;))</code></pre>
+<figure class="tmblr-full" data-orig-width="1200" data-orig-height="600">
+<img
+src="../media/2023-02-04-clojurepython_interop_examples_2.png"
+data-orig-width="1200" data-orig-height="600" />
+</figure>
+<h2 id="an-image-processing-example">An Image Processing Example</h2>
+<p>In our next example, I am going to work with the <a
+href="https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_olivetti_faces.html">Olivetti
+Faces Dataset</a>. I am going to compute the <a
+href="https://en.wikipedia.org/wiki/Eigenface"><em>eigen-face</em></a>
+of a given random person.</p>
+<pre><code>(py/from-import sklearn.datasets fetch_olivetti_faces)
+(py/from-import sklearn.decomposition PCA)
+
+(def faces (fetch_olivetti_faces :data_home &quot;/home/kaygun/local/data/scikit_learn_data/&quot;))
+
+(let [N (* 10 (rand-int 40))
+      X (-&gt; faces
+            (py/get-attr :data)
+            (py/get-item (range N (+ N 10)))
+            (py/call-attr :transpose))      
+      Y (-&gt; (PCA :n_components 1)
+            (py/call-attr :fit_transform X)
+            (py/call-attr :reshape [64 64]))]
+  (plt/figure :figsize [4 4])
+  (plt/imshow Y :cmap &quot;gray_r&quot;)
+  (plt/savefig &quot;eigen-face.png&quot;))
+
+#&#39;cl-py/fetch_olivetti_faces
+#&#39;cl-py/PCA
+#&#39;cl-py/faces</code></pre>
+<figure class="tmblr-full" data-orig-width="400" data-orig-height="400">
+<img
+src="../media/2023-02-04-clojurepython_interop_examples_3.png"
+data-orig-width="400" data-orig-height="400" />
+</figure>
+<h2 id="a-decision-tree-model">A Decision Tree Model</h2>
+<p>In our next example, I am going to construct a <a
+href="https://en.wikipedia.org/wiki/Decision_tree">Decision Tree
+Model</a> using <a
+href="https://scikit-learn.org/stable/modules/tree.html">scikit-learn</a>
+on the <a href="https://en.wikipedia.org/wiki/Iris_flower_data_set">Iris
+dataset</a>. First, I’ll split the dataset into train and test datasets,
+and after I trained the model on the train set, I’ll show the confusion
+matrix on the test dataset.</p>
+<pre><code>(py/from-import sklearn.datasets load_iris)
+(py/from-import sklearn.model_selection train_test_split)
+(py/from-import sklearn.tree DecisionTreeClassifier)
+(py/from-import sklearn.metrics confusion_matrix)
+
+(def iris (load_iris))
+
+(let [X (py/get-attr iris :data)
+      y (py/get-attr iris :target)
+      [X-train X-test y-train y-test] (train_test_split X y :test_size 0.2)
+      model (DecisionTreeClassifier)]
+  (py/call-attr model :fit X-train y-train)
+  (-&gt;&gt; X-test (py/call-attr model :predict) (confusion_matrix y-test)))
+
+#&#39;cl-py/load_iris
+#&#39;cl-py/train_test_split
+#&#39;cl-py/DecisionTreeClassifier
+#&#39;cl-py/confusion_matrix
+#&#39;cl-py/iris
+[[ 9  0  0]
+ [ 0 11  1]
+ [ 0  1  8]]</code></pre>
+<h2 id="a-support-vector-classifier">A Support Vector Classifier</h2>
+<p>In our next example, I am going to write a <a
+href="https://en.wikipedia.org/wiki/Support_vector_machine">support
+vector classifier</a> using <a
+href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html">scikitlearn</a>
+on the <a href="https://en.wikipedia.org/wiki/Iris_flower_data_set">iris
+dataset</a>.</p>
+<pre><code>(py/from-import sklearn.svm SVC)
+
+(let [X (py/get-attr iris :data)
+      y (py/get-attr iris :target)
+      [X-train X-test y-train y-test] (train_test_split X y :test_size 0.2)
+      model (SVC :max_iter 1000)]
+  (py/call-attr model :fit X-train y-train)
+  (-&gt;&gt; X-test (py/call-attr model :predict) (confusion_matrix y-test)))
+
+#&#39;cl-py/SVC
+[[ 8  0  0]
+ [ 0 17  0]
+ [ 0  0  5]]</code></pre>
+<div id="footer">
+<p><span id="timestamp">February 4th, 2023 2:38pm</span></p>
+</div>
+</body>
+</html>

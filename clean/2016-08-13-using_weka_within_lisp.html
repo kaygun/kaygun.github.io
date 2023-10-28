@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-08-13-using_weka_within_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="using-weka-within-lisp">Using Weka within Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>As much as I like implementing machine learning algorithms from
+scratch within various languages I like using, in doing serious research
+one should not take the risk of writing error-prone code. Most likely
+somebody already spent many thousand hours writing, debugging and
+optimizing code you can use with some effort. Re-use people, re-use!</p>
+<p>In any case, today I am going to describe how one can use <a
+href="http://www.cs.waikato.ac.nz/ml/weka/">weka</a> libraries within <a
+href="https://common-lisp.net/project/armedbear/">ABCL</a>
+implementation of common lisp. Specifically, I am going to use the
+k-means implementation of weka.</p>
+<h2 id="code">Code</h2>
+<p>First, I need to dynamically load the weka into our classpath:</p>
+<pre><code>(mapc #&#39;require &#39;(:abcl-asdf :cl-ppcre))
+
+(java:add-to-classpath
+   (abcl-asdf:as-classpath
+      (abcl-asdf:resolve &quot;nz.ac.waikato.cms.weka:weka-stable&quot;)))</code></pre>
+<p>Weka libraries require that the data fed into them come in <a
+href="http://www.cs.waikato.ac.nz/ml/weka/arff.html">arff</a> format.
+So, we are going to need a function that loads an arff file.</p>
+<pre><code>(defun load-arff-file (file-name)
+   (jnew &quot;weka.core.Instances&quot;
+         (jnew &quot;java.io.FileReader&quot; file-name)))</code></pre>
+<p>For the tests today, I am going to use an arff file I made from the
+<a href="https://archive.ics.uci.edu/ml/datasets/Wine">wine
+dataset</a>.</p>
+<pre><code>(defvar wine (load-arff-file &quot;weka-wine.arff&quot;))</code></pre>
+<p>If you’d like to see the methods the java class of the data comes
+with you should call <code>jss:java-class-method-names</code> on
+<code>wine</code>:</p>
+<pre><code>(jss:java-class-method-names wine)
+
+(&quot;notifyAll&quot; &quot;notify&quot; &quot;getClass&quot; &quot;wait&quot; &quot;retainAll&quot; &quot;removeAll&quot;
+ ...
+ &quot;replaceAttributeAt&quot; &quot;readInstance&quot; &quot;randomize&quot; &quot;numInstances&quot;
+ &quot;numDistinctValues&quot; &quot;numClasses&quot; &quot;numAttributes&quot;)</code></pre>
+<p>If you’d like to get method’s type signatures, you are better off
+calling <code>jclass-methods</code> on
+<code>(jss:find-java-class "weka.core.Instances")</code>. But, beware:
+the raw return vector is not human readable. I find the following
+function useful:</p>
+<pre><code>(defun find-method-with-signature (method-name class-name)
+   (delete-if-not (lambda (x) (ppcre:scan method-name (#&quot;toString&quot; x)))
+                  (coerce (jclass-methods class-name) &#39;list)))</code></pre>
+<p>For example,</p>
+<pre><code>(find-method-with-signature &quot;numInstances&quot; &quot;weka.core.Instances&quot;)
+
+(#&lt;method public int weka.core.Instances.numInstances()&gt;)</code></pre>
+<p>means <code>numInstances</code> accepts no inputs, but</p>
+<pre><code>(find-method-with-signature &quot;deleteAttributeAt&quot; &quot;weka.core.Instances&quot;)
+
+(#&lt;method public void weka.core.Instances.deleteAttributeAt(int)&gt;)</code></pre>
+<p>the method <code>deleteAttributeAt</code> takes an integer input.</p>
+<p>Let’s get back to our data:</p>
+<pre><code>(list (#&quot;numInstances&quot; wine) (#&quot;numAttributes&quot; wine))
+
+(178 14)</code></pre>
+<p>We have 178 data points each of which has 14 dimensions.</p>
+<pre><code>(#&quot;get&quot; wine 0)
+
+#&lt;weka.core.DenseInstance 14.23,1.71,2.43,15.6,127,2.8,3.0.... {4C58DE9}&gt;</code></pre>
+<p>OK. We got a weka class. We need to convert it to a lisp object:</p>
+<pre><code>(jss:jarray-to-list (#&quot;toDoubleArray&quot; (#&quot;get&quot; wine 0)))
+
+(14.23d0 1.71d0 2.43d0 15.6d0 127.0d0 2.8d0 3.06d0 0.28d0 2.29d0
+5.64d0 1.04d0 3.92d0 1065.0d0 1.0d0)</code></pre>
+<p>The last entry is the class label of the wine. We better delete
+it:</p>
+<pre><code>(#&quot;deleteAttributeAt&quot; wine 13)
+
+(jss:jarray-to-list (#&quot;toDoubleArray&quot; (#&quot;get&quot; wine 0)))
+
+(14.23d0 1.71d0 2.43d0 15.6d0 127.0d0 2.8d0 3.06d0 0.28d0 2.29d0 5.64d0 1.04d0 3.92d0 1065.0d0)</code></pre>
+<p>But, I am going to need to extract a similar information below. So,
+let us write a function for it:</p>
+<pre><code>(defun extract-vectors (instances)
+   (let ((num (#&quot;numInstances&quot; instances))
+         (res nil))
+      (dotimes (i num (nreverse res))
+            (push (jss:jarray-to-list (#&quot;toDoubleArray&quot; (#&quot;get&quot; instances i))) res))))</code></pre>
+<p>Now, let us create the weka’s k-means clusterer from this data:</p>
+<pre><code>(defvar k-means (jnew &quot;weka.clusterers.simpleKMeans&quot;))
+
+(jss:java-class-method-names k-means)
+
+(&quot;notifyAll&quot; &quot;notify&quot; &quot;getClass&quot; &quot;hashCode&quot; &quot;equals&quot; &quot;wait&quot;
+ ...
+ &quot;getDistanceFunction&quot; &quot;distanceFunctionTipText&quot;
+ &quot;getDontReplaceMissingValues&quot; &quot;setDontReplaceMissingValues&quot;
+ &quot;dontReplaceMissingValuesTipText&quot; &quot;getDisplayStdDevs&quot;)</code></pre>
+<p>The methods I am interested today are <code>setNumClusters</code> and
+<code>buildClusterer</code>.</p>
+<pre><code>(find-method-with-signature &quot;setNumClusters&quot; &quot;weka.clusterers.SimpleKMeans&quot;)
+
+(#&lt;method public void weka.clusterers.SimpleKMeans.setNumClusters(int) throws java.lang.Exception&gt;)
+
+(find-method-with-signature &quot;buildClusterer&quot; &quot;weka.clusterers.SimpleKMeans&quot;)
+
+(#&lt;method public void weka.clusterers.SimpleKMeans.buildClusterer(weka.core.Instances) throws java.lang.Exception&gt;)</code></pre>
+<p>OK. We call these methods as follows:</p>
+<pre><code>(#&quot;setNumClusters&quot; k-means 3)
+(#&quot;buildClusterer&quot; wine)</code></pre>
+<p>For the problem I don’t need the clusters themselves, but rather, the
+cluster centroids. So,</p>
+<pre><code>(extract-vectors (#&quot;getClusterCentroids&quot; k-means))
+
+((13.732166666666666d0 2.005000000000001d0 2.458d0
+17.253333333333334d0 106.88333333333334d0 2.8478333333333334d0
+2.9808333333333326d0 0.2886666666666667d0 1.9003333333333334d0
+5.492000000000001d0 1.0661666666666667d0 3.1635d0
+1113.5333333333333d0 1.0166666666666666d0) (13.151632653061228d0
+3.344489795918368d0 2.43469387755102d0 21.43877551020408d0
+99.0204081632653d0 1.6781632653061223d0 0.7979591836734694d0
+0.45081632653061215d0 1.1630612244897958d0 7.343265285714285d0
+0.6859183673469389d0 1.6902040816326522d0 627.5510204081633d0
+2.979591836734694d0) (12.257246376811594d0 1.9085507246376812d0
+2.2385507246376806d0 20.06376811594203d0 94.04347826086956d0
+2.2526086956521745d0 2.0762318840579708d0 0.36231884057971014d0
+1.6256521739130436d0 3.0579710144927543d0 1.0557391304347825d0
+2.7862318840579707d0 512.8260869565217d0 2.0d0))</code></pre>
+<h2 id="analysis">Analysis</h2>
+<p>The example I gave above is a toy example. I used weka’s clusterer on
+a large dataset (~150K data points where each point had 100 numerical
+attributes) and run the code to generate 1024 clusters. I ran it on my
+portable notebook, and it was slow. From what I could see, the library
+ran only on a single core. My guess it is not parallelized.</p>
+<div id="footer">
+<p><span id="timestamp">August 13th, 2016 7:56pm</span></p>
+</div>
+</body>
+</html>

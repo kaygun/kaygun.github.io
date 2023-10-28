@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-10-09-estimating_cardinality_with_constant_memory_complexity</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="estimating-cardinality-with-constant-memory-complexity">Estimating
+Cardinality with Constant Memory Complexity</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Imagine you have a stream of integers which satisfies:</p>
+<ol type="1">
+<li><p>The number of distinct items the stream hands to you is
+finite.</p></li>
+<li><p>Each item is going to appear equally likely.</p></li>
+</ol>
+<p>We want to estimate the number of distinct items appearing in the
+stream. The problem is that if the number of items is large, can we make
+a statistical guess about the cardinality <em>without</em> storing all,
+or some, of the stream?</p>
+<h2 id="thetheory">The theory</h2>
+<p>There are very nice and efficient algorithms out there, such as <a
+href="http://www.ic.unicamp.br/~celio/peer2peer/math/bitmap-algorithms/durand03loglog.pdf">LogLog</a>
+and <a href="http://en.wikipedia.org/wiki/HyperLogLog">HyperLogLog</a>.
+Nick Johnson wrote an extensive <a
+href="http://blog.notdot.net/2012/09/Dam-Cool-Algorithms-Cardinality-Estimation">blog
+entry</a>. I recommend that you see it. He also has python
+implementations for these algorithms. But those algorithms require
+hashing the inputs and counting initial segments of these generated hash
+data.</p>
+<p>Today, I am going to describe a much more simplified single pass
+algorithm whose memory complexity is constant.</p>
+<p>Assume <span class="math inline">\((a_n)_{n\in\mathbb{N}}\)</span> is
+a very long sequence of integers, and assume you have seen an item <span
+class="math inline">\(x\)</span> in the stream. What is the expected
+number of items you are going to see after <span
+class="math inline">\(x\)</span> until you see <span
+class="math inline">\(x\)</span> again? It is a simple statistics
+question. We have <span class="math inline">\(m\)</span> distinct items
+and each item appears in the stream with a probability of <span
+class="math inline">\(\frac{1}{m}\)</span>. Thus the number we need is
+given by an infinite series <span class="math display">\[
+\sum_{k=1}^\infty
+\left(1-\frac{1}{m}\right)^{k-1}\frac{k}{m} =
+\frac{1}{m}\frac{d}{dx}
+\left\|_{1-\frac{1}{m}}\left(\frac{1}{1-x}\right)\right. =
+\frac{1}{m}\left.\frac{1}{(1-x)^2}\right\|_{1-\frac{1}{m}} = m
+\]</span> This means, if we get a good statistical estimate for this
+number then we can estimate the number of distinct items in out
+stream.</p>
+<h2 id="thecode">The code</h2>
+<p>For the purposes of fixing the terminology, an interval is a
+subsequence of integers appearing in our stream which start and end with
+the same object <span class="math inline">\(x\)</span> without appearing
+in the middle. We want to find the average lengths of such
+intervals.</p>
+<p>Without further ado, here is the code:</p>
+<pre><code>(defun estimate (stream m &amp;optional x j n c)
+   (let ((y (funcall stream)))
+      (cond 
+        ((null x) (estimate stream m y 1 1 0))
+        ((= m 0)  (floor (+ 0.5d0 (/ c n))))
+        ((= x y)  (estimate stream (1- m) (funcall stream) 1 (1+ n) (+ c j)))
+        (t        (estimate stream (1- m) x (1+ j) n c)))))
+
+ESTIMATE</code></pre>
+<p>The function returns the estimate for the number we want to calculate
+I described earlier in the previous section. Do not worry. We are not
+going to blow your stack because of the deeply recursive nature of the
+implementation if the lisp compiler does proper tail call optimization
+as it is supposed to do.</p>
+<p>Let me briefly explain what the variables are:</p>
+<ol type="1">
+<li><p><code>stream</code> represents our stream implemented as a
+function which accepts no input and returns the next item in the
+stream.</p></li>
+<li><p><code>m</code> represents the number of items we are going to
+pull from the stream to calculate our estimate.</p></li>
+<li><p><code>x</code> represents the item at the beginning of an
+interval. It will change next time around when we look at a different
+interval.</p></li>
+<li><p><code>j</code> represents the number of items we saw in the
+interval</p></li>
+<li><p><code>n</code> represents the number of interval we saw up until
+that point.</p></li>
+<li><p><code>c</code> represents the total length of all intervals we
+saw up until that point.</p></li>
+</ol>
+<p>Every time we pull a new element <code>y</code> from the stream, we
+compare it with <code>x</code>. Depending if these are equal we make
+adjustments and call our function recursively. We return the average
+length after we pull <code>m</code> items from the stream.</p>
+<p>Let us do the test. For that I need an experiment function:</p>
+<pre><code>(defun experiment (n num)
+  (let* ((m (* n 500))
+         (col (loop repeat num collect 
+                 (estimate (lambda () (random n)) m)))
+         (ave (/ (reduce #&#39;+ col) num 1.0d0))
+         (dev (sqrt (/ (reduce #&#39;+ (mapcar (lambda (x) (expt (- x ave) 2)) col)) num))))
+    (list ave dev (/ dev n))))
+
+EXPERIMENT</code></pre>
+<p>And, now the actual test:</p>
+<pre><code>(experiment 100 25)
+(100.24 5.14027236632457 0.0514027236632457)
+
+(experiment 1000 25)
+(996.36 44.59226838814101 0.04459226838814101)
+
+(experiment 10000 25)
+(9995.04 497.4946415791833 0.04974946415791833)</code></pre>
+<p>You need to pay attention to the last number: the relative error. I
+played with the number of items to pull from the stream. The optimal
+choice for <span class="math inline">\(N\)</span> seems to be about 500
+times <span class="math inline">\(m\)</span> (the number of distinct
+items) to keep the relative error about 5%. My numerical experiments
+indicate that the relative error grows like <span
+class="math inline">\(o(m/N)\)</span> where <span
+class="math inline">\(m\)</span> is the number of distinct items and
+<span class="math inline">\(N\)</span> is the size of the sample.</p>
+<h2 id="animperativeversionoftheestimationfunction">An Imperative
+Version of the Estimation Function</h2>
+<p>For those who would prefer a more imperative version of the
+implementation, here is one:</p>
+<pre><code>(defun estimate (stream m)
+  (let ((c 0)
+        (n 1)
+        (j 1)
+        (x (funcall stream))
+        (y (funcall stream)))
+    (dotimes (i m (floor (+ 0.5d0 (/ c n))))
+      (if (= x y)
+         (progn 
+           (incf c j)
+           (incf n 1)
+           (setf j 0)
+           (setf x (funcall stream))))
+      (incf j)
+      (setf y (funcall stream)))))
+
+ESTIMATE</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 9th, 2014 6:32am</span></p>
+</div>
+</body>
+</html>

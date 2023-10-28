@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-10-03-source_code_entropy</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="sourcecodeentropy">Source code entropy</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>There is a very beautiful way of calculating the information content
+of a channel. This measure, called <a
+href="http://en.wikipedia.org/wiki/Shannon_entropy_as_information_content">Shannon
+Entropy</a>, measures the randomness of a signal. And the idea is that
+the more random the signal is the more information it contains.</p>
+<p>Today, I am going to apply this idea to randomly collected source
+code from various languages.</p>
+<h2 id="calculation">Calculation</h2>
+<p>The entropy of a text which uses an alphabet of <span
+class="math inline">\(n\)</span> symbols is <span
+class="math display">\[
+\sum_{i=1}^n - p_i \log(p_i) \]</span> where <span
+class="math inline">\(p_i\)</span> is the probability of seeing <span
+class="math inline">\(i\)</span>-th letter in the text, assuming we
+order our alphabet <span class="math inline">\(a_1,\ldots,a_n\)</span>.
+Thus if we had all of our letters appearing equally likely, the entropy
+would have been <span class="math display">\[
+n\cdot\left(\frac{1}{n}\log(n)\right) = \log(n) \]</span> In our case we
+consider the letters 33 to 126 in the ASCII table. This is a total of 94
+letters giving <span class="math inline">\(log(94) = 4.543\)</span>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>For the purposes I set up, I need to calculate the entropy of a given
+text. This could be a news article, or source code or a text of a web
+page etc. Here is a <code>C</code> program doing exactly that. It reads
+an input text from standard input and calculates the entropy and the
+number of characters minus the white space.</p>
+<pre><code>#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;math.h&gt;
+
+ int main() {
+   unsigned long table[256], total = 0;
+   double entropy = 0;
+   char c;
+   short i;
+
+   for(i=0; i&lt;256; i++)
+      table[i] = 0;
+
+   while((c = getchar())!=EOF)
+      table[c]++;
+
+   for(i=33;i&lt;127;i++)
+      if(table[i]) {
+        total += table[i];
+        entropy -= log(table[i])*table[i];
+      }
+
+   entropy /= total;
+   entropy += log(total);
+
+   printf(&quot;Total Characters: %6d\n&quot;,total);
+   printf(&quot;Entropy: %5.6f\n&quot;,entropy);
+
+   exit(0);
+ }</code></pre>
+<p>Now, I need some randomly collected source code from various
+languages. As a reference I am going to calculate the entropy for texts
+from natural language. For that I used few Jack London books from <a
+href="http://www.gutenberg.org/">Project Gutenberg</a>’s website. As for
+the source code from different languages, it would be best to compare
+the codes which essentially perform the same task to reduce the
+variation. For that reason, I used <a
+href="http://aima.cs.berkeley.edu/code.html">AIMA</a>’s code repository
+which provide code bases in languages java, C++, lisp, prolog and
+python.</p>
+<p>Here are the results for these languages:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Source</th>
+<th style="text-align: right;">Size of data</th>
+<th style="text-align: center;">Entropy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">c++</td>
+<td style="text-align: right;">407737</td>
+<td style="text-align: center;">3.476</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">java</td>
+<td style="text-align: right;">1349032</td>
+<td style="text-align: center;">3.638</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">lisp [case sensitive]</td>
+<td style="text-align: right;">287749</td>
+<td style="text-align: center;">3.595</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">lisp [not case sensitive]</td>
+<td style="text-align: right;">287749</td>
+<td style="text-align: center;">3.397</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">prolog</td>
+<td style="text-align: right;">102322</td>
+<td style="text-align: center;">3.679</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">python</td>
+<td style="text-align: right;">152445</td>
+<td style="text-align: center;">3.603</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">Jack London</td>
+<td style="text-align: right;">1859084</td>
+<td style="text-align: center;">3.127</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">Totally random [case sensitive]</td>
+<td style="text-align: right;"></td>
+<td style="text-align: center;">4.543</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">Totally random [not case sensitive]</td>
+<td style="text-align: right;"></td>
+<td style="text-align: center;">4.220</td>
+</tr>
+</tbody>
+</table>
+<figure class="tmblr-full" data-orig-height="333" data-orig-width="500">
+<img
+src="../media/2012-10-03-source_code_entropy_0.png"
+data-orig-height="333" data-orig-width="500" />
+</figure>
+<p>In the graph above, I normalized the numbers by subtracting the
+Shannon Entropy value for the texts from Jack London.</p>
+<h2 id="interpretation">Interpretation</h2>
+<p>The natural language text is the least random, thus has the minimal
+raw information content. I found it surprizing that java and prolog were
+close and generated the highest values. On the outset, java and prolog
+are very very different languages. But yet in terms of raw information
+content of the source code they are close. This interesting. On the
+other hand python and lisp were in the same class in this comparison if
+were to treat the lisp code as case sensitive. Once we treat lisp as
+case insensitive the raw information content drops sharply. However, the
+drop from case-sensitive to not-case-sensitive in lisp [which is roughly
+6%] is similar to the drop in the fully random case [which is roughly
+7%]. And in terms of source code raw information content c++ had the
+smallest value among all case sensitive languages. The case insentive
+lisp code has the smallest raw information content.</p>
+<h2 id="onebigshortcomingofthemethodology.">One big shortcoming of the
+methodology.</h2>
+<p>I should have removed all comments from the sources to compare the
+parts of the code that actually do the real work, but I did not.</p>
+<div id="footer">
+<p><span id="timestamp">October 3rd, 2012 12:45pm</span> <span
+class="tag">Entropy</span> <span class="tag">include</span></p>
+</div>
+</body>
+</html>

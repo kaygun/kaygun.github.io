@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-03-14-my_first_idris_proof</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="my-first-idris-proof">My First Idris Proof</h1>
+<h2 id="tools-vs-conveniences">Tools vs Conveniences</h2>
+<p>Most of what I do are affected by the tools I use. In writing math my
+two options are paper and <a
+href="https://www.latex-project.org/">LaTeX</a>. I am a total slob when
+it comes to paper: loose paper are all over the place and my notebooks
+are like a homeless graphomaniac’s ramblings. That leaves typing in
+LaTeX, and when it comes to editors I am an editor-agnostic: I’ll do <a
+href="https://www.gnu.org/software/emacs/">emacs</a>, <a
+href="https://en.wikipedia.org/wiki/Vi">vi</a>, <a
+href="https://www.nano-editor.org/">nano</a>, <a
+href="https://wiki.gnome.org/Apps/Gedit">gedit</a> or even <a
+href="https://en.wikipedia.org/wiki/Ed_%28text_editor%29">ed</a>. If you
+observe me long enough, you can even see me doing straight cat into a
+file.</p>
+<p>When it comes to programming, I am IDE-averse. Apart from emacs, the
+last IDE I used was probably <a
+href="https://en.wikipedia.org/wiki/Borland_Turbo_C">Turbo C</a> back in
+90’s. Because, if my IDE’s raison d'etre is to do the boring stuff for
+me, may be I am using a wrong language to start with. You don’t want me
+to pull a <a
+href="http://www.columbia.edu/acis/ets/CCREAD/etscc/kant.html">Kant</a>
+on you:</p>
+<blockquote>
+<p>If I have a book that thinks for me, a pastor who acts as my
+conscience, a physician who prescribes my diet, and so on–then I have no
+need to exert myself.</p>
+</blockquote>
+<p>True tools are languages. Editors and frameworks are
+conveniences.</p>
+<h2 id="diversity-objectives-and-constraints">Diversity, Objectives and
+Constraints</h2>
+<p><a href="https://en.wikipedia.org/wiki/Georges_Perec">George
+Perec</a> once wrote <a href="https://en.wikipedia.org/wiki/A_Void">a
+whole novel</a> on a type-writer whose e-key was removed which was in
+part inspired by <a
+href="https://en.wikipedia.org/wiki/Gadsby_(novel)">another novel</a>
+written by an obscure American writer <a
+href="https://en.wikipedia.org/wiki/Ernest_Vincent_Wright">Ernest
+Wright</a>. In the same vein, if I’d like to write programs that
+severely restricts my use of side effects then I’d use haskell. If I’d
+want to do this on the JVM platform then I’d switch to <a
+href="https://en.wikipedia.org/wiki/Frege_%28programming_language%29">frege</a>,
+probably. Different objectives and constraints require different tools,
+and in turn, these constraints might bring out novel ideas you wouldn’t
+normally think of.</p>
+<p>In short, learn as much as you can and as diversely as you can. Make
+choices and write, or cat if appropriate.</p>
+<h2 id="idris-programming-language-and-proof-assistants">Idris
+Programming Language and Proof Assistants</h2>
+<p><a href="http://www.idris-lang.org/">Idris</a> has been on my todo
+list for a long time. A strongly and dependently typed functional
+programming language similar to <a
+href="https://www.haskell.org/">haskell</a>. I am mainly interested in
+idris’ interactive theorem proving capabilities.</p>
+<p>I know that <a href="https://coq.inria.fr/">coq</a> is the de facto
+standard and it does a more comprehensive job than idris, but I like its
+haskell-like syntax. If you are interested, check <a
+href="https://golem.ph.utexas.edu/category/2015/06/whats_so_hott_about_formalizat.html">Homotopy
+Type Theory</a>, a machine assisted proof of <a
+href="https://hal.inria.fr/hal-00816699/file/main.pdf">Feit-Thompson Odd
+Order Theorem in coq</a>, and a coq proof of the <a
+href="https://www.microsoft.com/en-us/download/details.aspx?id=52574&amp;from=http%3A%2F%2Fresearch.microsoft.com%2Fen-us%2Fdownloads%2F5464e7b1-bd58-4f7c-bfe1-5d3b32d42e6d%2Fdefault.aspx">Four
+Color Theorem</a>.</p>
+<p>There are many old, and new and experimental formal proof assistants
+out there. Here are a few in case you’d want to check out:</p>
+<ul>
+<li><a
+href="http://wiki.portal.chalmers.se/agda/pmwiki.php">Agda</a></li>
+<li><a href="http://isabelle.in.tum.de/">Isabelle</a></li>
+<li><a href="http://www.cs.utexas.edu/users/moore/acl2/">ACL2</a></li>
+<li><a href="https://leanprover.github.io/">Lean</a></li>
+</ul>
+<h2 id="my-first-proof-in-idris">My first proof in Idris</h2>
+<p>Every journey starts with few small steps. So, here are mine: I am
+going to verify that the addition in the set of natural numbers is
+commutative. This proof is different than the commutativity proof given
+in the official documentation of idris.</p>
+<p>The set of natural numbers is given as a recursive type which as a
+bottom element <code>Z</code> and recursively defined as</p>
+<pre><code>data Nat    = Z   | S Nat </code></pre>
+<p>Unlike haskell, the type definitions are preceeded by <code>:</code>
+instead of <code>::</code> as you can see below:</p>
+<pre><code>unit: (a: Nat) -&gt; plus a Z = a
+unit Z = Refl
+unit (S k) = rewrite unit k in Refl</code></pre>
+<p>My first lemma is the unitality of the addition. The proof is a
+simple recursion/induction argument. I think of <code>Refl</code> as the
+bottom type in proofs which is <code>x=x</code> reflexivity: if you can
+reduce your proof to that you are done.</p>
+<p>The next lemma is the about the fact that (n+1)+m=n+(m+1).</p>
+<pre><code>unloop: (a: Nat) -&gt; (b: Nat) -&gt; plus a (S b) = S (plus a b) 
+unloop Z b = Refl
+unloop (S k) b = rewrite unloop k b in Refl</code></pre>
+<p>Then the rest is recursion on the second argument:</p>
+<pre><code>comm: (a: Nat) -&gt; (b: Nat) -&gt; plus a b = plus b a
+comm Z b = rewrite unit b in Refl
+comm (S k) b = rewrite comm k b in rewrite unloop b k in Refl</code></pre>
+<div id="footer">
+<p><span id="timestamp">March 14th, 2017 5:07am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-01-27-phase_transitions_in_entropy</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="phase-transitions-in-entropy">Phase transitions in entropy</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>In my <a href="2013-12-13-optimal_length_of_n-grams.html">last
+post</a> I looked at the way the information content (the entropy)
+changes as I increased the lengths of the n-grams. The text I consider
+was <a href="ftp://ftp.ncbi.nlm.nih.gov/genbank/gbbct112.seq.gz">a
+randomly chosen genome sequence</a> and Twain’s Huckleberry Finn and Tom
+Sawyer.</p>
+<p>One curious observation I made in that post was the fact that there
+was a dramatic phase shift. Today, I will test if that shift is specific
+to the genome data or it is an artifact of the method.</p>
+<h2 id="anexperiment">An experiment</h2>
+<p>I will use the following functions in my experiment. The first
+function is for creating a frequency table for n-grams for a specific
+n. The second function is for calculating the entropy, and the last for
+calculating the derivative of the entropy function. As you might recall,
+the derivative will tell us where the phase transition happens.</p>
+<pre><code>(defun get-ngrams (file len getline)
+   (let* ((result (make-hash-table :test &#39;equal)))
+      (with-open-file (in file :direction :input)
+         (do ((buffer 
+                 (funcall getline in)
+                 (if (&lt; (length buffer) (1+ len))
+                    (concatenate &#39;string (subseq buffer 1) (funcall getline in))
+                    (subseq buffer 1))))
+               ((&lt; (length buffer) len) result)
+             (let ((key (subseq buffer 0 len)))
+               (setf (gethash key result) 
+                     (1+ (gethash key result 0))))))))
+
+GET-NGRAMS
+
+(defun temperature (hash)
+  (let ((result 0.0d0)
+        (n 0))
+    (maphash 
+       (lambda (x y) 
+          (incf result (* y (log y 2.0d0)))
+          (incf n y))
+       hash)
+    (- (log n 2.0d0) (/ result n))))
+
+TEMPERATURE
+
+(defun diff (sequence)
+   (let (result)
+      (do ((x sequence (cdr x)))
+          ((null (cadr x)) (nreverse result))
+        (push (- (cadr x) (car x)) result))))
+
+DIFF</code></pre>
+<p>For the first experiment, I will re-consider the genome data
+again.</p>
+<pre><code>(defun get-line-genome (stream)
+   (remove-if-not
+       (lambda (x) (or (char= x #\a) (char= x #\g) (char= x #\t) (char= x #\c)))
+       (read-line stream nil)))
+
+GET-LINE-GENOME
+
+(defparameter *result*
+   (diff (loop for i from 1 to 18 
+           collect (temperature (get-ngrams &quot;../data/gbpat91-processed.seq&quot; i &#39;get-line-genome))))) 
+
+*RESULT*</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-01-27-phase_transitions_in_entropy_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>Now, I will perform the same analysis for the first <span
+class="math inline">\(10^7\)</span> decimal digits of <span
+class="math inline">\(\pi\)</span>.</p>
+<pre><code>(defun get-line-pi (stream)
+   (remove-if-not
+       (lambda (x) (and (char&gt;= x #\0) (char&lt;= x #\9)))
+       (read-line stream nil)))
+
+GET-LINE-PI
+
+(defparameter *result* 
+   (diff (loop for i from 1 to 9
+           collect (temperature (get-ngrams &quot;../data/digits-of-pi-1e7&quot; i &#39;get-line-pi)))))
+
+*RESULT*</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-01-27-phase_transitions_in_entropy_1.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>The natural question is, are these results which show similar phase
+transitions, particular to these datasets or are they artifacts of the
+method. So, I will generate <span class="math inline">\(10^6\)</span>
+uniformly random decimal digits and repeat the analysis on that
+data.</p>
+<pre><code>(defun random-line (n m)
+   (reduce 
+      (lambda (x y) (concatenate &#39;string x y))
+      (loop repeat n collect (format nil &quot;~x&quot; (random m)))))
+
+RANDOM-LINE
+
+(with-open-file (out &quot;temp&quot; 
+                     :direction :output
+                     :if-exists :supersede
+                     :if-does-not-exist :create)
+   (loop repeat 1000 do (format out &quot;~s~%&quot; (random-line 100 10))))
+
+NIL
+
+(defparameter *result* 
+  (diff (loop for i from 1 to 9
+           collect (temperature (get-ngrams &quot;temp&quot; i (lambda (x) (read-line x nil)))))))
+
+*RESULT*</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-01-27-phase_transitions_in_entropy_2.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>OK. The phase transition happens here as well but the place it
+happens is shifted. What happens if I change these random numbers from
+decimal to quaternary, as in the genome data?</p>
+<pre><code>(with-open-file (out &quot;temp&quot;
+                     :direction :output
+                     :if-exists :supersede
+                     :if-does-not-exist :create)
+   (loop repeat 1024 do (format out &quot;~s~%&quot; (random-line 128 4))))
+
+NIL
+
+(defparameter *result*
+  (diff (loop for i from 1 to 12 
+           collect (temperature (get-ngrams &quot;temp&quot; i (lambda (x) (read-line x nil)))))))
+
+*RESULT*</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-01-27-phase_transitions_in_entropy_3.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<h2 id="analysis">Analysis</h2>
+<p>Hmmm. I don’t know what to say. The transition is common to all of
+these examples but the width of the transition period, and where they
+start all differ. I need to understand this on a more conceptual
+footing. I need to think a bit more…</p>
+<div id="footer">
+<p><span id="timestamp">January 27th, 2014 12:16pm</span></p>
+</div>
+</body>
+</html>

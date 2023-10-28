@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-07-02-a_lazy_sequence_of_primes_in_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-lazy-sequence-of-primes-in-clojure">A Lazy Sequence of Primes
+in Clojure</h1>
+<h2 id="description-of-the-problem">Description of the problem:</h2>
+<p>Today, I would like to write a lazy sequence of prime numbers in
+Clojure.</p>
+<h2 id="code">Code</h2>
+<p>First let us start with the iterator:</p>
+<pre><code>(defn next-prime
+  ([] 2)
+  ([ps] (if (= ps [2])
+            3
+            (loop [m (+ 2 (last ps))]
+               (if (some #(zero? (mod m %)) ps)
+                   (recur (+ m 2))
+                   m)))))
+
+#&#39;user/next-prime</code></pre>
+<p>Let us test:</p>
+<pre><code>(next-prime)
+(next-prime [2])
+(next-prime [2 3])
+(next-prime [2 3 5])
+
+2
+3
+5
+7</code></pre>
+<p>Next, the stream of primes:</p>
+<pre><code>(defn primes
+   ([] (lazy-seq (cons 2 (primes [2]))))
+   ([ps] (lazy-seq (let [q (next-prime ps)] (cons q (primes (conj ps q)))))))
+
+#&#39;user/primes</code></pre>
+<p>Let us pull the first 100 prime numbers from this stream:</p>
+<pre><code>(into [] (take 100 (primes)))
+
+[2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101 103 107 109 113 127 131 137 139 149 151 157 163 167 173 179 181 191 193 197 199 211 223 227 229 233 239 241 251 257 263 269 271 277 281 283 293 307 311 313 317 331 337 347 349 353 359 367 373 379 383 389 397 401 409 419 421 431 433 439 443 449 457 461 463 467 479 487 491 499 503 509 521 523 541]</code></pre>
+<p>Here is a nice application: let us find the largest pair of <a
+href="https://en.wikipedia.org/wiki/Twin_prime">twin primes</a> within
+the first 10000 prime numbers:</p>
+<pre><code>(-&gt;&gt; (primes)
+     (take 10000)
+     (partition 2 1)
+     (filter (fn [[p q]] (= (- q p) 2)))
+     (last)
+     (into []))
+
+[104681 104683]</code></pre>
+<div id="footer">
+<p><span id="timestamp">July 2nd, 2020 12:13am</span></p>
+</div>
+</body>
+</html>

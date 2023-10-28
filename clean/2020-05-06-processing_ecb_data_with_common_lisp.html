@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-05-06-processing_ecb_data_with_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="processing-ecb-data-with-common-lisp">Processing ECB Data with
+Common Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a href="https://www.ecb.europa.eu/home/html/index.en.html">European
+Central Bank</a> has a <a href="http://sdw.ecb.europa.eu/home.do">large
+economic data repository</a> and lets people use it for free. It even
+has a nice <a href="https://sdw-wsrest.ecb.europa.eu/help/">API</a>. I
+sometimes use their datasets as examples when I teach, especially when
+it comes to time series stuff.</p>
+<p>Today, I am going to show how one can use their API from common lisp
+which is not very complicated, and one can translate the code to other
+languages in a fairly straight-forward manner.</p>
+<h2 id="the-hard-part">The hard part</h2>
+<p>The data repository contains <a
+href="https://sdw.ecb.europa.eu/browse.do?node=9689727">a large number
+of datasets</a>. The good thing is that ECB allows bulk downloads of
+data. There is also a separate interface for data exploration, but
+that’s a topic for another post. Today, I am going to assume you know
+which dataset you want from ECB. Use their <a
+href="https://sdw.ecb.europa.eu/browse.do?node=9689727">data exploration
+interface</a> to find something that catches your fancy for the examples
+below.</p>
+<h2 id="the-easy-part">The easy part</h2>
+<p>First, let us load all the libraries we need:</p>
+<pre><code>;; (mapcar #&#39;ql:quickload &#39;(:drakma :xmls :flexi-streams))
+(mapcar #&#39;require &#39;(:drakma :xmls :flexi-streams))
+
+(NIL NIL NIL)</code></pre>
+<p>Next, the <a
+href="https://clojure.org/guides/threading_macros">threading macro</a>
+from <a href="https://clojure.org">clojure</a> that I like using. It is
+going to make the code more readable.</p>
+<pre><code>(defmacro -&gt;&gt; (x &amp;rest forms)
+  (dolist (f forms x)
+    (if (listp f)
+        (setf x (append f (list x)))
+        (setf x (list f x)))))
+
+-&gt;&gt;</code></pre>
+<p>Here is another function that I like and going to use for this post
+from clojure:</p>
+<pre><code>(defun juxt (&amp;rest fns)
+  (lambda (x)
+    (mapcar (lambda (f) (funcall f x)) fns)))
+
+JUXT</code></pre>
+<p>Next, I need a piece of code that handles the requests for the ECB
+API.</p>
+<pre><code>(defun request (dataset)
+  (progn
+     (setf (aref dataset 3) #\/)
+     (-&gt;&gt; dataset
+          (concatenate &#39;string &quot;https://sdw-wsrest.ecb.europa.eu/service/data/ECB,&quot;)
+          drakma:http-request
+          flexi-streams:octets-to-string
+          xmls:parse)))
+
+REQUEST</code></pre>
+<p>And the piece of code that extract the information as an association
+list:</p>
+<pre><code>(defun deep-get (tags xs)
+  (if (or (null xs) (null tags))
+      xs
+      (deep-get (cdr tags)
+                (let ((tag (car tags)))
+                  (mapcan (lambda (x) (xmls:xmlrep-find-child-tags tag x)) xs)))))
+
+(defun extract-data (dataset)
+  (-&gt;&gt; dataset
+       request 
+       list
+       (deep-get &#39;(&quot;DataSet&quot; &quot;Series&quot; &quot;Obs&quot;))
+       (mapcar (apply #&#39;juxt
+                         (mapcar (lambda (tag)
+                                 (lambda (x) (-&gt;&gt; (xmls:xmlrep-find-child-tag tag x)
+                                                  xmls:node-attrs
+                                                  cadar)))
+                     &#39;(&quot;ObsDimension&quot; &quot;ObsValue&quot;))))
+       (mapcar (lambda (x) (cons (car x) 
+                                 (read-from-string (cadr x)))))))
+
+DEEP-GET
+EXTRACT-DATA</code></pre>
+<p>Let us test: I am going to use data on Europe’s total trade (exports
+and imports) with Turkey. The keys for those datasets at ECB API are
+“TRD.M.I8.Y.X.TTT.TR.4.VAL” and “TRD.M.I8.Y.M.TTT.TR.4.VAL”</p>
+<pre><code>(defparameter turkey-export (extract-data &quot;TRD.M.I8.Y.X.TTT.TR.4.VAL&quot;))
+(defparameter turkey-import (extract-data &quot;TRD.M.I8.Y.M.TTT.TR.4.VAL&quot;))
+
+TURKEY-EXPORT
+TURKEY-IMPORT</code></pre>
+<p>which then can be plotted</p>
+<figure class="tmblr-full" data-orig-height="480" data-orig-width="640">
+<img
+src="../media/2020-05-06-processing_ecb_data_with_common_lisp_0.png"
+data-orig-height="480" data-orig-width="640" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">May 6th, 2020 3:22pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-01-28-experiments_with_infinite_recursive_sequences_continued</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="experiments-with-infinite-recursive-sequences-continued">Experiments
+with Infinite Recursive Sequences (continued)</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>I was looking into working with potentially infinite recursive
+sequences <a
+href="2015-01-17-experiments_with_infinite_recursive_sequences.html">few
+days ago</a>. The idea was that if we forgo an internal state, then
+working with such a sequence amounts to having a recursive function with
+a head, ie. not just the last element in the sequence but all of the
+sequence we already constructed. The next element in the sequence
+depended <em>only</em> on the head of the sequence. Using this, it was
+easy to implement natural numbers, arithmetic progressions and even
+Fibonacci sequence. The sequence of prime numbers as a recursive
+sequence was a little work, but it can be done. I also wrote some
+experimental code for filtering such sequences using predicates.</p>
+<p>For implementing something like <code>map</code> or
+<code>mapcar</code> I need something else. For today’s experiment, a
+stream is a cons pair of two functions: an <em>iterator</em> which will
+construct new elements on top of the head of the sequence and an
+<em>extractor</em> which pulls a single element from the stream.</p>
+<h2 id="implementation">Implementation</h2>
+<p>If the extractor is going to pull the last element in the returned
+sequence, this means no extra work is required. I am going to set it to
+<code>nil</code> as the default case as in the case of natural numbers
+or any arithmetic progression:</p>
+<pre><code>(defvar natural
+   (cons (lambda (x)
+            (if (null x)
+               (list 0)
+               (cons (1+ (car x)) x)))
+         nil))
+NATURAL
+
+(defun arithmetic-progression (a b)
+   (cons (lambda (x)
+            (if (null x)
+               (list b)
+               (cons (+ a (car x)) x)))
+         nil))
+ARITHMETIC-PROGRESSION</code></pre>
+<p>Even with the Fibonacci sequence, or with the sequence of prime
+numbers the extractor is trivial.</p>
+<pre><code>(defvar fibonacci
+   (cons (lambda (x)
+            (cond ((null x) (list 1))
+                  ((&lt; (length x) 2) (cons 1 x))
+              (t (cons (+ (car x) (cadr x)) x))))
+         nil))
+FIBONACCI
+
+(defvar prime
+   (cons (lambda (x)
+            (cond ((null x) (list 2))
+                  ((= (car x) 2) (cons 3 x))
+                  (t (let ((y (reverse x))
+                           (m (1+ (floor (sqrt (car x))))))
+                        (do ((i (+ (car x) 2) (+ i 2)))
+                            ((do ((j y (cdr j)))
+                                 ((or (&gt; (car j) m)
+                                      (zerop (mod i (car j))))
+                                  (&gt; (car j) m)))
+                             (cons i x)))))))
+         nil))
+PRIME</code></pre>
+<p>This change will require me to modify the <code>take</code> function
+using extractors:</p>
+<pre><code>(defun s-take (stream n &amp;optional (head nil))
+   (destructuring-bind
+         (iterate . extract) stream
+      (do* ((i n (1- i))
+            (run head (funcall iterate run))
+            (res nil (and extract (cons (funcall extract run) res))))
+           ((zerop i) (or res run)))))
+S-TAKE</code></pre>
+<p>The variable <code>res</code> holds part of the data we want to
+extract from the stream if the <code>extractor</code> is not
+<code>nil</code>. Now, you can see why I set the extractor to
+<code>nil</code>. I could also use <code>car</code> but by doing so both
+<code>run</code> and <code>res</code> do contain the same elements.
+Twice the memory for no gain.</p>
+<p>Let us test the streams we defined above:</p>
+<pre><code>(s-take natural 10)
+(9 8 7 6 5 4 3 2 1 0)
+
+(s-take (arithmetic-progression 13 4) 10)
+(121 108 95 82 69 56 43 30 17 4)
+
+(s-take prime 10)
+(29 23 19 17 13 11 7 5 3 2)</code></pre>
+<p>The <code>s-take</code> function that I wrote above is a special kind
+of a reducer which uses <code>cons</code> as the aggregator. We can
+replace it with any two to one function
+<code>fn:T -&gt; T -&gt; T</code></p>
+<pre><code>(defun s-reduce (stream n &amp;optional (fn #&#39;cons) head)
+   (let ((iterate (car stream))
+         (extract (or (cdr stream) #&#39;car)))
+      (do* ((i n (1- i))
+            (run head (funcall iterate run))
+            (res nil (funcall fn (funcall extract run) res)))
+           ((zerop i) res))))
+S-REDUCE</code></pre>
+<p>Now, let me test it to calculate 10!. For that I am going to need the
+first 10 natural numbers starting at 1 (hence <code>(list 1)</code>
+argument) and the aggregator is the product. But before I do that I must
+guarantee that <code>nil</code> arguments are turned into the unit of
+the product (hence <code>(or x 1)</code> and <code>(or y 1)</code>
+arguments)</p>
+<pre><code>(s-reduce
+   natural
+   9
+   (lambda (x y) (* (or x 1) (or y 1)))
+   (list 1))
+3628800</code></pre>
+<h2 id="filteringasequence">Filtering a sequence</h2>
+<p>As for filtering, now I have:</p>
+<pre><code>(defun s-filter (stream &amp;rest preds)
+  (let* ((iterate (car stream))
+         (extract (or (cdr stream) #&#39;car)))
+    (cons (lambda (x)
+             (do* ((y (funcall iterate x) (funcall iterate y))
+                   (z (funcall extract y) (funcall extract y)))
+                  ((every (lambda (pred) (funcall pred z)) preds) y)))
+          extract)))
+S-FILTER</code></pre>
+<p>This time around, one can send a sequence of predicates and we will
+filter the stream using all of the predicates.</p>
+<pre><code>(defun primep (n)
+  (cond
+     ((&lt; n 2) nil)
+     ((= n 2) t)
+     ((evenp n) nil)
+     (t (let ((m (floor (sqrt n))))
+           (do ((i 3 (+ i 2)))
+               ((or (zerop (mod n i)) (&gt; i m))
+                (&gt; i m)))))))
+PRIMEP
+
+(s-take (s-filter fibonacci #&#39;primep) 9)
+(514229 28657 1597 233 89 13 5 3 2)
+
+(defun decimal-palindrome-p (n)
+   (string-equal (format nil &quot;~d&quot; n)
+                 (reverse (format nil &quot;~d&quot; n))))
+DECIMAL-PALINDROME-P
+
+(s-take
+   (s-filter
+      (arithmetic-progression 151 3)
+      #&#39;oddp
+      #&#39;primep
+      #&#39;decimal-palindrome-p)
+   10)
+(126676621 125000521 118626811 117101711 7159517 3127213 1684861 1532351
+ 30203 3)</code></pre>
+<h2 id="mappinganinfinitestream">Mapping an infinite stream</h2>
+<p>Now, with streams with extractors (an idea I already used in
+filtering) mapping becomes easy:</p>
+<pre><code>(defun s-map (stream &amp;rest fns)
+  (cons (car stream)
+        (lambda (x)
+           (let ((y (funcall (or (cdr stream) #&#39;car) x)))
+              (dolist (fn fns y)
+                 (setf y (funcall fn y)))))))
+S-MAP</code></pre>
+<p>The mapping functions do not alter the iterator. Instead, we compose
+them one by one with the current extractor. As with filter, I am going
+to send a sequence of functions and they will be applied to the stream
+<em>from left to right</em>.</p>
+<pre><code>(defun binary-palindrome-p (n)
+  (string-equal (format nil &quot;~b&quot; n)
+                (reverse (format nil &quot;~b&quot; n))))
+BINARY-PALINDROME-P
+
+(defun fn (n)
+  (if (oddp n)
+     n
+     (fn (/ n 2))))
+FN
+
+(s-take
+  (s-filter
+     (s-map
+        (arithmetic-progression 41 13)
+        #&#39;fn
+        (lambda (x) (+ (* x x) x 1)))
+     #&#39;binary-palindrome-p)
+  5)
+(1114081 272629633 4328521473 5113 381)</code></pre>
+<h2 id="postscript">Postscript</h2>
+<p>What I wrote above is heavily influenced by what Rich Hickey did with
+<a href="http://clojure.org/reducers">reducers</a> and <a
+href="http://clojure.org/transducers">transducers</a>. But this all came
+out from reading <a
+href="https://mitpress.mit.edu/sicp/full-text/sicp/book/node70.html">SICP’s
+streams</a>. I was thinking of constructing primes as a stream. It came
+to me that it would be easier, and perhaps conceptually clearer, to
+construct streams as recursive functions that depend only on the head of
+the stream. To be clear: when I say <em>the head</em> I mean the whole
+initial segment <span
+class="math inline">\((a_n,a_{n-1},\ldots,a_1)\)</span> of the stream,
+not just the last element <span class="math inline">\(a_n\)</span>. This
+way, the stream can also be functional, that is, whoever has the head
+has also the next element. With clever use of memoization, there would
+be no collisions, no blocking, no semaphores, no nothing.</p>
+<p>To be fair, there are a couple of things missing in my
+implementation. For example, this approach is good for infinite
+sequences, but I need a way of signaling that a stream has reached its
+end if it happens to be a finite sequence. This can be done via
+returning multiple values in the extractor: one value and one boolean
+(<code>t</code> when the end is reached, and <code>nil</code>
+otherwise). Then all of the functions I wrote above need to be corrected
+accordingly.</p>
+<div id="footer">
+<p><span id="timestamp">January 28th, 2015 11:28am</span></p>
+</div>
+</body>
+</html>

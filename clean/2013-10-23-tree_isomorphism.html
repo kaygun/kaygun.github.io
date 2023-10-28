@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-10-23-tree_isomorphism</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="tree-isomorphism">Tree Isomorphism</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Deciding whether two graphs <span
+class="math inline">\((E,V)\)</span> and <span
+class="math inline">\((E&#39;,V&#39;)\)</span> are isomorphic is a <a
+href="http://en.wikipedia.org/wiki/Graph_isomorphism_problem">difficult
+problem</a>. Best known algorithms are of exponential complexity.
+However, for trees the situation is much simpler. Today, I will describe
+and implement a simple algorithm to decide if two trees are isomorphic.
+I basically followed Eric Thierry’s <a
+href="http://perso.ens-lyon.fr/eric.thierry/Graphes2010/marthe-bonamy.pdf">excellent
+notes</a> on the subject. (All errors are mine, of course.) Thierry
+claims the algorithm is of linear complexity following <a
+href="http://www.lsi.upc.edu/~valiente/algorithm/">Valiente</a>, but
+because of the sorting part involved in the algorithm, it seems more
+like <span class="math inline">\(\mathcal{O}(n\log(n))\)</span>.</p>
+<h2 id="thealgorithmanditscorrectness">The Algorithm and Its
+Correctness</h2>
+<p>For us, a (labeled) graph is a pair <span
+class="math inline">\((E,V)\)</span> such that <span
+class="math inline">\(V\)</span> is a finite subset of <span
+class="math inline">\(\mathbb{N}\)</span> of type <span
+class="math inline">\({0,\ldots,n-1}\)</span>, and <span
+class="math inline">\(E\)</span> is a collection of 2-element subsets of
+<span class="math inline">\(V\)</span>. A tree is a graph in which every
+vertex <span class="math inline">\(m\in V\)</span> is connected to <span
+class="math inline">\(0\in V\)</span> via a unique path.</p>
+<p>Let <span class="math inline">\(\mathcal{T}\)</span> be the set of
+all rooted trees (the vertex 0 is defined to be the root) as we defined
+above. We want to construct a function <span
+class="math inline">\(\Upsilon\)</span> from the set of trees into the
+set of finite sequences of natural numbers such that <span
+class="math inline">\(\Upsilon(T_1) = \Upsilon(T_2)\)</span> if and only
+if <span class="math inline">\(T_1\)</span> and <span
+class="math inline">\(T_2\)</span> are isomorphic. I will define the
+function recursively as follows:</p>
+<ol type="1">
+<li><p>Define <span class="math inline">\(\Upsilon(\bullet) =
+(0)\)</span>.</p></li>
+<li><p>Let <span class="math inline">\(T\)</span> be a tree and let
+<span class="math inline">\(T_1,\ldots,T_m\)</span> be the set of
+subtrees connected to the root. Assume we calculated <span
+class="math inline">\(\Upsilon(T_i)\)</span> for <span
+class="math inline">\(i=1,\ldots,m\)</span>. Sort them as <span
+class="math inline">\(\Upsilon(T_{i_1}) \preceq \cdots \preceq
+\Upsilon(T_{i_m})\)</span> using the <a
+href="http://en.wikipedia.org/wiki/Lexicographical_order">lexicographical
+ordering</a> on the set of all finite sequences in <span
+class="math inline">\(\mathbb{N}\)</span>. Now, define <span
+class="math display">\[
+\Upsilon(T) = (m, \Upsilon(T_{i_1}), \ldots, \Upsilon(T_{i_m})
+) \]</span></p></li>
+</ol>
+<p>The function is well-defined for any tree <span
+class="math inline">\(T\)</span> as the notion of <em>the subtrees
+connected to the root</em> is a well-defined notion and we defined <span
+class="math inline">\(\Upsilon(\bullet)\)</span>. What remains to be
+shown is that <span class="math inline">\(\Upsilon(T_1)\)</span> and
+<span class="math inline">\(\Upsilon(T_2)\)</span> are equal if and only
+if the trees are isomorphic.</p>
+<p>One side of the implication is straightforward: if <span
+class="math inline">\(T_1\)</span> and <span
+class="math inline">\(T_2\)</span> are isomorphic then <span
+class="math inline">\(\Upsilon(T_1)=\Upsilon(T_2)\)</span>. This is
+basically recursion/induction on the number of vertices in the tree.</p>
+<p>For the converse, assume <span class="math inline">\(\Upsilon(T_1) =
+\Upsilon(T_2)\)</span>. In that case, we have</p>
+<ol type="1">
+<li><p>The first terms of <span
+class="math inline">\(\Upsilon(T_1)\)</span> and <span
+class="math inline">\(\Upsilon(T_2)\)</span> are equal which means the
+number of subtrees connected to the root are the same for <span
+class="math inline">\(T_1\)</span> and <span
+class="math inline">\(T_2\)</span></p></li>
+<li><p>The subtrees of <span class="math inline">\(T_1\)</span> and
+<span class="math inline">\(T_2\)</span> produce the same sequence of
+terms out of <span class="math inline">\(\Upsilon\)</span>.</p></li>
+</ol>
+<p>Then again using an induction/recursion argument on the number of
+vertices in a tree, we get the reverse implication.</p>
+<h2 id="animplementation">An Implementation</h2>
+<p>We will describe trees using lisp lists. For example, the following
+list</p>
+<pre><code>(defvar tree-1 &#39;(* * (* * *) (* *) (* (* * *))))</code></pre>
+<p>describes the following tree:</p>
+<figure data-orig-height="176" data-orig-width="221">
+<img
+src="../media/2013-10-23-tree_isomorphism_0.png"
+data-orig-height="176" data-orig-width="221" />
+</figure>
+<p>However, the tree above and the tree given by</p>
+<pre><code>(defvar tree-2 &#39;(* * (* *) (* * *) (* (* * *))))</code></pre>
+<figure data-orig-height="176" data-orig-width="243">
+<img
+src="../media/2013-10-23-tree_isomorphism_1.png"
+data-orig-height="176" data-orig-width="243" />
+</figure>
+<p>are isomorphic trees.</p>
+<p>In order to implement the algorithm I described in the first section,
+I will need a <em>lexicographical comparison function</em> for sequences
+of integers:</p>
+<pre><code>(defun compare (a b)
+  (cond ((and (atom a) (atom b)) (&lt; a b))
+        ((atom a) &#39;t)
+        ((atom b) nil)
+        ((equal (car a) (car b)) (compare (cdr a) (cdr b)))
+        (t (compare (car a) (car b)))))</code></pre>
+<p>Actually, <code>compare</code> does more than comparing lists of
+integers. I will leave it up to you to figure out why and how. Now, the
+function <span class="math inline">\(\Upsilon\)</span>:</p>
+<pre><code>(defun upsilon (tree)
+  (cond ((null tree) nil)
+        ((atom tree) (list 0))
+        (t (cons (length tree)
+                 (reduce &#39;append (sort (mapcar &#39;upsilon tree) 
+                                       &#39;compare))))))</code></pre>
+<p>which implements the function which checks for isomorphism</p>
+<pre><code>(defun tree-isomorphic-p (tree1 tree2)
+  (equal (upsilon tree1) (upsilon tree2)))</code></pre>
+<p>Let me test it on the trees I defined above:</p>
+<pre><code>(tree-isomorphic-p tree-1 tree-2)
+T</code></pre>
+<p>and test on a pair which is not isomorphic:</p>
+<pre><code>(tree-isomorphic-p &#39;((* *) ((* *) * (* *))) &#39;(* * (* (*) (* *))))
+NIL</code></pre>
+<h2 id="addendum">Addendum</h2>
+<p>There is a short-cut for the solution I gave for the tree isomorphism
+problem: the function <code>compare</code> I defined above does define a
+total order on the set of trees. So, I can use it to transform trees
+into a canonical form. Once they are in canonical form, two trees are
+isomorphic if and only if they are are equal. It is that easy.</p>
+<pre><code>(defun compare-trees (a b)
+  (cond ((and (atom a) (atom b)) &#39;t)
+        ((atom a) &#39;t)
+        ((atom b) nil)
+        ((equal (car a) (car b)) (compare-trees (cdr a) (cdr b)))
+        (t (compare-trees (car a) (car b)))))
+
+(defun canonical-form (tree)
+  (if (atom tree)
+      tree
+    (sort (mapcar &#39;canonical-form tree) &#39;compare-trees)))
+
+CANONICAL-FORM</code></pre>
+<p>Let me test it:</p>
+<pre><code>(canonical-form &#39;(* * (* * *) (* *) (* (* * *))))
+(* * (* *) (* * *) (* (* * *)))
+
+
+(canonical-form &#39;(* * (* *) (* * *) (* (* * *))))
+(* * (* *) (* * *) (* (* * *)))</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 23rd, 2013 12:20pm</span></p>
+</div>
+</body>
+</html>

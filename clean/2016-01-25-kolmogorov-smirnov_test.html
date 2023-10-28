@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-01-25-kolmogorov-smirnov_test</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="kolmogorov-smirnov-test">Kolmogorov-Smirnov Test</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>In doing data analysis, sometimes one needs to test if two data sets
+are significantly different. Put it in a statistically verifiable
+statement: how do we check if two data sets viewed as random variables
+come from different distributions? One possible way of doing this is to
+employ <a
+href="https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test">Kolmogorov-Smirnov
+test</a>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>I am not going to try to implement my own version of the Kolmogorov
+distribution. I am going to use the <a
+href="http://www-labs.iro.umontreal.ca/%7Esimul/ksdir/">C
+implementation</a> written by Richard Simard and <a
+href="http://www.iro.umontreal.ca/%7Elecuyer/">Pierre L’Ècuyer</a>.</p>
+<p>Download the C code together with the header file, and compile it
+using</p>
+<pre><code>gcc -fpic -shared KolmogorovSmirnovDist.c -lm -o ks.o</code></pre>
+<p>Let us define our own package in order not to pollute the global
+namespace.</p>
+<pre><code>(defpackage stats
+   (:use common-lisp gsll cffi)
+   (:import-from cffi load-foreign-library defcfun)
+   (:import-from gsll make-random-number-generator sample))
+#&lt;PACKAGE &quot;STATS&quot;&gt;
+
+(in-package :stats)
+#&lt;PACKAGE &quot;STATS&quot;&gt;</code></pre>
+<p>Now, we are ready to load the function <code>KScdf</code> from this
+library using <a
+href="https://common-lisp.net/project/cffi/">cffi</a>.</p>
+<pre><code>(load-foreign-library 
+    &quot;/home/kaygun/src/lisp/kolmogorov-smirnov/ks.so&quot;)
+#&lt;FOREIGN-LIBRARY KS.SO-664 &quot;ks.so&quot;&gt;
+
+(defcfun (&quot;KScdf&quot; ks) :double (n :int) (x :double))
+KS</code></pre>
+<p>I am going to need to get an empirical cumulative distribution
+function out of a given data set.</p>
+<pre><code>(defun cdf (xs)
+  (let ((n (1- (length xs))))
+    (lambda (x)
+      (labels ((fn (a b)
+                 (let ((m (truncate (/ (+ b a) 2))))
+                   (cond
+                     ((or (&lt;= x (elt xs a))
+                          (&lt;= (- b a) 1))
+                      (/ a n 1.0d0))
+                     ((&gt;= x (elt xs b))
+                      (/ b n 1.0d0))
+                     ((&gt; (elt xs m) x) (fn a m))
+                     (t (fn m b))))))
+        (fn 0 n)))))
+CDF</code></pre>
+<p>And, finally the test code:</p>
+<pre><code>(defun ks-test (xs ys)
+  (multiple-value-bind (as bs)
+      (if (&gt;= (length xs) (length ys))
+          (values xs ys)
+          (values ys xs))
+    (let* ((n (1- (length bs)))
+           (fn (cdf (sort as #&#39;&lt;)))
+           (cs (sort bs #&#39;&lt;))
+           (d (loop for i from 0 below (length cs) maximize
+                   (abs (- (funcall fn (elt cs i))
+                           (/ i n 1d0))))))
+      (cons d (- 1.0d0 (ks n d))))))
+KS-TEST</code></pre>
+<p>Let us see how this works:</p>
+<pre><code>(let* ((n 200)
+       (rng (make-random-number-generator +mt19937+))
+       (xs (loop repeat n collect
+               (sample rng :gaussian :sigma 1d0)))
+       (ys (loop repeat (* 3 n) collect
+               (sample rng :gaussian :sigma 1d0)))
+       (zs (loop repeat (* 5 n) collect
+               (+ 8d-1 (sample rng :gaussian :sigma 1.25d0)))))
+    (list (ks-test xs ys)
+          (ks-test xs zs)))
+((0.07133329418377363d0 . 0.2511688455701715d0)
+ (0.2042042042042042d0 . 1.8368679837110768d-4))</code></pre>
+<h2 id="analysis">Analysis</h2>
+<p>Since p-value is about 0.25, the statistics we calculated for the
+first two datasets is not significant. We can’t say <code>xs</code> and
+<code>ys</code> are different. On the other hand, with statistical
+certainity we can say that <code>xs</code> and <code>zs</code> are
+different.</p>
+<div id="footer">
+<p><span id="timestamp">January 25th, 2016 6:58pm</span></p>
+</div>
+</body>
+</html>

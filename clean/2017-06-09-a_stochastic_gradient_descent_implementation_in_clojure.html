@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-06-09-a_stochastic_gradient_descent_implementation_in_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-stochastic-gradient-descent-implementation-in-clojure">A
+Stochastic Gradient Descent Implementation in Clojure</h1>
+<h2 id="description-of-the-problem">Description of the problem<a
+href="#file:///home/kaygun/local/tmp/Untitled.html#Description-of-the-problem"></a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Gradient_descent">Gradient
+Descent</a> is an algorithm that finds local extremum points of a real
+valued function with several variables.  As such it is a go-to algorithm
+for many optimization problems that appear in the context of machine
+learning.  I wrote <a
+href="2013-08-10-logistic_regression_in_lisp.html">an implementation</a>
+optimizing <a
+href="https://en.wikipedia.org/wiki/Linear_regression">Linear
+Regression</a> and <a
+href="https://en.wikipedia.org/wiki/Logistic_regression">Logistic
+Regression</a> cost functions in Common Lisp in the past.</p>
+<p>These cost functions that we would like to optimize, calculate an
+average error over a whole data set we have at hand.  Thus, as the data
+set grows the price we have to pay (both time- and space-wise) grows.  
+One option is to take a large-enough random sample from the data set and
+take the average cost over this representative sample.  Thus we arrive
+at <a
+href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent">Stochastic
+Gradient Descent</a>.</p>
+<h2 id="an-implementation">An implementation<a
+href="#file:///home/kaygun/local/tmp/Untitled.html#An-implementation"></a></h2>
+<p>The following is a faithful clojure translation of <a
+href="2013-08-10-logistic_regression_in_lisp.html">the code I wrote in
+Common Lisp</a>.</p>
+<pre><code>(defn descent [f xs error rate epochs]
+  (let [ns (range (count xs))
+        r (/ rate error 2)]        
+    (letfn [(delta [ys i e] (into [] (map (fn [j y] (if (= i j) (+ y e) y))
+                                          ns ys)))
+            (step [ys]
+              (into [] (map (fn [i y] (- y (* r (- (f (delta ys i error))
+                                                   (f (delta ys i (- error)))))))
+                            ns ys)))
+            (norm [ys] (Math/sqrt (reduce (fn [u v] (+ u (* v v))) 0 ys)))]
+      (loop [ys xs
+             m 0]
+        (let [zs (step ys)]
+          ;; (if (= 0 (mod m 20)) (println zs))
+          (if (or (&gt; m epochs)
+                  (&lt; (norm (map - zs ys)) error))
+            ys
+            (recur zs (inc m))))))))
+
+#&#39;user/descent</code></pre>
+<p>Let me test this on the ordinary linear regression cost function.  I
+am not going to explain the theory behind it.  If you are so inclined,
+you should check <a
+href="2013-08-10-logistic_regression_in_lisp.html">my previous post</a>
+where I explained why we need the following function (sans the
+sampling/stochastic bits) for our optimization routine.</p>
+<pre><code>(defn least-sq [data sample-rate]
+  (letfn [(dot [ys zs] (reduce + (map * ys zs)))
+          (hlp [ys zs]
+            (let [y (first ys)
+                  x (rest ys)
+                  u (dot (conj (into [] x) 1) zs)
+                  v (- y u)]
+              (* v v)))]
+    (let [n (int (* sample-rate (count data)))
+          r (/ n)
+          sample (repeatedly n (fn [] (rand-nth data)))]
+       (fn [xs]
+           (* r (reduce + (map hlp sample (repeat n xs))))))))
+
+#&#39;user/least-sq</code></pre>
+<p>I need to generate a random test data set and generate the specific
+cost function for that data set.  We do that as follows:</p>
+<pre><code>(let [data (repeatedly 100 (fn [] (let [x (rand 1.0)] [(+ (* 12.0 x) (- (rand 1.0) 0.5)) x])))
+      errfn (least-sq data 0.25)]
+   (descent errfn [0.0 0.0] 0.02 0.2 1000))
+
+[11.121470442729198 0.4521003889249443]</code></pre>
+<p>The result is encouraging.</p>
+<p>Now, let us move to the logistic regression cost function.</p>
+<pre><code>(defn logistic [data sample-rate]
+  (letfn [(dot [ys zs] (reduce + (map * ys zs)))
+          (hlp [ys zs]
+            (let [y (first ys)
+                  x (rest ys)
+                  p (/ 1.0 (+ 1.0 (Math/exp (- (dot (conj (into [] x) 1) zs)))))]
+              (+ (* (+ 1 y) (Math/log p))
+                 (* (- 1 y) (Math/log (- 1.0 p))))))]
+    (let [n (int (* sample-rate (count data)))
+          r (/ -1.0 n)
+          sample (repeatedly n (fn [] (rand-nth data)))]
+      (fn [xs]
+        (* r (reduce + (map hlp sample (repeat n xs))))))))
+
+#&#39;user/logistic
+
+(let [data (concat (repeatedly 600 (fn [] (let [x (rand 1.0)] [-1 x (+ (* -0.2 x) (- 0.2 (rand 1.2)))])))
+                   (repeatedly 450 (fn [] (let [x (rand 1.0)] [ 1 x (+ (* -0.3 x) (rand 0.9))]))))
+      errfn (logistic data 0.25)
+      theta (descent errfn [0.0 0.0 0.0] 0.01 0.1 2000)
+      slope (/ (nth theta 0) (nth theta 1) -1)
+      intercept (/ (nth theta 2) (nth theta 1) -1)]
+   [slope intercept])
+
+[-0.0365938480224255 0.05372144183008341]</code></pre>
+<p>When we plot this we get</p>
+<figure class="tmblr-full" data-orig-width="640" data-orig-height="480">
+<img src="../media/2017-06-09-a_stochastic_gradient_descent_implementation_in_clojure_0.png" data-orig-width="640"
+data-orig-height="480" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">June 9th, 2017 7:00pm</span></p>
+</div>
+</body>
+</html>

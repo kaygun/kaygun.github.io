@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-01-31-collatz-type_conjectures_continued</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="collatz-type-conjectures-continued">Collatz-type Conjectures
+(Continued)</h1>
+<p>Today’s post is going to be short. I would like to show collatz
+lengths of natural numbers with different values of <span
+class="math inline">\(p\)</span>.</p>
+<p>Let us recall: we have two functions</p>
+<pre><code>(defun f (n p)
+   (if (zerop (mod n p))
+      (f (/ n p) p)
+      n))
+F
+
+(defun g (n p)
+   (if (zerop (mod n p))
+      (f (/ n p) p)
+      (f (+ (* n p) n p (- (mod n p))) p)))
+G</code></pre>
+<p>From this we calculate lengths of the recursive sequence <span
+class="math inline">\(a_{n+1} = g_p(a_n)\)</span>. We are going to
+terminate the recursive sequence when <span
+class="math inline">\(a_n\)</span> hits 1, or if the sequence contains a
+cycle <span class="math inline">\((a_k,\ldots,a_{m+k})\)</span> where
+<span class="math inline">\(a_k = a_{k+m}\)</span>. My implementation of
+the length in lisp is as follows:</p>
+<pre><code>(defun run (n p &amp;optional (m 0) (tail nil))
+   (let ((res (g n p)))
+      (if (or (= n 1) (member res tail))
+         m
+         (run res p (1+ m) (cons res tail)))))
+RUN</code></pre>
+<p>I’ll show you several plots: for <span
+class="math inline">\(p=2\)</span> (the original Collatz Conjecture
+case), and for <span class="math inline">\(p=3,5,7\)</span> and one for
+a large <span class="math inline">\(p\)</span> where <span
+class="math inline">\(p=103\)</span>.</p>
+<figure data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2015-01-31-collatz-type_conjectures_continued_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<figure data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2015-01-31-collatz-type_conjectures_continued_1.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<figure data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2015-01-31-collatz-type_conjectures_continued_2.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<figure data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2015-01-31-collatz-type_conjectures_continued_3.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<figure data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2015-01-31-collatz-type_conjectures_continued_4.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">January 31st, 2015 8:22pm</span></p>
+</div>
+</body>
+</html>

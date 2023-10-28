@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-02-11-information_content_of_n-grams</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="information-content-of-n-grams">Information content of
+n-grams</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>In a <a href="2014-01-27-phase_transitions_in_entropy.html">previous
+post</a> I investigated the way the entropy increases as one increases
+the length of n-grams in genomic data. I had two questions after I
+completed that post:</p>
+<ol type="1">
+<li><p>Does the rate of change in entropy depend on the size of the
+sample?</p></li>
+<li><p>How different is the rate of change from a completely random
+data.</p></li>
+</ol>
+<h2 id="theeffectofthesamplesize">The effect of the sample size</h2>
+<p>The following function reads the file and randomly samples at a rate
+supplied to the function.</p>
+<pre><code>(defun get-ngrams (file len rate)
+   (with-open-file (in file :direction :input)
+      (labels ((getline ()
+                    (remove-if-not 
+                       (lambda (x) (or (char= x #\a)
+                                       (char= x #\t)
+                                       (char= x #\g)
+                                       (char= x #\c)))
+                       (read-line in nil))))
+         (let ((result (make-hash-table :test &#39;equal)))
+            (do ((buffer 
+                   (getline)
+                   (if (&lt;= (length buffer) len)
+                      (concatenate &#39;string (subseq buffer 1) (getline))
+                      (subseq buffer 1))))
+                ((&lt; (length buffer) len) result)
+                (let ((key (subseq buffer 0 len)))
+                   (if (&lt; (random 1.0) rate) 
+                      (setf (gethash key result) 
+                            (1+ (gethash key result 0))))))))))
+
+GET-NGRAMS</code></pre>
+<p>And the following code calculates the information content of the
+sampled data.</p>
+<pre><code>(defun entropy (data)
+   (let ((res 0.0d0)
+         (n 0))
+     (maphash (lambda (x y)
+                 (incf res (if (&gt; y 0) (* y (log y 2.0d0)) 0))
+                 (incf n y))
+              data)
+     (- (log n 2.0d0) (/ res n))))
+
+ENTROPY</code></pre>
+<p>And finally the code that performs the analysis.</p>
+<pre><code>(defun analyze (filename len rate)
+   (let ((result (loop for i from 1 to len collect
+                     (entropy (get-ngrams filename i rate)))))
+      (mapcar &#39;- result (cdr result))))
+
+ANALYZE</code></pre>
+<p>I will perform the analysis with sampling rates of 25%, 50% and
+100%.</p>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-02-11-information_content_of_n-grams_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>As the graph suggests, the phase transition happens at the same spot
+regardless of the sampling rate.</p>
+<h2 id="thecomparisonbetweentherandomdataandgenomedata">The comparison
+between the random data and genome data</h2>
+<p>For this part of the post I will write a function which will generate
+uniformly random sequences of letters “a”, “t”, “g” and “c”.</p>
+<pre><code>(defun random-ngrams (len rep)
+   (let ((result (make-hash-table :test &#39;equal)))
+      (labels ((getline () 
+                 (coerce (loop repeat 100 collect (elt &quot;atgc&quot; (random 4))) &#39;string)))
+         (do ((buffer (getline)
+                      (if (&lt;= (length buffer) len)
+                         (concatenate &#39;string (subseq buffer 1) (getline))
+                         (subseq buffer 1)))
+              (i 0 (1+ i)))
+             ((&gt; i rep) result)
+             (let ((key (subseq buffer 0 len)))
+                (setf (gethash key result) 
+                      (1+ (gethash key result 0))))))))
+
+RANDOM-NGRAMS</code></pre>
+<p>Now, I will get the entropy for n-grams from <span
+class="math inline">\(n=1\)</span> to <span
+class="math inline">\(n=20\)</span> as did before and since the genome
+data contains <span class="math inline">\(4.6\times 10^6\)</span>
+characters I will create a uniformly random data in equal size</p>
+<pre><code>(let* ((gene (analyze &quot;../data/gene.txt&quot; 20 1.0))
+       (temp (loop for i from 1 to 20 collect 
+                 (entropy (random-ngrams i 47538))))
+       (rand (mapcar &#39;- temp (cdr temp))))
+  (with-open-file (out &quot;information-output2.csv&quot;
+                       :direction :output
+                       :if-exists :supersede
+                       :if-does-not-exist :create)
+     (mapcar (lambda (x y) (format out &quot;~4,2f, ~4,2f~%&quot; x y)) gene rand)))</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-02-11-information_content_of_n-grams_1.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>Phase transition occurs in the random data earlier and ends earlier
+than the genome data suggesting the entropy increases slower than the
+random data. Moreover, even though in the random data when n=10 the
+n-grams achieve information saturation (no new information can be
+obtained by increasing the lengths of n-grams) while the same maturation
+is achieved in the genome data when n=12.</p>
+<div id="footer">
+<p><span id="timestamp">February 11th, 2014 3:32pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-02-22-text_summarization_and_topic_analysis</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="text-summarization-and-topic-analysis">Text Summarization and
+Topic Analysis</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>This is my second post on the subject, but you can read it
+independently of my <a
+href="2015-10-16-document_summarization_via_markov_chains.html">first
+post</a>.</p>
+<p>On the most abstract terms: Given a text, or a corpora, I’d like to
+create a discrete <a
+href="https://en.wikipedia.org/wiki/Markov_chain">Markov Chain Model</a>
+best explaining the text and then make a statistically quantifyable
+analysis of the text. Specifically, I would like to summarize the text,
+and also, get a list of topics for the text(s) at hand.</p>
+<h2 id="similarity-measure">Similarity measure</h2>
+<p>I will view individual sentences within each text as a bag of words.
+To be precise, I will consider each sentence as a list of words and
+their frequencies. For example, I will represent the sentence</p>
+<blockquote>
+<p>My colorless green ideas sleep furiously on the green lawn of my
+little green house with my colorless furries.</p>
+</blockquote>
+<p>as</p>
+<pre><code>((furries. . 1) (sleepless . 1) (with . 1) (house . 1) (little . 1)
+ (my . 2) (of . 1) (lawn . 1) (the . 1) (on . 1) (furiously . 1)
+ (sleep . 1) (ideas . 1) (green . 3) (colorless . 1))</code></pre>
+<p>I will not consider the syntax, nor the grammar, nor the parts of
+speech. It is a very simplistic model, but let us see how far we can go
+:) I will do one non-trivial thing though. I will <a
+href="https://en.wikipedia.org/wiki/Stemming">stem the words</a> before
+I bag them.</p>
+<p>Before I give you the code, I am going to need two thunks, the
+<code>merge-with</code> function and the <code>-&gt;&gt;</code> macro,
+that I got used to working with from clojure. I explained why and how I
+use them in two earlier posts <a
+href="2015-09-28-merging_association_lists_in_common_lisp.html">here</a>
+and <a
+href="2015-05-03-threading_macros_in_common_lisp.html">here</a>.</p>
+<p>Now, the function that returns bag of words for a given sentence:</p>
+<pre><code>(defun bag-of-words (sentence)
+   (let ((junk (coerce &quot;\@#$%^&amp;*[]_+-=(){}\&#39;\:\&quot;,/&lt;&gt;“”’‘–—&quot; &#39;list)))
+      (-&gt;&gt; (remove-if (lambda (x) (member x junk)) sentence)
+           (split &quot;\s+&quot;)
+           (mapcar (lambda (x) (cons (stem (string-downcase x)) 1)))
+           (merge-with #&#39;+))))
+BAG-OF-WORDS
+(defvar example
+        (bag-of-words &quot;Colorless green ideas sleep furiously on the green
+                       lawn of my little green house with my sleepless furries.&quot;))
+EXAMPLE
+example
+((furries. . 1) (sleepless . 1) (with . 1) (hous . 1) (littl . 1) (my . 2)
+ (of . 1) (lawn . 1) (the . 1) (on . 1) (furious . 1) (sleep . 1) (idea . 1)
+ (green . 3) (colorless . 1))</code></pre>
+<p>As the dot product of two vectors tell us how similar they are, in
+the case of sentences, I’d like to define a <em>dot product</em> between
+sentences that tells me how similar two sentences are. In this case I’d
+like to measure the number of commons words between two sentences with
+weights.</p>
+<pre><code>(defun dot (bag1 bag2)
+   (loop for x in bag2 sum
+         (* (cdr x)
+            (or (cdr (assoc (car x) bag1 :test #&#39;string=)) 1))))
+DOT
+(dot example (bag-of-words &quot;How green was my little sleepy valley&quot;))
+10</code></pre>
+<p>We can turn this on its head: we can measure how similar two words
+are depending on how many times they co-occur within the same sentence
+in a document. But I am not going to define a new function for that.
+Instead, I will define a new representation of a document from which we
+can infer both of these measures, and more, easily.</p>
+<h2 id="another-representation-of-a-document">Another representation of
+a document</h2>
+<p>Now, consider a document which contains <span
+class="math inline">\(n\)</span> sentences and <span
+class="math inline">\(m\)</span> unique (stemmed) words. Consider an
+<span class="math inline">\(n\times m\)</span> matrix <span
+class="math inline">\(A\)</span>. Label the rows with sentences, say
+ordered in the natural order they appear within the document, and label
+the columns with words, say ordered in lexicographical ordering. We let
+<span class="math inline">\(a_{ij}\)</span> to be the number of
+occurences of the word <span class="math inline">\(w_j\)</span> within
+the sentence <span class="math inline">\(s_i\)</span>.</p>
+<p>The best thing about this matrix is that <span
+class="math inline">\(A A^t\)</span> is the <span
+class="math inline">\(n\times n\)</span> matrix that gives us the matrix
+of measuring common words between sentences. On the other hand, <span
+class="math inline">\(A^t A\)</span> is the <span
+class="math inline">\(m\times m\)</span> matrix whose entries marked by
+pairs of words that gives us the number of sentences that pair of words
+cooccur.</p>
+<p><a
+href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular
+Value Decomposition</a> of this matrix analyzes these matrices,
+calculates their eigenvalues and eigenvectors.</p>
+<p>Now, let us write the function constructing the matrix we described
+above: first, a utility function that slurps a text.</p>
+<pre><code>(defun slurp (file)
+   (with-open-file (in file :direction :input)
+       (do* ((line (read-line in nil) (read-line in nil))
+             (res line (concatenate &#39;string res &quot; &quot; line)))
+            ((null line) res))))
+SLURP</code></pre>
+<p>Next, given a chunk of text we are going to split it along the end of
+sentence markers.</p>
+<pre><code>(defun get-sentences (blob)
+   (-&gt;&gt; (split &quot;[\.?!;]\s+&quot; blob)
+        (mapcar (lambda (x) (cons x (bag-of-words x))))))
+GET-SENTENCES</code></pre>
+<p>Let me test:</p>
+<pre><code>(get-sentences &quot;Hey! This is a test. Did it work?  Yes! &quot;)
+((Hey (hei . 1)) (This is a test (test . 1) (a . 1) (is . 1) (thi . 1))
+ (Did it work (work . 1) (it . 1) (did . 1)) (Yes (ye . 1)))</code></pre>
+<p>Getting the list of words now is easy: we need to append the
+individual bags of words, and then apply
+<code>(merge-with #'+)</code>.</p>
+<pre><code>(let ((test (get-sentences &quot;Hear, hear! Or don&#39;t. But if you do, make sure of being here and hear. &quot;)))
+   (merge-with #&#39;+ (reduce #&#39;append test :key #&#39;cdr)))
+((but . 1) (if . 1) (you . 1) (do . 1) (make . 1) (sure . 1) (of . 1)
+ (be . 1) (here . 1) (and . 1) (or . 1) (dont . 1) (hear . 3))</code></pre>
+<p>Now, let us process a given text file. The computationally intensive
+part is the singular value decomposition:</p>
+<pre><code>(defun process (file stops)
+   (let* ((sentences (-&gt;&gt; file slurp get-sentences))
+          (stop-words (-&gt;&gt; stops slurp (split &quot;\s+&quot;) (mapcar #&#39;stem)))
+          (words (-&gt;&gt; (reduce #&#39;append sentences :key #&#39;cdr)
+                      (merge-with #&#39;+)
+                      (remove-if (lambda (x) (member (car x) stop-words :test #&#39;string=)))))
+          (n (length sentences))
+          (m (length words))
+          (matrix (make-array (list n m))))
+      (dotimes (i n)
+         (dotimes (j m)
+            (setf (aref matrix i j)
+                  (dot (cdr (elt sentences i))
+                       (list (elt words j))))))
+      (list (mapcar #&#39;car sentences)
+            (mapcar #&#39;car words)
+            (svd matrix))))
+PROCESS</code></pre>
+<p>I added a small bit about removing the stop words. The rest is
+shuffling terms around. SVD returns 3 items:</p>
+<ol type="1">
+<li>Eigenvectors for <span class="math inline">\(AA^t\)</span></li>
+<li>Eigenvalues for both <span class="math inline">\(A^tA\)</span> and
+<span class="math inline">\(AA^t\)</span></li>
+<li>Eigenvectors for <span class="math inline">\(A^tA\)</span></li>
+</ol>
+<p>Eigenvalues are ordered from largest to smallest and eigenvectors are
+in the right order. I am going to need the vectors corresponding to the
+largest eigenvector. Here is the report generator from the SVD matrix
+result.</p>
+<pre><code>(defun normalize (xs)
+   (let ((n (length xs))
+         (sum (reduce #&#39;+ xs)))
+      (map &#39;list (lambda (x) (* x (/ n sum))) xs)))
+NORMALIZE
+(defun report (sentences words svd-result t1 t2)
+   (let* ((sbag (mapcar #&#39;cons sentences (normalize (grid:column (svd-u svd-result) 0))))
+          (tbag (mapcar #&#39;cons words (normalize (grid:row (svd-vt svd-result) 0))))
+          summary topics)
+      (dolist (x sbag)
+         (if (&gt; (cdr x) t1) (push (car x) summary)))
+      (dolist (x (sort tbag #&#39;&gt; :key #&#39;cdr))
+         (if (&gt; (cdr x) t2) (push (car x) topics)))
+      (cons (reverse summary) topics)))
+REPORT</code></pre>
+<p>From the list of sentences and the part of SVD for the sentences, we
+pick those sentences whose weight is larger than a threshold
+<code>t1</code>. We repeat the same for the words. The biggest
+difference is, though, I need to keep the order the sentences in the
+their specific order they appear in the original document, but the words
+that will appear in the topic summary need to be ordered from the
+highest to lowest weight.</p>
+<p>Now, let us put all of this together:</p>
+<p>Here is a <a
+href="http://www.nytimes.com/2015/10/11/us/politics/obama-wont-seek-access-to-encrypted-user-data.html">news
+story</a> that I summarized:</p>
+<blockquote>
+<div>
+<p>The Obama administration has backed down in its bitter dispute with
+Silicon Valley over the encryption of data on iPhones and other digital
+devices, concluding that it is not possible to give American law
+enforcement and intelligence agencies access to that information without
+also creating an opening that China, Russia, cybercriminals and
+terrorists could exploit. With its decision, which angered the FBI and
+other law enforcement agencies, the administration essentially agreed
+with Apple, Google, Microsoft and a group of the nation’s top
+cryptographers and computer scientists that millions of Americans would
+be vulnerable to hacking if technology firms and smartphone
+manufacturers were required to provide the government with “back doors,”
+or access to their source code and encryption keys. Companies like Apple
+say they are protecting their customers’ information by resisting
+government demands for access to text messages. Security experts like
+Richard A. Clarke, the former White House counterterrorism czar, also
+signed the letter to Obama. Mr Comey had expressed alarm a year ago
+after Apple introduced an operating system that encrypted virtually
+everything contained in an iPhone. His concern about what the FBI calls
+the “going dark” problem received support from the director of the
+National Security Agency and other intelligence officials.</p>
+</div>
+</blockquote>
+<p>and the list of words I got as “topics”:</p>
+<blockquote>
+<div>
+<p>effort put comei commun neumann system year kei comput fbi open devic
+execut chines door googl inform intellig digit data back hous white
+agenc enforc nation offici secur technolog compani mr law administr
+obama access govern appl encrypt</p>
+</div>
+</blockquote>
+<p>Now, here is another <a
+href="http://www.supremecourt.gov/opinions/14pdf/14-46_10n2.pdf">document</a>
+from US Supreme Court.</p>
+<blockquote>
+<div>
+<p>The Clean Air Act directs the Environmental Protection Agency to
+regulate emissions of hazardous air pollutants from power plants if the
+Agency finds regulation “appropriate and necessary.” We must decide
+whether it was reasonable for EPA to refuse to consider cost when making
+this finding. regulation is appropriate and necessary after considering
+the results of the study,” it “shall regulate [power plants] under
+[7412].” Ibid EPA has interpreted the Act to mean that power plants
+become subject to regulation on the same terms as ordinary major and
+area sources, see 77 Federal Regulations 9330 (2012), and we assume
+without deciding that it was correct to do so. EPA’s disregard of cost
+rested on its interpretation of 7412(n)(1)(A), which, to repeat, directs
+the Agency to regulate power plants if it “finds such regulation is
+appropriate and necessary.” The Agency accepts that it could have
+interpreted this provision to mean that cost is relevant to the decision
+to add power plants to the program. But when adopting the regulations
+before us, the Agency insisted that the provisions concerning all three
+studies “provide a framework for [EPA’s] determination of whether to
+regulate [power plants].” 76 Federal Regulations 24987. Turning to the
+mechanics of the hazardous-air-pollutants program, EPA argues that it
+need not consider cost when first deciding whether to regulate power
+plants because it can consider cost later when deciding how much to
+regulate them. hence 7412(n)(1)(A)‘s requirement to study hazards posed
+by power plants’ emissions “after imposition of the requirements of [the
+rest of the Act].” But if uncertainty about the need for regulation were
+the only reason to treat power plants differently, Congress would have
+required the Agency to decide only whether regulation remains
+“necessary,” not whether regulation is “appropriate and necessary.” In
+any event, EPA stated when it adopted the rule that “Congress did not
+limit [the] appropriate and necessary inquiry to [the study mentioned in
+7412(n)(1)(A)].” 77 Federal Regulations 9325. Because power plants are
+regulated under other federal and state laws, the best-performing power
+plants’ emissions limitations might reflect cost-blind regulation rather
+than cost-conscious decisions.</p>
+</div>
+</blockquote>
+<p>and its topics:</p>
+<blockquote>
+<div>
+<p>doe part necessary. 7412n1a regulatori interpret relev standard
+benefit feder necessari health congress studi decis program environment
+make requir clean sourc direct hazard find pollut act reason air whether
+decid emiss consid appropri epa power plant agenc cost regul</p>
+</div>
+</blockquote>
+<div id="footer">
+<p><span id="timestamp">February 22nd, 2016 5:23pm</span></p>
+</div>
+</body>
+</html>

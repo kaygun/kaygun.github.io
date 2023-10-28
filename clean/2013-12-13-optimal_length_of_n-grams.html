@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-12-13-optimal_length_of_n-grams</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="optimal-length-of-n-grams">Optimal length of n-grams</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>The <a href="2013-12-02-patterns_separating_large_texts.html">other
+day</a> I was looking at a problem of determining how long a string one
+needs to use to identify a large text. As we increase the length of the
+substring, the chances of an accidental match reduces. However, there
+will be a sweet spot: after a point increasing the length of the
+substring will not give us an additional information. Today, I will try
+to figure out this <em>breaking-point</em>.</p>
+<h2 id="anexperiment">An experiment</h2>
+<p>For todays experiment I will use <a
+href="ftp://ftp.ncbi.nlm.nih.gov/genbank/gbbct112.seq.gz">a sample</a>
+from genome data <a
+href="http://www.ncbi.nlm.nih.gov/nucleotide">GenBank</a> and I will
+compare the results with “Huckleberry Finn” by Twain. The gene data is a
+collection of sequences with metadata. In order to get to the genome
+data, I needed to strip out the metadata and get to the sequence data.
+Luckily that data is stored within two markers in between “ORIGIN” and
+“//”. You can whip up a simple perl script (I show my age, aren’t I :)
+to do that.</p>
+<p>I will load the data, and then create the frequency table of <a
+href="http://en.wikipedia.org/wiki/N-gram">n-grams</a> and then compute
+<a
+href="http://en.wikipedia.org/wiki/Entropy_%28information_theory%29">the
+entropy</a> of this resulting table. Changes in the entropy will give us
+the information we need. The following lisp function creates a frequency
+table for a given length n-gram.</p>
+<pre><code>(defun get-ngrams (file len getline)
+   (let* ((result (make-hash-table :test &#39;equal)))
+      (with-open-file (in file :direction :input)
+         (do ((buffer 
+                 (funcall getline in)
+                 (if (&lt; (length buffer) (1+ len))
+                    (concatenate &#39;string (subseq buffer 1) (funcall getline in))
+                    (subseq buffer 1))))
+               ((&lt; (length buffer) len) result)
+             (let ((key (subseq buffer 0 len)))
+               (setf (gethash key result) 
+                     (1+ (gethash key result 0))))))))
+
+GET-NGRAMS</code></pre>
+<p>And then we calculate the entropy in a modified form. See <a
+href="2013-11-11-entropy_and_approximately_one-to-one_maps.html">here</a>
+on why I do that.</p>
+<pre><code>(defun temperature (hash)
+  (let ((result 0.0d0))
+    (maphash 
+       (lambda (x y) (incf result (* y 1.0d0 (log y))))
+       hash)
+    result))
+
+TEMPERATURE</code></pre>
+<p>Then, since I am looking for a phase transition, I need to look at
+the first derivative of the results:</p>
+<pre><code>(defun diff (sequence)
+   (let (result)
+      (do* ((x sequence (cdr x)))
+           ((null (cadr x)) (nreverse result))
+        (push (- (cadr x) (car x)) result))))
+
+DIFF</code></pre>
+<p>Now, let us see what is going on:</p>
+<pre><code>(defun get-line-genome (stream)
+   (remove-if-not
+       (lambda (x) (or (char= x #\a) 
+                       (char= x #\t) 
+                       (char= x #\g) 
+                       (char= x #\c)))
+       (read-line stream nil)))
+
+GET-LINE-GENOME
+
+(with-open-file (out &quot;ngrams-out1.csv&quot; 
+                    :direction :output
+                    :if-exists :supersede
+                    :if-does-not-exist :create)
+  (let ((temps (diff (loop for i from 1 to 17
+                           collect (temperature 
+                                     (get-ngrams 
+                                       &quot;../data/gbbct112-processed.seq&quot; 
+                                       i
+                                       &#39;get-line-genome))))))
+     (dotimes (i (length temps)) (format out &quot;~d ~12,8f~%&quot; (1+ i) (elt temps i)))))
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2013-12-13-optimal_length_of_n-grams_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>From this graph we see that increasing the length of n-grams do not
+yield much on the interval 1 to 5. There is a phase transition at n=6.
+Any increase result in drastic changes on the interval 6 to 10. Then
+there is another phase transition at n=11. This suggests that I should
+pay attention n-grams of length 6 and 11.</p>
+<p>Now, I will repeat the test with Huckleberry Finn. For that I will
+need to modify the function which reads the lines from the input
+file.</p>
+<pre><code>(defun get-line-text (stream)
+   (remove-if-not 
+       (lambda (x) (or (char= x #\Space)
+                       (and (char&gt;= x #\a)
+                            (char&lt;= x #\z))))
+       (read-line stream nil)))
+
+GET-LINE-TEXT
+
+(with-open-file (out &quot;ngrams-out2.csv&quot; 
+                    :direction :output
+                    :if-exists :supersede
+                    :if-does-not-exist :create)
+  (let ((temps (diff (loop for i from 1 to 40 
+                           collect (temperature 
+                                     (get-ngrams 
+                                        &quot;../data/twain-huckleberry-finn.txt&quot; 
+                                        i
+                                        &#39;get-line-text))))))
+     (dotimes (i (length temps)) (format out &quot;~d ~12,8f~%&quot; (1+ i) (elt temps i)))))
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2013-12-13-optimal_length_of_n-grams_1.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>There is no phase transition in this example. The longer the n-grams
+the better the result. And since the entropy becomes the maximum at n=38
+I must choose n=38 or higher.</p>
+<div id="footer">
+<p><span id="timestamp">December 13th, 2013 4:11pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-04-18-a_migration_analysis</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-migration-analysis">A Migration Analysis</h1>
+<h2 id="description-of-the-data">Description of the data </h2>
+<p>I am not sure if readers of this blog are aware: there was a big data
+dump which contained data on Turkish citizens several years back, and
+recently it made <a
+href="http://www.bbc.com/news/technology-35978216">the headlines</a>.
+The data contained names, parents’ names, birth day and place along with
+the current addresses and the Turkish Citizenship ID numbers.</p>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Today, I will look into internal migration patterns in Turkey: what
+are the visible patterns for a citizen’s birth city and the current city
+s/he lives in. </p>
+<p>I will split the data into 3 time frames:</p>
+<ol type="1">
+<li>Those who were born before 1950</li>
+<li>Those who were born between 1950 and 1980</li>
+<li>Those who were born after 1980</li>
+</ol>
+<p>This time around, I will not post <del>the code nor</del> the
+data.</p>
+<h2 id="graphs">Graphs</h2>
+<ul>
+<li><a
+href="https://dl.dropboxusercontent.com/u/17946140/migration_before-1950.png">Migration
+before 1950 [threshold 4K]</a></li>
+<li><a
+href="https://dl.dropboxusercontent.com/u/17946140/migration_1950-1980.png">Migration
+between 1950 and 1980 [threshold 10K]</a></li>
+<li><a
+href="https://dl.dropboxusercontent.com/u/17946140/migration_after-1980.png">Migration
+after 1980 [threshold 20K]</a></li>
+</ul>
+<h2 id="methodology">Methodology</h2>
+<p>The original data was a SQL database dump. Luckily, the dump was
+well-structured text file and all I had to do to delete first few and
+last few line. And voila! I had a tab separated data file.</p>
+<p>Next, I extracted the birth place, birth date and current city. I
+counted the results via a hash table:</p>
+<pre><code>(let ((table (make-hash-table :test #&#39;equal)))
+   (do ((line (read-line *standard-input* nil)
+              (read-line *standard-input* nil)))
+       ((null line) nil)
+       (let* ((entries (cl-ppcre:split (format nil &quot;~c&quot; #\tab) line))
+              (date (third (cl-ppcre:split &quot;/&quot; (elt entries 8))))
+              (from (get-city (asciify (elt entries 7))))
+              (to   (asciify (elt entries 9))))
+           (setf (gethash (cons from to) table)
+                 (1+ (gethash (cons from to) table 0)))
+   (maphash (lambda (x y) (format t &quot;~a~c~a~c~a~%&quot; (car x) #\tab (cdr x) #\tab y))
+            table))</code></pre>
+<p>Unfortunately, the birth place wasn’t city proper but the <a
+href="https://en.wikipedia.org/wiki/Arrondissement">municipal
+arrondissement</a>. I had to get the city using a simple lookup. The
+<code>get-city</code> function does that. I got the list from <a
+href="https://en.wikipedia.org/wiki/List_of_cities_in_Turkey">Wikipedia</a>.</p>
+<p>Incidentally, the <code>cl-unicode</code> library does not correctly
+upcase Turkish letters. Besides, it is safer to ascii-fy the letters.
+For that, I used the following function.</p>
+<pre><code> (let ((from &quot;ÂÇĞİÖŞÜ&quot;)
+       (to &quot;ACGIOSU&quot;))
+   (defun asciify (word)
+     (map &#39;string
+          (lambda (x)
+            (let ((i (position x from)))
+              (if i (elt to i) x)))
+          (map &#39;string #&#39;cl-unicode:uppercase-mapping word))))</code></pre>
+<p>After the results are displayed, I used a simple awk script to
+convert the results into a <a
+href="https://en.wikipedia.org/wiki/DOT_(graph_description_language)">graphviz</a>
+dot file:</p>
+<pre><code> awk &#39;BEGIN { print &quot;digraph cities {&quot;; } \
+      { if(($3 &gt; 4000) &amp;&amp; ($1 != $2)) { print $1&quot; -&gt; &quot;$2&quot; [penwidth=&quot;int($3/4000)&quot;];&quot;; } } \
+      END { print &quot;}&quot; }&#39;</code></pre>
+<p>Here the threshold for the number of data entries was 4000.</p>
+<div id="footer">
+<p><span id="timestamp">April 18th, 2016 5:40pm</span></p>
+</div>
+</body>
+</html>

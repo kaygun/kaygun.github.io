@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-01-04-a_simple_monte-carlo_integration_implementation_in_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-simple-monte-carlo-integration-implementation-in-lisp">A
+Simple Monte-Carlo Integration Implementation in Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume <span class="math inline">\(\Omega\subseteq
+\mathbb{R}^n\)</span> is a region, and that we have a rectangular box
+<span class="math inline">\(B := I_1\times\cdots\times I_n\)</span>
+which contains <span class="math inline">\(\Omega\)</span>. Imagine also
+that we have a function (usually called <em>a characteristic
+function</em>) <span class="math inline">\(\chi_\Omega\colon B\to
+\{T,F\}\)</span> which returns a boolean value telling us whether a
+given input lies in <span class="math inline">\(\Omega\)</span>, or
+not.</p>
+<p>Now, using uniform distributions on the intervals <span
+class="math inline">\(I_i\)</span> for <span
+class="math inline">\(i=1,\ldots,n\)</span>, if we sample <span
+class="math inline">\(N\)</span> points from the box <span
+class="math inline">\(B\)</span> and count the sample points which lie
+in <span class="math inline">\(\Omega\)</span> we can estimate the
+volume <span class="math inline">\(\Omega\)</span>. Let <span
+class="math inline">\(p\)</span> be the number of sample points which
+lie in <span class="math inline">\(\Omega\)</span>. Then the ratio <span
+class="math inline">\(\frac{p}{N}\)</span> approximates the ratio of the
+volume of <span class="math inline">\(\Omega\)</span> by the volume of
+the box <span class="math inline">\(B\)</span>.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>I am going to use the following lisp function.</p>
+<pre><code>(defun monte-carlo (experiment n &amp;optional (scale 1.0)) 
+   (do ((i 0 (1+ i))
+        (p 0 (if (funcall experiment) (1+ p) p)))
+       ((&gt; i n) (/ (* p scale) n))))
+MONTE-CARLO</code></pre>
+<p>Here the argument function <code>experiment</code> needs to do both
+the sampling and the testing. Let us test it on a function. Let <span
+class="math inline">\(f(x) = \frac{1}{\sqrt{2\pi}} exp(-x^2/2)\)</span>
+and assume that I would like to integrate <span
+class="math inline">\(f(x)\)</span> on <span
+class="math inline">\(\[-1.96,1.96\]\)</span>.<br />
+I will then write:</p>
+<pre><code>(defun experiment-erf ()
+   (let* ((x (- (random 3.92) 1.96))
+          (y (random 1.0))
+          (z (/ (exp (- 0 (* x x 0.5))) 
+                (sqrt (* 8 (atan 1))))))
+         (&lt; y z)))
+EXPERIMENT-ERF</code></pre>
+<p>Notice that the bounding box <span
+class="math inline">\(\[-1.96,1.96\]\times \[0,1\]\)</span> has area
+<span class="math inline">\(3.92\)</span>. So, if we call our function
+<code>monte-carlo</code> with a specific sample size, the return value
+is going to be an approximation of the value <span
+class="math display">\[ \frac{1}{3.92}\int_{-1.96}^{1.96}
+\frac{e^{-x^2/2}}{\sqrt{2\pi}} dx \]</span> So, the integral we are
+looking for is going to be obtained by multiplying the return value by
+<span class="math inline">\(3.92\)</span>.</p>
+<pre><code>(monte-carlo &#39;experiment-erf 500 3.92)
+0.89376</code></pre>
+<p>The result should be approximately <span
+class="math inline">\(0.95\)</span>. Let me statistically analyze the
+function simply calculating its average and standard deviation over 100
+runs.</p>
+<pre><code>(defparameter collection 
+               (loop for i from 1 to 100 collect (monte-carlo &#39;experiment-erf 500 3.92)))
+COLLECTION</code></pre>
+<p>In order to analyze the ensemble, I will need the following
+function:</p>
+<pre><code>(defun analyze (collection)
+   (let* ((N (length collection))
+          (average (/ (reduce &#39;+ collection) N))
+          (deviation (sqrt (/ (loop for x in collection 
+                                    sum (let ((u (- x average))) (* u u))) (1- N)))))
+         (format nil &quot;Average: ~A~%    Deviation: ~A~%&quot; average deviation)))
+ANALYZE</code></pre>
+<p>And now, if we analyze our data we get</p>
+<pre><code>(analyze collection)
+Average: 0.95953757
+Deviation: 0.079398565</code></pre>
+<p>As one can easily see, the monte carlo integration method is not very
+efficient in a 1-dimensional integral as even the ordinary Riemann sum
+would probably give a better convergence rate with respect to the sample
+size. So, let us move to a higher dimensional problem.</p>
+<p>This time, I would like to approximate the area within an ellipse.
+Specifically the area of the region <span
+class="math inline">\(\frac{x^2}{3} + \frac{y^2}{5} \leq 1\)</span>.
+Then I will need the following experiment function</p>
+<pre><code>(defun experiment-ellipse ()
+   (let* ((a (sqrt 3))
+          (b (sqrt 5))
+          (x (- (random (* 2 a)) a))
+          (y (- (random (* 2 b)) b))
+          (z (+ (/ (* x x) 3) (/ (* y y) 5))))
+         (&lt; z 1)))
+EXPERIMENT-ELLIPSE</code></pre>
+<p>Now, let me put this function through a test: We know that the real
+value of the area is <span class="math inline">\(\pi\sqrt{15}\)</span>
+which is approximately 12.167336 and from a single run we get</p>
+<pre><code>(monte-carlo &#39;experiment-ellipse 200 (* (sqrt 15) 4))
+11.309112</code></pre>
+<p>and if we look at 100 runs we will get</p>
+<pre><code>(setf collection 
+     (loop for i from 1 to 100 collect (monte-carlo &#39;experiment-ellipse 200 (* 4 (sqrt 15)))))
+(analyze collection)
+Average: 12.214616
+Deviation: 0.45041347</code></pre>
+<p>In practice, it would not be feasible to actually test the
+statistical quality of the result we will obtain using ensambles as I
+did above. Let me see what happens if I increase the sample size</p>
+<pre><code>(time (monte-carlo &#39;experiment-ellipse 999999 (* 4 (sqrt 15))))
+12.171126
+
+Evaluation took:
+ 0.163 seconds of real time
+ 0.160010 seconds of total run time (0.160010 user, 0.000000 system)
+ 98.16% CPU
+ 388,385,688 processor cycles
+ 0 bytes consed</code></pre>
+<p>Not bad for this sample size, considering the <em>undeserved</em>
+reputation of lisp in numerical computations.</p>
+<div id="footer">
+<p><span id="timestamp">January 4th, 2013 5:15pm</span></p>
+</div>
+</body>
+</html>

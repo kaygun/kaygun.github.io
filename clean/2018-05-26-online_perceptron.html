@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2018-05-26-online_perceptron</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="online-perceptron">Online Perceptron</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a href="2018-05-18-online_regression.html">Few days ago</a> I
+described a machine learning algorithm that learns the coefficients of a
+regression. The setup I gave is far too general. If you read it
+carefully, you see that I described a <a
+href="https://en.wikipedia.org/wiki/Perceptron">perceptron</a></p>
+<p>Today, I am going to redo <a
+href="2018-05-18-online_regression.html">what I did</a> in scala.</p>
+<h2 id="an-implementation-in-scala">An implementation in scala</h2>
+<p>Here is my implementation:</p>
+<pre class="scala211"><code>import $ivy.&#39;org.scalanlp:breeze_2.11:1.0-RC2&#39;
+import breeze.linalg._
+import math.random
+import scala.util.Random.nextInt
+
+def logit(x:Double):Double = 1.0/(1.0 + math.exp(-x))</code></pre>
+<pre><code>import $ivy.&#39;org.scalanlp:breeze_2.11:1.0-RC2&#39;
+import breeze.linalg._
+import math.random
+import scala.util.Random.nextInt
+defined function logit</code></pre>
+<pre class="scala211"><code>case class perceptron(n: Int, fn: Double=&gt;Double, eta: Double){
+
+    private var derivative = 0.0
+    private var input = DenseVector.zeros[Double](n+1)
+    var weights = DenseVector.zeros[Double](n+1)
+
+    def forward(xs:DenseVector[Double]):Double = {
+        input = DenseVector.vertcat(DenseVector(1.0),xs)
+        val calc = input.dot(weights)
+        derivative = (fn(calc + eta/2) - fn(calc - eta/2))/eta
+        return fn(calc)
+    }
+
+    def train(ys:Double, xs:DenseVector[Double]) {
+        val delta = ys - forward(xs)
+        weights += delta*eta/(derivative + eta*(2.0-math.random))*input
+    }
+}</code></pre>
+<pre><code>defined class perceptron</code></pre>
+<p>The data I am going to use is <a
+href="https://archive.ics.uci.edu/ml/datasets/skin+segmentation">Skin
+Segmentation Data Set</a> from <a
+href="https://archive.ics.uci.edu">UCI</a>. The data consists of 4
+columns each is an integer from 0 to 255 indicating pixel color (RGB)
+values, and the last is either 1 or 2.</p>
+<p>Let us read the data:</p>
+<pre class="scala211"><code>val raw = scala.io.Source.fromURL(&quot;https://archive.ics.uci.edu/ml/machine-learning-databases/00229/Skin_NonSkin.txt&quot;)
+               .mkString
+               .split(&quot;\n&quot;)
+               .map(_.split(&quot;\t&quot;).map(_.toDouble).reverse)
+val n = raw.length-1</code></pre>
+<pre><code>raw: Array[Array[Double]] = Array(
+  Array(1.0, 123.0, 85.0, 74.0),
+  Array(1.0, 122.0, 84.0, 73.0),
+  Array(1.0, 121.0, 83.0, 72.0),
+  Array(1.0, 119.0, 81.0, 70.0),
+  Array(1.0, 119.0, 81.0, 70.0),
+  Array(1.0, 118.0, 80.0, 69.0),
+  Array(1.0, 119.0, 81.0, 70.0),
+  Array(1.0, 119.0, 81.0, 70.0),
+  Array(1.0, 125.0, 87.0, 76.0),
+  Array(1.0, 125.0, 87.0, 76.0),
+  Array(1.0, 126.0, 88.0, 77.0),
+...-(77%)
+n: Int = 245056</code></pre>
+<p>There are approximately 250K data points. I am going to use only a
+random sample of 10K points to build a model. Since I am using the
+sigmoid function, the class labels 1 and 2 h as to be normalized to 0
+and 1.</p>
+<pre class="scala211"><code>val node = perceptron(3,logit,4e-2)
+
+(1 to 10000).foreach(i=&gt;{
+    val x = raw(nextInt(n))
+    node.train(x(0)-1.0, DenseVector(x.slice(1,x.length)))
+})</code></pre>
+<pre><code>node: perceptron = perceptron(3, , 0.001)</code></pre>
+<p>Let us test on randomly chosen 1K data points.</p>
+<pre class="scala211"><code>def experiment(m: Int, data:Array[Array[Double]]): Double = {
+    val n = data.length
+    var res = 0.0
+    (1 to m).foreach(i=&gt;{
+        val x = data(nextInt(n))
+        val y = x(0)
+        val u = 1.0 + node.forward(DenseVector(x.slice(1,4)))
+        if(math.abs(u-y)&gt;1e-2) res += 1
+    })
+    return 1.0 - res/m
+}
+
+(1 to 100).map(i=&gt;experiment(100,raw)).reduce(_+_)/100</code></pre>
+<pre><code>defined function experiment
+res97_1: Double = 0.9128999999999999</code></pre>
+<p>A success of 91.3%. Very nice!</p>
+<div id="footer">
+<p><span id="timestamp">May 26th, 2018 2:39pm</span></p>
+</div>
+</body>
+</html>

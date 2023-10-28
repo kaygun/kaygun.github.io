@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-08-25-simulated_annealing_in_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="simulated-annealing-in-lisp">Simulated Annealing in Lisp</h1>
+<p>Today, I am going to look at a standard optimization algorithm called
+<a href="http://en.wikipedia.org/wiki/Simulated_annealing">Simulated
+Annealing</a>, and I will write an implementation in lisp. The algorithm
+is a heuristic one, and usually used to search for a near optimal
+solution within a fixed time period. It works by imitating a statistical
+mechanical process.</p>
+<h2 id="thealgorithm">The algorithm</h2>
+<p>The <a
+href="http://en.wikipedia.org/wiki/Simulated_annealing">Wikipedia page
+on Simulated Annealing</a> is quite informative but for me the <a
+href="http://www.gnu.org/software/gsl/manual/html_node/Simulated-Annealing-algorithm.html">GNU
+Scientific Library’s page</a> on the subject struck the perfect balance
+on being concise and informative. Here is my narrative on the algorithm.
+(All errors are mine, of course.)</p>
+<p>The idea is that we randomly iterate our points using a stochastic
+process. The probability of jumping from one state to the randomly
+chosen next point depends on the ambient temperature. If the cost <span
+class="math inline">\(\phi(x_{i+1})\)</span> in the next step is smaller
+than the cost <span class="math inline">\(\phi(x_i)\)</span> at the
+current state then the probability of a jump is</p>
+<p><span class="math display">\[ e^{ \frac{\phi(x_{i+1})-\phi(x_i)}{kT}
+} \]</span></p>
+<p>Otherwise, the probability is set to 1.</p>
+<pre><code>Function SimulatedAnnealing
+Input: cost, a cost function to be optimized
+       init.pos, an initial point
+       step, a function which iterates our approximation
+       random, a uniform random number generator in [0,1] 
+       init.temp, initial temperature
+       k, a scaling parameter for temperature
+       cooling, a function which gives us the temperature 
+          in the next iteration
+       min.temp, the temperature we stop
+Output: pos, a near optimal minimum for the cost function
+Initialize: temp &lt;- init.temp
+            pos &lt;- init.pos
+Begin
+  While temp &gt; temp.min do
+     next &lt;- step(pos, k, temp)
+     if random() &lt; exp( (cost(pos) - cost(next))/(k*temp) ) 
+        pos &lt;- next
+     end
+     temp &lt;- cooling(temp, k)
+  End
+End</code></pre>
+<h2 id="animplementationinlisp">An implementation in lisp</h2>
+<p>Here is the code I wrote for the algorithm I described above:</p>
+<pre><code>(defun simulated-annealing (cost init step k init-temp cooling min-t &amp;optional (trace nil))
+     (labels ((obj (pos next temp)
+                 (let ((a (funcall cost pos))
+                       (b (funcall cost next)))
+                    (exp (/ (- a b)
+                            (* k temp)))))
+              (iter (pos temp)
+                 (let ((next (funcall step pos k temp)))
+                    (if (&gt; (obj pos next temp) (random 1.0d0))
+                       next
+                       pos))))
+        (do* ((temp init-temp (funcall cooling temp))
+              (pos init (iter pos temp))    
+              (i 1 (1+ i)))
+             ((&lt; temp min-t) pos)
+          (if (and trace (zerop (mod i 100)))
+             (format t &quot;~4d ~5,2f ~5,2f ~a~%&quot; i temp (funcall cost pos) pos)))))</code></pre>
+<p>In my first example, I will try to minimize the function <span
+class="math inline">\(sin(exp(-x^2+x+1))\)</span></p>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-08-25-simulated_annealing_in_lisp_0.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<p>As one can see, the global minimum is hidden within a narrow valley.
+If the random iteration is incremental, that is if it uses Brownian
+motion, then it will get stuck in the large desert of local minima. It
+seems, if we know the approximate region where our near optimal solution
+lives, it is better to choose the next point completely random to avoid
+to get stuck in the local minima. So, I used a totally random iteration
+function which takes values in [-3,4] and does not use the current
+position. Initial position is set to 2.0, initial temperature is set to
+100, minimal temperature is set to 0.001 and cooling schedule is
+multiplicative <code>temp -&gt; temp/1.01</code>.</p>
+<pre><code>(simulated-annealing (lambda (x) (sin (exp (+ (* -1 x x) x 1))))
+                      2.0d0
+                      (lambda (x k temp) (- (random 7.0) 3.0))
+                      1.0d-2
+                      100
+                      (lambda (temp) (/ temp 1.01))
+                      1.0d-3)
+0.51129866</code></pre>
+<p>Not bad.</p>
+<p>Next up, the <a
+href="http://en.wikipedia.org/wiki/Himmelblau&#39;s_function">Himmelbrau
+function</a>: <span class="math display">\[
+(x^2 + y - 11)^2 + (x + y^2 - 7)^2 \]</span></p>
+<p>Here, the global minima are on the intersection of two parabolas
+<span class="math inline">\(y=11-x^2\)</span> and <span
+class="math inline">\(x= 7 - y^2\)</span>. After some algebraic
+manipulation, you should see that the solution to the equation <span
+class="math display">\[ y^4 - 14y^2 +
+y + 38 = 0 \]</span> is what we need. There are 4 solutions:</p>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
+<img
+src="../media/2013-08-25-simulated_annealing_in_lisp_1.png"
+data-orig-height="375" data-orig-width="500" />
+</figure>
+<p>One of the possible solutions is y = -1.8481265269621736d0 and x =
+3.584428340338734d0.</p>
+<p>Here, I used a Brownian motion type iteration with the same cooling
+schedule function as above.</p>
+<pre><code>(simulated-annealing (lambda (v)
+                        (let ((x (aref v 0))
+                              (y (aref v 1)))
+                           (+ (expt (+ -11.0d0 y (expt x 2)) 2)
+                              (expt (+ -7.0d0 x (expt y 2)) 2))))
+                     #(3.0 -2.0)
+                     (lambda (v k temp)
+                        (map &#39;vector (lambda (i) (+ i (- (random 0.2d0) 0.1d0)))  v))
+                     1.0d-1
+                     100.0
+                     (lambda (x) (/ x 1.01))
+                     1.0d-2)
+#(3.5762820850832755d0 -1.8606108094272549d0)</code></pre>
+<p>Again, not too bad.</p>
+<p>If I were to choose my next point in the iteration totally randomly,
+then if the algorithm to converge, it would converge to one of the
+possible 4 optimal points. With the Brownian motion type iteration, if
+we were to drop the initial point close to any of the other 3 possible
+solutions we would find the other points. Here let me find one
+other:</p>
+<pre><code>(simulated-annealing (lambda (v)
+                        (let ((x (aref v 0))
+                              (y (aref v 1)))
+                           (+ (expt (+ -11.0d0 y (expt x 2)) 2)
+                              (expt (+ -7.0d0 x (expt y 2)) 2))))
+                     #(4.0 4.0)
+                     (lambda (v k temp)
+                        (map &#39;vector (lambda (i) (+ i (- (random 0.2d0) 0.1d0)))  v))
+                     1.0d-1
+                     100.0
+                     (lambda (x) (/ x 1.01))
+                     1.0d-2)
+#(3.0015812084913107d0 2.008224658084634d0)</code></pre>
+<h2 id="endnote">End note</h2>
+<p>I was thinking of implementing this in <a
+href="http://julialang.org">Julia</a> too but <a
+href="http://www.johnmyleswhite.com/">J. M. White</a> has already <a
+href="http://www.johnmyleswhite.com/notebook/2012/04/04/simulated-annealing-in-julia/">done
+it</a>. As a matter of fact, I took idea of using SA to find the global
+minima for the <a
+href="http://en.wikipedia.org/wiki/Himmelblau&#39;s_function">Himmelbrau
+Function</a> from him.</p>
+<div id="footer">
+<p><span id="timestamp">August 25th, 2013 2:03pm</span></p>
+</div>
+</body>
+</html>

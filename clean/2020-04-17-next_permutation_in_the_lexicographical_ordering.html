@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-04-17-next_permutation_in_the_lexicographical_ordering</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="next-permutation-in-the-lexicographical-ordering">Next
+Permutation in the Lexicographical Ordering</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Listing permutations of a list of objects is a useful thing. However,
+the space complexity is <span class="math inline">\(n!\approx
+n^n\)</span> which is worse than exponential. One way getting around
+this problem is to find a way of generating the list in a sequential
+manner by using a total order on all permutations. Today, I am going to
+write a common lisp program that gives the list of all permutations of a
+list using such a total order.</p>
+<h2 id="some-theory">Some theory</h2>
+<p>One can order all permutations using <a
+href="https://en.wikipedia.org/wiki/Lexicographical_order">the
+lexicographical ordering</a>. If we use this order, then given a
+permutation we know what the next one is going to be. So, here is the
+algorithm in pseudo-code</p>
+<pre><code>Algorithm NextPermutation
+Input: A permutation sigma = a(1), ..., a(n)
+Output: The next permutation sigma&#39; = b(1), ..., b(n) in the lexicographical order
+
+Begin
+  i &lt;- max { k | a(k-1) &lt;= a(k) }
+  If i &gt; 0
+     j &lt;- max { k | a(k+i) &gt; a(i-1) }
+     Swap a(i-1) and a(i+j-1)
+     Return a(1), ..., a(i-1), a(n), a(n-1), ..., a(i)
+  Else
+     Return NIL
+  End If
+End</code></pre>
+<p>The algorithm and the pseudo-code I use here is a modified version I
+saw in <a
+href="https://en.wikipedia.org/wiki/Permutation#Generation_in_lexicographic_order">here</a>.</p>
+<h2 id="the-code">The code</h2>
+<p>First, I need two utility functions:</p>
+<pre><code>(defun take-until (pred xs &amp;optional (c 0))
+  (if (funcall pred xs)
+      c
+      (take-until pred (cdr xs) (incf c))))
+
+TAKE-UNTIL</code></pre>
+<p>This function processes a list of objects until a predicate is
+satisfied. It returns the index at which the predicate is satisfied.
+Next, we have:</p>
+<pre><code>(defun iterate-until (pred fn val &amp;optional carry)
+  (let ((next (funcall fn val)))
+     (if (funcall pred next)
+         (reverse (cons val carry))
+         (iterate-until pred fn next (cons val carry)))))
+
+ITERATE-UNTIL</code></pre>
+<p>This function iterates a function until a predicate is satisfied. It
+returns the list of values in the iteration as a list.</p>
+<p>Now, the main function:</p>
+<pre><code>(defun next-permutation (xs)
+  (let ((i (- (length xs) 1 (take-until (lambda (ys)
+                                          (or (null ys)
+                                              (null (cdr ys))
+                                              (&gt; (car ys) (cadr ys))))
+                                        (reverse xs)))))
+    (if (&gt; i 0)
+        (let* ((x (elt xs (1- i)))
+               (j (take-until (lambda (ys)
+                                (or (null ys)
+                                    (&lt;= (car ys) x)))
+                              (subseq xs i)))
+               (zs (copy-list xs)))
+          (setf (elt zs (1- i)) (elt xs (+ i j -1))
+                (elt zs (+ i j -1)) (elt xs (1- i)))
+          (append (subseq zs 0 i) (reverse (subseq zs i)))))))
+
+NEXT-PERMUTATION</code></pre>
+<p>This function takes a permutation of elements and then returns the
+next permutation in the lexicographical ordering. Let us check:</p>
+<pre><code>(iterate-until #&#39;null #&#39;next-permutation &#39;(0 1 1 2 2 2))
+
+((0 1 1 2 2 2) (0 1 2 1 2 2) (0 1 2 2 1 2) (0 1 2 2 2 1) (0 2 1 1 2 2)
+ (0 2 1 2 1 2) (0 2 1 2 2 1) (0 2 2 1 1 2) (0 2 2 1 2 1) (0 2 2 2 1 1)
+ (1 0 1 2 2 2) (1 0 2 1 2 2) (1 0 2 2 1 2) (1 0 2 2 2 1) (1 1 0 2 2 2)
+ (1 1 2 0 2 2) (1 1 2 2 0 2) (1 1 2 2 2 0) (1 2 0 1 2 2) (1 2 0 2 1 2)
+ (1 2 0 2 2 1) (1 2 1 0 2 2) (1 2 1 2 0 2) (1 2 1 2 2 0) (1 2 2 0 1 2)
+ (1 2 2 0 2 1) (1 2 2 1 0 2) (1 2 2 1 2 0) (1 2 2 2 0 1) (1 2 2 2 1 0)
+ (2 0 1 1 2 2) (2 0 1 2 1 2) (2 0 1 2 2 1) (2 0 2 1 1 2) (2 0 2 1 2 1)
+ (2 0 2 2 1 1) (2 1 0 1 2 2) (2 1 0 2 1 2) (2 1 0 2 2 1) (2 1 1 0 2 2)
+ (2 1 1 2 0 2) (2 1 1 2 2 0) (2 1 2 0 1 2) (2 1 2 0 2 1) (2 1 2 1 0 2)
+ (2 1 2 1 2 0) (2 1 2 2 0 1) (2 1 2 2 1 0) (2 2 0 1 1 2) (2 2 0 1 2 1)
+ (2 2 0 2 1 1) (2 2 1 0 1 2) (2 2 1 0 2 1) (2 2 1 1 0 2) (2 2 1 1 2 0)
+ (2 2 1 2 0 1) (2 2 1 2 1 0) (2 2 2 0 1 1) (2 2 2 1 0 1) (2 2 2 1 1 0))</code></pre>
+<div id="footer">
+<p><span id="timestamp">April 17th, 2020 10:55pm</span></p>
+</div>
+</body>
+</html>

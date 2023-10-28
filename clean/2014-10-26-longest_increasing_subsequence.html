@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-10-26-longest_increasing_subsequence</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="longest-increasing-subsequence">Longest Increasing
+Subsequence</h1>
+<p>It is a slow day, being Sunday and all. Plus I have a terrible case
+of sinusitis. It is a perfect time to look into some stuff that I failed
+to understand in the past. The easiest one to attack at the moment are
+algorithms for <a
+href="http://en.wikipedia.org/wiki/Longest_increasing_subsequence">a
+longest increasing subsequence</a> in a given sequence. If anything goes
+wrong, I’ll blame the sinusitis, or this scotch I have been nursing. You
+have been warned:</p>
+<h2 id="firstattemptofrefactoring">First attempt of refactoring</h2>
+<p>Here is the <a
+href="http://rosettacode.org/wiki/Longest_increasing_subsequence">code</a>
+for an O(n log(n)) algorithm given at <a
+href="http://rosettacode.org/">Rosetta Code</a>:</p>
+<pre><code>(defun longest-inc-seq (input)
+  (let ((piles nil))
+    (dolist (item input)
+      (setf piles (insert item piles)))
+    (reverse (caar (last piles)))))
+
+LONGEST-INC-SEQ
+
+
+(defun insert (item piles)
+  (let ((inserted nil))
+    (loop for pile in piles
+      and prev = nil then (car pile)
+      and i from 0
+      do (when (and (not inserted)
+                    (&lt;= item (caar pile)))
+            (setf inserted t
+                  (elt piles i) (push (cons item prev) (elt piles i)))))
+(if inserted
+    piles
+    (append piles (list (list (cons item (caar (last piles)))))))))
+
+INSERT
+
+
+(longest-inc-seq (list 3 2 6 4 5 1))
+
+(2 4 5)
+
+(longest-inc-seq (list 0 8 4 12 2 10 6 14 1 9 5 13 3 11 7 15))
+
+(0 2 6 9 11 15)</code></pre>
+<p>There is the immediate refactoring opportunity in the for loop: the
+<code>(not inserted)</code> clause should have been in the for loop. So,
+the minimal rewriting of the same code would be</p>
+<pre><code>(defun insert (item piles)
+  (let ((not-found t))
+    (loop 
+       while not-found
+       for pile in piles
+       and prev = nil then pile
+       and i from 0
+       do (when (&lt;= item (caar pile))
+             (setf (elt piles i) (push (cons item (car prev)) (elt piles i))
+                   not-found nil)))
+    (if not-found
+        (append piles (list (list (cons item (caar (last piles))))))
+        piles)))
+
+INSERT
+
+
+(longest-inc-seq (list 3 2 6 4 5 1))
+
+(2 4 5)
+
+(longest-inc-seq (list 0 8 4 12 2 10 6 14 1 9 5 13 3 11 7 15))
+
+(0 2 6 9 11 15)</code></pre>
+<p>Looks better, and slightly more efficient. But then again, I do not
+like the syntax of <code>loop</code> that much. This brings me the new
+and improve version</p>
+<pre><code>(defun longest-inc-seq (input)
+  (do* ((piles nil (insert (car x) piles))
+        (x input (cdr x)))
+       ((null x) (reverse (caar (last piles))))))
+
+LONGEST-INC-SEQ
+
+(defun insert (item piles)
+  (multiple-value-bind
+        (i prev)
+      (do* ((prev nil (caar x))
+            (x piles (cdr x))
+            (i 0 (1+ i)))
+           ((or (null x) (&lt;= item (caaar x))) (values i prev)))
+    (if (= i (length piles))
+        (append piles (list (list (cons item (caar (last piles))))))
+        (progn (push (cons item prev) (elt piles i))
+               piles))))
+
+INSERT
+
+(longest-inc-seq (list 3 2 6 4 5 1))
+
+(2 4 5)
+
+(longest-inc-seq (list 0 8 4 12 2 10 6 14 1 9 5 13 3 11 7 15))
+
+(0 2 6 9 11 15)</code></pre>
+<p>But, I still have a problem: I prefer recursion over the
+<code>do</code> loops because they are easier to debug in a lisp
+environment. Hence:</p>
+<pre><code>(defun longest-inc-seq (input &amp;optional carry)
+  (if (null input) 
+      (reverse (caar (last carry)))
+      (longest-inc-seq (cdr input) (insert (car input) carry))))
+
+LONGEST-INC-SEQ
+
+(defun insert (item piles &amp;optional prev)
+  (cond ((null piles) 
+         (reverse (cons (list (cons item (caar prev))) prev)))
+        ((&lt;= item (caaar piles)) 
+         (append (reverse prev)
+                 (progn (push (cons item (caar prev)) (car piles))
+                        piles)))
+        (t (insert item (cdr piles) (push (car piles) prev)))))
+
+INSERT
+
+(longest-inc-seq (list 3 2 6 4 5 1))
+
+(2 4 5)
+
+(longest-inc-seq (list 0 8 4 12 2 10 6 14 1 9 5 13 3 11 7 15))
+
+(0 2 6 9 11 15)</code></pre>
+<h2 id="acomparison">A comparison</h2>
+<p>I ran my three different versions using the same random sequence on
+my old dinky laptop Intel i5 with 4Gb running sbcl.</p>
+<pre><code>(loop repeat 30000 collect (random 100))</code></pre>
+<p>And the winner is…</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Version</th>
+<th style="text-align: right;">Memory</th>
+<th style="text-align: right;">CPU cycles</th>
+<th style="text-align: center;">Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>for</code> loop</td>
+<td style="text-align: right;">761Kb</td>
+<td style="text-align: right;">125M</td>
+<td style="text-align: center;">0.05s</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>do</code> loop</td>
+<td style="text-align: right;">761Kb</td>
+<td style="text-align: right;">184M</td>
+<td style="text-align: center;">0.08s</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tail recursive</td>
+<td style="text-align: right;">34,000Kb</td>
+<td style="text-align: right;">257M</td>
+<td style="text-align: center;">0.11s</td>
+</tr>
+</tbody>
+</table>
+<p>Alas, the recursive version, as sweet as it looks, is the least
+efficient one.</p>
+<div id="footer">
+<p><span id="timestamp">October 26th, 2014 6:33am</span></p>
+</div>
+</body>
+</html>

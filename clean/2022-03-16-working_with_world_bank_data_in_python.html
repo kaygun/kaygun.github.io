@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2022-03-16-working_with_world_bank_data_in_python</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="working-with-world-bank-data-in-python">Working with World Bank
+Data in Python</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I have been working with European Central Bank data in python. I am
+teaching two data science classes this semester and I need a good source
+of real socio-economic data for teaching purposes. <a
+href="https://databank.worldbank.org/home.aspx">World Bank</a> is such a
+good source. Today, I am going to write two python functions to query
+the World Bank Data Store.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Let me start with the imports:</p>
+<pre><code>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from io import BytesIO
+from urllib.request import urlopen
+from zipfile import ZipFile
+from xmltodict import parse</code></pre>
+<p>My first function pulls the data from World Bank Data store in xml
+and converts to a hash map:</p>
+<pre><code>def queryWorldBank(series):
+    base = &#39;https://api.worldbank.org/v2/en/indicator/&#39;
+    with urlopen(f&#39;{base}/{series}?downloadformat=xml&#39;) as url:
+        zf = ZipFile(BytesIO(url.read()))
+    name = zf.filelist[0].filename
+    return parse(zf.open(name).read().decode(&#39;utf8&#39;))</code></pre>
+<p>The next function parses the raw xml we pull from the data
+source:</p>
+<pre><code>def parseXML(rawXML, name):
+    res = []
+    years = []
+    for x in raw[&#39;Root&#39;][&#39;data&#39;][&#39;record&#39;]:
+        y = x[&#39;field&#39;]
+        try:
+            res.append({&#39;country&#39;: y[0][&#39;#text&#39;], 
+                         name: float(y[3][&#39;#text&#39;])})
+            years.append(int(y[2][&#39;#text&#39;]))
+        except:
+            None
+    return pd.DataFrame(res, index=years)</code></pre>
+<p>Each data set on World Bank’s Data Store has a unique ID. For
+example, the store has <a
+href="https://data.worldbank.org/indicator/IS.AIR.PSGR">data</a> that
+contains the number of air passengers (both domestic and international)
+carried by the air carriers registered in the country. The unique id for
+the data set is “IS.AIR.PSGR”. The records indicates that the data came
+from International Civil Aviation Organization.</p>
+<pre><code>raw = queryWorldBank(&#39;IS.AIR.PSGR&#39;)
+passengers = parseXML(raw,&#39;passengers&#39;)
+(passengers[passengers[&#39;country&#39;]==&#39;Turkey&#39;])[&#39;passengers&#39;].plot(figsize=(18,6))
+plt.savefig(&#39;world-bank-data-figure-1.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-width="1800" data-orig-height="600">
+<img
+src="../media/2022-03-16-working_with_world_bank_data_in_python_0.png"
+data-orig-width="1800" data-orig-height="600" />
+</figure>
+<p>Next, let me pull the <a
+href="https://data.worldbank.org/indicator/SI.POV.GINI">gini index
+data</a>, and I’ll plot the data for Turkey.</p>
+<pre><code>raw = queryWorldBank(&#39;SI.POV.GINI&#39;)
+gini = parseXML(raw,&#39;gini&#39;)
+(gini[gini[&#39;country&#39;]==&#39;Turkey&#39;])[&#39;gini&#39;].plot(figsize=(18,6))
+plt.savefig(&#39;world-bank-data-figure-2.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-width="1038" data-orig-height="357">
+<img
+src="../media/2022-03-16-working_with_world_bank_data_in_python_1.png"
+data-orig-width="1038" data-orig-height="357" />
+</figure>
+<p>Next, I’ll pull the <a
+href="https://databank.worldbank.org/source/education-statistics-%5e-all-indicators">data</a>
+on the number of years schooling received by 15+ year old women. The ID
+for that data set is “BAR.PRM.SCHL.15UP.FE”.</p>
+<pre><code>raw = queryWorldBank(&#39;BAR.PRM.SCHL.15UP.FE&#39;)
+education = parseXML(raw,&#39;level&#39;)
+(education[education[&#39;country&#39;]==&#39;Turkey&#39;])[&#39;level&#39;].plot(figsize=(18,6))
+plt.savefig(&#39;world-bank-data-figure-3.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-width="1041" data-orig-height="357">
+<img
+src="../media/2022-03-16-working_with_world_bank_data_in_python_2.png"
+data-orig-width="1041" data-orig-height="357" />
+</figure>
+<p>How about we plot average gini against average year of schooling 15+
+year old women get for each country:</p>
+<pre><code>ed = education.groupby(&#39;country&#39;).mean()
+gi = gini.groupby(&#39;country&#39;).mean()
+
+res = ed.join(gi,how=&#39;inner&#39;)
+
+plt.figure(figsize=(8,8))
+plt.scatter(res[&#39;level&#39;],res[&#39;gini&#39;],c=&#39;blue&#39;,alpha=0.3)
+plt.savefig(&#39;world-bank-data-figure-4.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-width="480" data-orig-height="466">
+<img
+src="../media/2022-03-16-working_with_world_bank_data_in_python_3.png"
+data-orig-width="480" data-orig-height="466" />
+</figure>
+<p>Do you notice something? The gini index (a measure of economic
+inequality) reduces as the average number of schooling of women 15+
+increases. Something to ponder about.<br />
+</p>
+<div id="footer">
+<p><span id="timestamp">March 16th, 2022 8:36pm</span></p>
+</div>
+</body>
+</html>

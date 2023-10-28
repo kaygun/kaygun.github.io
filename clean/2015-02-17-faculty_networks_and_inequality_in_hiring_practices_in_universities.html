@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-02-17-faculty_networks_and_inequality_in_hiring_practices_in_universities</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="faculty-networks-and-inequality-in-hiring-practices-in-universities">Faculty
+Networks and Inequality in Hiring Practices in Universities</h1>
+<p>I came across <a
+href="http://advances.sciencemag.org/content/1/1/e1400005">this
+paper</a> which is a detailed study of hiring networks and
+discrimination practices in hiring of faculty among a large number of
+universities in the US. They also provided the <a
+href="http://advances.sciencemag.org/highwire/filestream/185201/field_highwire_adjunct_files/0/1400005_Datasets.zip">data</a>
+for other researchers to download and play.</p>
+<h2 id="how-i-constructed-the-graphs">How I constructed the graphs</h2>
+<p>What I did was to graph all hiring data as a weighted directed graph.
+If university <span class="math inline">\(y\)</span> hired someone from
+university <span class="math inline">\(x\)</span>, the weight of the
+directed edge <span class="math inline">\(x\to y\)</span> is increased
+by 1. The final graphs are huge. So, I only pictured those edges whose
+weight are above certain value and removed “All others” (which I am
+guessing, indicates Universities not from Northern American
+continent).</p>
+<h2 id="computer-science-with-threshold-value-1.5">Computer Science
+(with threshold value 1.5)</h2>
+<p><a
+href="https://www.dropbox.com/s/l12uhb469frpdf1/faculty-inequality-cs.png?dl=0">Image
+File</a><br />
+</p>
+<p>The graph is very much like a tree. Almost a pyramid, one can say.
+You should probably play with several threshold values to see what Iam
+about to observe:</p>
+<ol type="1">
+<li>There is a tight clique between MIT, Stanford, Berkeley and Carnegie
+Mellon. They hire from each other a lot.<br />
+</li>
+<li>There is a strong network between Canadian universities, but this is
+expected as by Canadian Law, Canadian universities must show a
+preference to Canadian citizens and permanent residents.  There are two
+groups: Universities in the West (British Columbia, Calgary and
+Saskatchewan) and the East (Toronto, Waterloo, Ottowa, York, Queens,
+McMaster). University of Alberta, even though it is in the West, has
+strong connections with Toronto and Waterloo.  Simon Fraser too exhibits
+a similar behavior with Toronto.  University of British Columbia, on the
+other hand, is more open to hiring from the US and East Canadian
+Universities.</li>
+</ol>
+<h2 id="history-with-threshold-value-2.0">History (with threshold value
+2.0)</h2>
+<p><a
+href="https://www.dropbox.com/s/iujr3nsr9n0jgl8/faculty-inequality-hist.png?dl=0">Image
+File</a><br />
+</p>
+<p>The network is a lot more connected and complicated than the network
+for computer science, but the pyramid-like structure is still
+present.</p>
+<h2 id="business-with-threshold-value-1.2">Business (with threshold
+value 1.2)</h2>
+<p><a
+href="https://www.dropbox.com/s/8uqfqlwfilkvs3y/faculty-inequality-bus.png?dl=0">Image
+File</a><br />
+</p>
+<p>The network is as not as connected compared to history or computer
+science, but the pyramid-like structure is again present.</p>
+<h2 id="the-lisp-code">The lisp code</h2>
+<p>Here is the code. If you are going to run the code, here are the
+instructions:</p>
+<ol type="1">
+<li>Put your data files in a directory called “data” and the following
+code in “src”. Rename the <a
+href="http://advances.sciencemag.org/highwire/filestream/185201/field_highwire_adjunct_files/0/1400005_Datasets.zip">files</a>
+you downloaded as “faculty-inequality-cs-vertices.csv”,
+“faculty-inequality-cs-edges.csv” for Computer Science. You should
+replace “cs” with “bus” and “hist” for the other files.</li>
+<li>I prepared the code to be run on the command line with <a
+href="http://www.sbcl.org/">SBCL</a>.You could hard code which files you
+are going to process. The part with “*posix-argv*” works only with SBCL.
+Make the appropriate changes in the main section.</li>
+<li>If you don’t want “All others” (foreign universities, I assume) as I
+did, grep out those.</li>
+<li>The code prints out the “.dot” file to be processed with <a
+href="http://www.graphviz.org/">graphviz</a>, which you should do
+separately. So, pipe the output into a “.dot” file and run one of the
+graph generating functions in the graphviz package.<br />
+</li>
+</ol>
+<!-- -->
+<pre><code>  ;; from the plain data files creates an assoc list to be fed into
+  ;; `dot-write`
+
+  (defun weighted-edges (edges vertices attribute)
+    (let (res y)
+      (dolist (x edges res)
+        (setf y (mapcar (lambda (i) (elt (assoc i vertices) attribute)) x))
+        (if (assoc y res :test #&#39;equal)
+            (incf (cdr (assoc y res :test #&#39;equal)))
+            (push (cons y 1) res)))))
+
+  ;; process the vertices file
+
+  (defun process-vertices (filename)
+    (mapcar 
+     (lambda (x) (mapcar (lambda (i j) (funcall j i))
+                         x
+                         (list 
+                          #&#39;read-from-string
+                          #&#39;read-from-string
+                          (lambda (i) (if (string= i &quot;.&quot;) 0 (read-from-string i)))
+                          (lambda (i) (if (string= i &quot;.&quot;) 0 (read-from-string i)))
+                          (lambda (i) i)
+                          (lambda (i) i))))
+     (read-file filename)))
+
+  ;; process the edge file
+
+  (defun process-edges (filename)
+    (mapcar 
+     (lambda (x) (mapcar (lambda (i j) (funcall j i))
+                         (list (car x) (cadr x)) 
+                         (list #&#39;read-from-string #&#39;read-from-string)))
+     (read-file filename)))
+
+  ;; reads data file into an assoc list
+
+  (defun read-file (name)
+    (let (res)
+      (with-open-file (in name :direction :input)
+        (read-line in)
+        (do ((line (read-line in nil) (read-line in nil)))
+            ((null line) res)
+          (push (cl-ppcre:split #\Tab line) res)))))
+
+  ;; The graph is weighted and represented as a assoc list where items
+  ;; are of the form &#39;((a b) . n)&#39; where a is the source b is the target
+  ;; and n is the count. I also pass a threshold value. If the weight is
+  ;; below a certain value, it will not show up in the graph as the
+  ;; graph is very large.
+
+  (defun dot-write (graph threshold)
+    (let* ((num (mapcar #&#39;cdr graph))
+           (a (reduce #&#39;min num))
+           (b (reduce #&#39;max num)))
+      (format t &quot;digraph transition {~% node[shape=\&quot;rectangle\&quot;];~%&quot;)
+      (dolist (edge graph)
+        (let ((weight (* 10 (/ (+ (cdr edge) (- a)) (- b a)))))
+          (if (&gt; weight threshold)
+              (format t 
+                      &quot;  \&quot;~a\&quot; -&gt; \&quot;~a\&quot; [penwidth = ~2,1f];~%&quot; 
+                      (string-trim &#39;(#\Space) (caar edge))
+                      (string-trim &#39;(#\Space) (cadar edge))
+                      weight))))
+      (format t &quot;}~%&quot;)))
+
+  ;; the main part of the code
+  
+  (let* ((base (concatenate 
+                &#39;string 
+                &quot;data/faculty-inequality-&quot; 
+                (elt *posix-argv* 1)))
+         (vertices (process-vertices (concatenate &#39;string base &quot;-vertices.csv&quot;)))
+         (edges (process-edges (concatenate &#39;string base &quot;-edges.csv&quot;))))  
+    
+    (dot-write (weighted-edges edges vertices (read-from-string (elt *posix-argv* 2)))
+               (read-from-string (elt *posix-argv* 3))))</code></pre>
+<h2 id="how-about-mathematics">How about mathematics?</h2>
+<p><a href="http://www.ams.org/home/page">AMS</a> has the necessary data
+but doesn’t disclose it for public use. I would very much like to see
+the network.</p>
+<h2 id="how-is-this-useful">How is this useful?</h2>
+<p>If you are about to go into PhD, screw the US News Rankings. Get the
+hiring network to determine your chances of being hired, and if there is
+any, by whom.<br />
+</p>
+<div id="footer">
+<p><span id="timestamp">February 17th, 2015 7:20am</span></p>
+</div>
+</body>
+</html>

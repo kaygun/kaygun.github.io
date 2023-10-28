@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2018-01-09-catalans_triangle</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="catalans-triangle">Catalan's Triangle</h1>
+<h2 id="description-of-the-problem">Description of the Problem:</h2>
+<p>Today, I am going to write a common lisp function that returns the
+entries in <a
+href="http://mathworld.wolfram.com/CatalansTriangle.html">Catalan’s
+Triangle</a>. The description is an easy recursive function: <span
+class="math inline">\(C(n,k) = 0\)</span> when <span
+class="math inline">\(n&lt;1\)</span>, or <span
+class="math inline">\(k&lt;1\)</span>, or <span
+class="math inline">\(n&lt;k\)</span>. And we have <span
+class="math display">\[ C(n,k) = C(n-1,k) + C(n,k-1)
+\]</span> otherwise. The base case is <span
+class="math inline">\(C(1,1)=1\)</span>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>If we were to implement this without <a
+href="https://en.wikipedia.org/wiki/Memoization">memoization</a> it
+would be very expansive to calculate the values of this function.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> dumb </span>(n k)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span> ((<span class="kw">or</span> (<span class="op">&lt;</span> n <span class="dv">1</span>) (<span class="op">&lt;</span> k <span class="dv">1</span>) (<span class="op">&lt;</span> n k)) <span class="dv">0</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        ((<span class="op">=</span> k <span class="dv">1</span>) <span class="dv">1</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">t</span> (<span class="op">+</span> (dumb (<span class="op">1-</span> n) k)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>              (dumb n (<span class="op">1-</span> k))))))</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>DUMB</span></code></pre></div>
+<p>Let me test:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">12</span> collect (dumb <span class="dv">12</span> i)))</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Evaluation took:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.008</span> seconds of <span class="kw">real</span> <span class="kw">time</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.008000</span> seconds of total run <span class="kw">time</span> (<span class="fl">0.008000</span> <span class="kw">user</span>, <span class="fl">0.000000</span> <span class="kw">system</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fl">100.00</span>% CPU</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">20</span>,<span class="dv">438</span>,<span class="dv">732</span> processor cycles</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dv">0</span> bytes consed</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">11</span> <span class="dv">65</span> <span class="dv">273</span> <span class="dv">910</span> <span class="dv">2548</span> <span class="dv">6188</span> <span class="dv">13260</span> <span class="dv">25194</span> <span class="dv">41990</span> <span class="dv">58786</span> <span class="dv">58786</span>)</span></code></pre></div>
+<p>So, I am going to re-implement it using a simple memoization
+trick:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> catalan </span>(n k)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span> ((<span class="kw">or</span> (<span class="op">&lt;</span> n <span class="dv">1</span>) (<span class="op">&lt;</span> k <span class="dv">1</span>) (<span class="op">&lt;</span> n k)) <span class="dv">0</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>          ((<span class="op">=</span> k <span class="dv">1</span>) <span class="dv">1</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n k) table)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">setf</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n k) table)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                       (<span class="op">+</span> (catalan (<span class="op">1-</span> n) k)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                          (catalan n (<span class="op">1-</span> k)))))))))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>CATALAN</span></code></pre></div>
+<p>Let us test:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">12</span> collect (catalan <span class="dv">12</span> i)))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Evaluation took:</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.000</span> seconds of <span class="kw">real</span> <span class="kw">time</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.000000</span> seconds of total run <span class="kw">time</span> (<span class="fl">0.000000</span> <span class="kw">user</span>, <span class="fl">0.000000</span> <span class="kw">system</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fl">100.00</span>% CPU</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">47</span>,<span class="dv">122</span> processor cycles</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dv">0</span> bytes consed</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">11</span> <span class="dv">65</span> <span class="dv">273</span> <span class="dv">910</span> <span class="dv">2548</span> <span class="dv">6188</span> <span class="dv">13260</span> <span class="dv">25194</span> <span class="dv">41990</span> <span class="dv">58786</span> <span class="dv">58786</span>)</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">January 9th, 2018 5:43am</span></p>
+</div>
+</body>
+</html>

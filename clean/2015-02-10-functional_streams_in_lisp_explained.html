@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-02-10-functional_streams_in_lisp_explained</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="functional-streams-in-lisp-explained">Functional Streams in Lisp
+Explained</h1>
+<p>I have been wanting to comment on <a
+href="http://irreal.org/blog/?p=3632">jcs’s post</a> on streams in lisp,
+and his take on what I did. But, I was traveling and having too much fun
+playing with <a
+href="2015-02-05-collatz-type_conjectures_continued.html">Collatz
+sequences</a>.</p>
+<p>He is correct in that transporting the streams code from scheme to
+lisp is almost trivial, and jcs did that nicely and concisely in his
+post. As he also noticed, what I was trying to do was different.
+Probably, this is a good opportunity to explain.</p>
+<h2 id="streams-as-purely-functional-data-structures">Streams as purely
+functional data structures</h2>
+<p>In <a
+href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-24.html#%25_sec_3.5">SICP</a>,
+Abelson and Sussman conceive them as potentially infinite lazy lists.
+And they use the same interface as the regular lists. So, they have a
+<code>car</code> and a <code>cdr</code> which obey the same algebraic
+rules as the regular lists:</p>
+<pre><code>x = (cons (car x) (cdr x))</code></pre>
+<p>If one would like to develop streams from ground up as a functional
+data structure, one option is to think of them as objects with two
+specific functions: an <em>iterator</em> and an <em>extractor</em>. An
+iterator receives a <em>head</em> for the stream and returns another
+<em>head</em>, this time for the iterated stream. An extractor receives
+a head and returns a single element which you’d like to construct out of
+the stream and the head at the hand.</p>
+<p>To make things clear: when I say <em>the head</em> I mean the whole
+sequence of elements constructed at a moment. Also, in the
+implementations below they are in the reverse order: from the last to
+the first. Don’t blame me: <code>car</code> is cheaper than
+<code>(lambda (x) (car (reverse x)))</code>.</p>
+<p>In this picture, a stream is purely functional: whoever has the head
+has the stream. No locks or semaphores. They are immutable, efficient,
+and with clever use of memoization for the iterators and extractors they
+are really fast.</p>
+<h2 id="the-interface">The interface</h2>
+<p>The code for the interface consisted of three functions only. I had a
+<code>take</code> function:</p>
+<pre><code>(defun s-take (stream n &amp;optional head)
+   (destructuring-bind
+       (iterator . extractor) stream
+     (do* ((x head (funcall iterator x))
+           (y nil (cons (funcall extractor x) y))
+           (i n (1- i)))
+          ((zerop i) y))))
+S-TAKE</code></pre>
+<p>which would take from the stream a specific number of items; a
+<code>map</code> function which would apply a sequence of functions to
+the values after we extract them:</p>
+<pre><code>(defun s-map (stream &amp;rest fns)
+   (destructuring-bind
+       (iterator . extractor) stream
+     (cons iterator
+           (lambda (x)
+              (let ((y (funcall extractor x)))
+                 (dolist (fn fns y)
+                    (setf y (funcall fn y))))))))
+S-MAP</code></pre>
+<p>and finally; a <code>filter</code> function which would filter the
+values extracted according to a list of predicates:</p>
+<pre><code>(defun s-filter (stream &amp;rest preds)
+   (destructuring-bind
+       (iterator . extractor) stream  
+     (cons (lambda (x)
+              (do* ((y (funcall iterator x) (funcall iterator y))
+                    (z (funcall extractor y) (funcall extractor y)))
+                   ((every (lambda (pred) (funcall pred z)) preds) y)))
+           extractor)))
+S-FILTER</code></pre>
+<h2 id="some-examples">Some examples</h2>
+<p>For simple streams such as the natural numbers or arithmetic
+progressions, the extractor returns the last element of the head and the
+iterator increases this value and affixes to the head.</p>
+<pre><code>(defvar natural-numbers
+   (cons (lambda (x)
+            (if (null x)
+               (list 1)
+               (cons (1+ (car x)) x)))
+         #&#39;car))
+NATURAL-NUMBERS
+
+(s-take natural-numbers 10)
+(10 9 8 7 6 5 4 3 2 1)
+
+(defun arithmetic-progression (a b)
+   (cons (lambda (x)
+            (if (null x)
+               (list b)
+               (cons (+ a (car x)) x)))
+         #&#39;car))
+ARITHMETIC-PROGRESSION
+
+(s-take (arithmetic-progression 12 3) 10)
+(111 99 87 75 63 51 39 27 15 3)</code></pre>
+<p>For the <a
+href="http://en.wikipedia.org/wiki/Fibonacci_number">Fibonnacci</a>
+sequence, the extractor is the same, but the iterator takes the last two
+values and affixes the sum to the head.</p>
+<pre><code>(defvar fibonacci
+   (cons (lambda (x)
+            (cond
+               ((null x) (list 1))
+               ((= 1 (length x)) (list 1 1))
+               (t (cons (+ (car x) (cadr x)) x))))
+         #&#39;car))
+FIBONACCI
+
+(s-take fibonacci 10)
+(55 34 21 13 8 5 3 2 1 1)</code></pre>
+<p>During the course of my experiments
+(2015-01-01-functional_streams.html) <a
+href="2015-01-17-experiments_with_infinite_recursive_sequences.html">here</a>
+and <a
+href="2015-01-28-experiments_with_infinite_recursive_sequences_continued.html">here</a>
+I gave several examples (some of which I reproduced here), but today I
+will give a new one: I’d like to construct a stream of integers which
+will give the sums of squares of the first <span
+class="math inline">\(n\)</span> integers. In that case, the iterator
+takes the last value of the list, adds one to it and then affixes to the
+head. The extractor on the other hand, takes the whole list and finds
+the sum of the squares.</p>
+<pre><code>(defvar sums-of-squares
+   (cons (lambda (x)
+            (if (null x)
+               (list 1)
+               (cons (1+ (car x)) x)))
+         (lambda (x) (reduce #&#39;+ (mapcar (lambda (i) (* i i)) x)))))
+SUMS-OF-SQUARES
+(s-take sums-of-squares 10)
+(385 285 204 140 91 55 30 14 5 1)</code></pre>
+<p>Of course, we can get the same stream from
+<code>natural-numbers</code> using a map:</p>
+<pre><code>(s-take 
+   (s-map 
+      natural-numbers 
+      (lambda (x) (* x (1+ x) (1+ (* 2 x)) (/ 6)))) 
+   10)
+(385 285 204 140 91 55 30 14 5 1)</code></pre>
+<p>but I was trying to make a point in saying that the extractor is an
+integral part of the stream, and in practice, may need to know the full
+head of the stream at the time of extraction, not just the last
+element.</p>
+<p>Now, we can filter and map this stream to get new stream(s):</p>
+<pre><code>(defun binary-palindrome-p (x)
+   (string-equal
+      (format nil &quot;~b&quot; x)
+      (reverse (format nil &quot;~b&quot; x))))
+BINARY-PALINDROME-P
+
+(s-take
+   (s-map 
+      (s-filter
+         sums-of-squares
+         #&#39;oddp
+         #&#39;binary-palindrome-p)
+      (lambda (x) (format nil &quot;~b&quot; x)))
+   4)
+(110011000101101000110011 1100110011 101 1)</code></pre>
+<h2 id="addendum">Addendum</h2>
+<p>I forgot: there is also room for a reducer in the <code>s-take</code>
+interface which can easily obtained by changing the reducer from
+<code>cons</code> to any other reducer:</p>
+<pre><code>(defun s-take (stream n &amp;optional head (reducer #&#39;cons))
+   (destructuring-bind
+        (iterator . extractor) stream
+     (do* ((x head (funcall iterator x))
+           (y nil (funcall reducer (funcall extractor x) y))
+           (i n (1- i)))
+          ((zerop i) y))))</code></pre>
+<p>and one can call it as</p>
+<pre><code>(s-take 
+   (s-map 
+      natural-numbers
+      (lambda (x) (* x x))
+   10
+   nil
+   (lambda (x y) (+ (or x 0) (or y 0))))
+
+385</code></pre>
+<div id="footer">
+<p><span id="timestamp">February 10th, 2015 10:34am</span></p>
+</div>
+</body>
+</html>

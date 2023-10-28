@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-05-07-levenshtein_distance</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="levenshtein-distance">Levenshtein Distance</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a
+href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein
+Distance</a> also known as the <em>edit distance</em> is a metric on the
+set of all words over a fixed alphabet. The Levenshtein distance between
+two words <span class="math inline">\(\omega_1\)</span> and <span
+class="math inline">\(\omega_2\)</span> is the minimal number of single
+character edits one has to make to convert <span
+class="math inline">\(\omega_1\)</span> to <span
+class="math inline">\(\omega_2\)</span>, or vice versa. The distance
+formula given in the Wikipedia article above has a very nice recursive
+implementation. The implementation I will give below is partly inspired
+by a <a
+href="http://blog.racket-lang.org/2012/08/dynamic-programming-versus-memoization.html">post</a>
+on the <a href="http://blog.racket-lang.org/">Racket Blog</a> on
+memoization vs. dynamic programming. The implementation I give below is
+memoized. For a dynamic programming approach you may look at the <a
+href="http://rosettacode.org/wiki/Levenshtein_distance#Common_Lisp">implementation</a>
+over at the <a href="http://rosettacode.org/wiki/Rosetta_Code">Rosetta
+Code</a>.</p>
+<h2 id="a-straightforward-implementation">A Straightforward
+Implementation</h2>
+<p>I will not spend to much time explaining the implementation. The
+algorithm is very straightforward. The main difference between the <a
+href="http://blog.racket-lang.org/2012/08/dynamic-programming-versus-memoization.html">implementation</a>
+at the <a href="http://blog.racket-lang.org/">Racket Blog</a> and the
+implementation below is that below I use lisp strings as arguments while
+the implementation I cited above uses lists.</p>
+<pre><code>(defun levenshtein (a b)
+   (cond ((zerop (length a)) (length b))
+         ((zerop (length b)) (length a))
+         (t (if (equal (char a 0) (char b 0))
+               (levenshtein (subseq a 1) (subseq b 1))
+               (1+ (min (levenshtein (subseq a 1) b)
+                        (levenshtein a (subseq b 1))
+                        (levenshtein (subseq a 1) (subseq b 1))))))))
+LEVENSHTEIN</code></pre>
+<p>Now let me test the code on an example:</p>
+<pre><code>(time (levenshtein &quot;hahahahhahhahhhaa&quot; &quot;haahahahhahahahahhhaa&quot;))
+4
+
+Evaluation took:
+ 0.004 seconds of real time
+ 0.004000 seconds of total run time (0.004000 user, 0.000000 system)
+ 100.00% CPU
+ 10,271,520 processor cycles
+ 1,544,856 bytes consed</code></pre>
+<h2 id="an-implementation-with-memoization">An Implementation with
+Memoization</h2>
+<p>Now, below I implement the same function with memoization:</p>
+<pre><code>(defparameter table-levenshtein 
+   (make-hash-table :test &#39;equal))
+
+(defun lookup-levenshtein (a b)
+   (gethash (list a b) table-levenshtein))
+
+(defun push-levenshtein (a b val)
+   (setf (gethash (list a b) table-levenshtein) val))
+
+(defun levenshtein (a b)
+   (cond ((zerop (length a)) (length b))
+         ((zerop (length b)) (length a))
+         (t (or (lookup-levenshtein a b)
+                (push-levenshtein a b 
+                   (if (equal (char a 0) (char b 0))
+                      (levenshtein (subseq a 1) (subseq b 1))
+                      (1+ (min (levenshtein (subseq a 1) b)
+                               (levenshtein a (subseq b 1))
+                               (levenshtein (subseq a 1) (subseq b 1))))))))))
+LEVENSHTEIN</code></pre>
+<p>And here is the same test above:</p>
+<pre><code>(time (levenshtein &quot;hahahahhahhahhhaa&quot; &quot;haahahahhahahahahhhaa&quot;))
+4
+
+Evaluation took:
+ 0.000 seconds of real time
+ 0.000000 seconds of total run time (0.000000 user, 0.000000 system)
+ 100.00% CPU
+ 239,724 processor cycles
+ 16,240 bytes consed</code></pre>
+<h2 id="another-implementation-in-scala">Another Implementation in
+Scala</h2>
+<p>I have been looking into learning some <a
+href="http://www.scala-lang.org">Scala</a> lately, and this problem
+seems to be a good way to write some scala code. So, here is the code
+without the memoization feature:</p>
+<pre><code>object Main {
+   def levenshtein(a:String, b:String):Int = {
+       if( a.length == 0 ) 
+         b.length
+       else if( b.length == 0 )
+         a.length
+       else if( a(0) == b(0) )
+         levenshtein( a.substring(1), b.substring(1) )
+       else 
+         1 + (List (levenshtein(a,b.substring(1)),
+                    levenshtein(a.substring(1),b),
+                    levenshtein(a.substring(1),b.substring(1))) min)
+   }
+
+   def main(args:Array[String]) {
+       println(&quot;The Levenshtein distance between &quot;+args(0)+&quot; and &quot;+args(1)+&quot; is &quot;+levenshtein(args(0),args(1)))
+   }
+}</code></pre>
+<div id="footer">
+<p><span id="timestamp">May 7th, 2013 3:11pm</span></p>
+</div>
+</body>
+</html>

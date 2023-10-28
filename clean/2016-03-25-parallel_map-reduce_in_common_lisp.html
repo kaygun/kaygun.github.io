@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-03-25-parallel_map-reduce_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="parallel-map-reduce-in-common-lisp">Parallel map-reduce in
+Common Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have a large collection of data points. We will map over
+the data points using a function and then use an associative and
+commutative reducer function. The associativity and commutativity of the
+reducer function allows us to parallelize this operation.</p>
+<h2 id="implementation-in-lisp">Implementation in Lisp</h2>
+<p>First, we need to import the necessary libraries:</p>
+<pre><code>(defpackage parallel-map-reduce
+  (:use cl)
+  (:import-from bordeaux-threads make-thread join-thread)
+  (:import-from ppcre split)
+  (:import-from utils -&gt;&gt; merge-with))
+#&lt;PACKAGE &quot;PARALLEL-MAP-REDUCE&quot;&gt;
+
+(in-package parallel-map-reduce)
+#&lt;PACKAGE &quot;PARALLEL-MAP-REDUCE&quot;&gt;</code></pre>
+<p>Now, the implementation:</p>
+<pre><code>(defun map-reduce (fn re xs num)
+  (let* ((n (length xs))
+         (ys (make-array n :initial-contents xs))
+         (size (floor n num)))
+    (-&gt;&gt; (loop for i from 0 below n by size collect
+              (make-array (min size (- n i))
+                          :displaced-to ys
+                          :displaced-index-offset i))
+         (mapcar (lambda (xs)
+                   (bordeaux-threads:make-thread
+                    (lambda () (reduce re (map &#39;list fn xs))))))
+         (mapcar #&#39;bordeaux-threads:join-thread)
+         (reduce re))))
+MAP-REDUCE</code></pre>
+<p>I am going to test this function to calculate the frequencies of
+words in a text file. First, I am going to need a function that removes
+all non-alpha-numeric characters:</p>
+<pre><code>(let ((junk (coerce &quot;\@#$%^&amp;*[]_+-=(){}\&#39;\:\&quot;,/&lt;&gt;“”‘’–—&quot; ’list)))
+ (defun clean (word)
+    (remove-if (lambda (x) (member x junk)) (string-downcase word))))
+ CLEAN</code></pre>
+<p>Now, a function to load the lines:</p>
+<pre><code>(defun read-lines (input)
+   (let (res)
+      (handler-case 
+          (do () (nil) (push (clean (read-line input)) res))
+        (end-of-file () (reverse res)))))
+READ-LINES</code></pre>
+<p>and finally the test code:</p>
+<pre><code>(let* ((file &quot;test.txt&quot;)
+       (num 20)
+       (fn (lambda (x) (mapcar (lambda (i) (cons i 1)) (split &quot;\s+&quot; x))))
+       (re (lambda (x y) (merge-with #&#39;+ (append x y))))
+       (xs (with-open-file (in file :direction :input)
+             (read-lines in))))
+   (time (sort (map-reduce fn re xs num) #&#39;&gt; :key #&#39;cdr))
+   (time (sort (reduce re (mapcar fn xs)) #&#39;&gt; :key #&#39;cdr))
+   nil)
+NIL
+
+
+
+Evaluation took:
+  1.051 seconds of real time
+  1.223333 seconds of total run time (1.163333 user, 0.060000 system)
+  116.37% CPU
+  2,412,238,511 processor cycles
+  3,081,296 bytes consed
+
+Evaluation took:
+  9.274 seconds of real time
+  9.273333 seconds of total run time (9.256666 user, 0.016667 system)
+  99.99% CPU
+  21,280,707,454 processor cycles
+  12,615,600 bytes consed</code></pre>
+<div id="footer">
+<p><span id="timestamp">March 25th, 2016 3:48am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-07-03-kaprekar_sequence</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="kaprekar-sequence">Kaprekar Sequence</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I was reading a <a
+href="http://gitcommit.co.uk/2017/07/03/kaprekars-constant/">blog
+post</a> on the <a
+href="https://en.wikipedia.org/wiki/6174_(number)">Kaprekar
+constant</a>. I will do the same experiment in Common Lisp. Here is the
+description of the experiment:</p>
+<p>Take any integer. Write it in a base. Sort the digits from largest to
+smallest. Sort it again, this time from smallest to largest. Take the
+difference. Repeat until you get a cycle.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>I will need two functions: one to convert a number into digits, and
+another to convert a list of digits into an integer. Simple enough:</p>
+<pre><code>(defun int-to-list (n base &amp;optional acc)
+  (multiple-value-bind (a b)
+      (floor n base)
+    (if (zerop a)
+        (cons b acc)
+        (int-to-list a base (cons b acc)))))
+
+(defun list-to-int (xs base &amp;optional (acc 0))
+  (if (null xs)
+      acc
+      (list-to-int (cdr xs) base (+ (* acc base) (car xs)))))
+
+INT-TO-LIST
+LIST-TO-INT</code></pre>
+<p>I know, I know. Common lisp has a <a
+href="http://mr.gy/ansi-common-lisp/FORMAT-Radix-Control.html"><code>radix</code></a>
+clause, but these functions work with any base not just for radixes 2 to
+32.</p>
+<p>Here is my implementation:</p>
+<pre><code>(defun kaprekar (n base &amp;optional acc)
+  (let* ((xs (int-to-list n base))
+         (next (- (list-to-int (sort (copy-list xs) #&#39;&gt;) base)
+                  (list-to-int (sort (copy-list xs) #&#39;&lt;) base))))
+    (if (member next acc :test #&#39;equal)
+        (reverse (cons next acc))
+        (kaprekar next base (cons n acc)))))
+
+KAPREKAR</code></pre>
+<p>If you wonder why I used <code>copy-list</code> you should know that
+<a href="http://clhs.lisp.se/Body/f_sort_.htm"><code>sort</code></a> in
+common lisp is destructive. Yeah, fun isn’t it? Let us test on the
+original Kaprekar constant:</p>
+<pre><code>(kaprekar 1234 10)
+
+(1234 3087 8352 6174 6174)</code></pre>
+<p>Note that all numbers are displayed in the decimal notation even
+though the sequence is computed using a different basis. Here is a large
+example</p>
+<pre><code>(mapcar (lambda (x) (format nil &quot;~X&quot; x)) (kaprekar 293847923129380187 16))
+
+(413F521141CED5B EDCB920FED64322 FCCBA84FA754331 EC98752FCA87632
+ DC97420FEDB8633 FCAA851FDA75531 EEA7552FCAA8512 ECC7552FCAA8332
+ DC99752FCA86633 DA97431FDCB8653 EAA8641FDB97552 EC96541FDBA9632
+ ECA8642FCB97532 DC98641FDB97633 EAA8531FDCA7552 ECA7552FCAA8532
+ DC97552FCAA8633 DA97541FDBA8653 EA96541FDBA9652 EC96542FCBA9632
+ DC98642FCB97633 DA98531FDCA7653 EAA7541FDBA8552 EC96552FCAA9632
+ DC97542FCBA8633 DA98641FDB97653 ECA8642FCB97532)</code></pre>
+<h2 id="why-does-this-work">Why does this work?</h2>
+<p>Well kids, have you heard the <a
+href="https://en.wikipedia.org/wiki/Pigeonhole_principle">pigeonhole
+principle</a>? There is a hard guarantee on the largest integer one is
+going to get from this sequence. One can not fit an infinite sequence of
+integers into a finite interval of integers. So, pigeonhole principle
+says there must be a cycle.</p>
+<div id="footer">
+<p><span id="timestamp">July 3rd, 2017 4:02pm</span></p>
+</div>
+</body>
+</html>

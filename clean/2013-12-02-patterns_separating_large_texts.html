@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-12-02-patterns_separating_large_texts</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="patterns-separating-large-texts">Patterns Separating Large
+Texts</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p><a
+href="2013-11-11-entropy_and_approximately_one-to-one_maps.html">The
+other day</a>, I was looking at a problem of pattern matching.
+Specifically, I was thinking about what parts of a pattern is most
+significant when trying to match it against a large set of strings. <a
+href="2013-11-11-entropy_and_approximately_one-to-one_maps.html">The
+solution I gave</a> used entropy, much of the same way decision trees
+use entropy but instead of minimizing entropy I chose the maximization
+route.</p>
+<p>In that problem I had one luxury: the strings (both the pattern
+string and the strings in the set) had a beginning and an end. In cases
+like genome sequences this is one luxury we don’t have. Plus there are
+the problems of mutations, insertions and deletions. An exact match is
+usually not the thing one wants. I guess the success of <a
+href="http://en.wikipedia.org/wiki/BLAST">BLAST</a>, or <a
+href="http://en.wikipedia.org/wiki/Bitap_algorithm">BITAP</a> type
+algorithms and their variations, comes from the fact that these are
+<em>fast approximate matching</em> algorithms.<a href="#fn:note"
+id="fnref:note" class="footnote">1</a></p>
+<p>So, today I will consider another matching problem: I were to find a
+specific pattern (preferably large) to match against a large set of
+large strings, which part of the pattern should I choose to match
+against the large set?</p>
+<blockquote>
+<p>Given a large pattern and even larger string, or set of strings, to
+match which part, or parts, of the string should I choose to maximize my
+chances of a total match?</p>
+</blockquote>
+<p>Let me make this clear: this is not an alternative to fast
+approximate search algorithms such as <a
+href="http://en.wikipedia.org/wiki/BLAST">BLAST</a>, but rather a
+complement by helping us to choose a specific part of the pattern to
+match against the large set of strings.</p>
+<h2 id="thedelimiters">The delimiters</h2>
+<p>Assume we have an alphabet consisting of letters <span
+class="math inline">\(a_0,a_1,\ldots,a_n\)</span> and a language which
+uses this alphabet to form its vocabulary and sentences. Assume that the
+language uses <span class="math inline">\(a_0\)</span> as the delimiter
+to delineate the beginnings and the ends of each word. What is the
+expected value of the length of a word in this language? This is a nice
+small problem I need to understand before I embark on solving the other
+problem.</p>
+<p>Each language (human or otherwise) has a specific distribution of
+characters (assuming the languages we compare use the same set of
+characters). Assume <span
+class="math inline">\(p_0,p_1,\ldots,p_n\)</span> be the probabilities
+of seeing the characters <span class="math inline">\(a_0,
+a_1,\ldots,a_n\)</span> respectively. Then the expected length is the
+result from an infinite series: <span class="math display">\[ E(\ell) =
+\sum_{\ell=0}^\infty \ell (1-p_0)^\ell p_0 \]</span> The sum can be
+obtained from the power series <span class="math display">\[ x(1-x)
+\frac{d}{dx}\sum_{\ell=0}^\infty x^\ell =
+x(1-x)\frac{d}{dx}\frac{1}{1-x} = \frac{x}{1-x} \]</span> by
+substituting <span class="math inline">\(1-p_0\)</span> for <span
+class="math inline">\(x\)</span>. Thus <span class="math display">\[
+E(\ell) = \frac{1-p_0}{p_0} =
+\left(\frac{1}{p_0}-1\right) \]</span></p>
+<h2 id="experimentwithmarktwain">Experiment with Mark Twain</h2>
+<p>First let me do a small experiment with a text from English.</p>
+<p>Below, I will find the character distributions form the texts
+“Adventures of Tom Sawyer” and “Adventures of Huckleberry Finn” by Mark
+Twain. The first function processes the text file:</p>
+<pre><code>(defun character-distribution (file)
+   (let ((hash (make-hash-table)))
+      (with-open-file (in file :direction :input)
+         (do ((line (read-line in nil) (read-line in nil)))
+             ((null line) hash)
+           (map nil 
+                (lambda (x) (setf (gethash x hash) (1+ (gethash x hash 0))))
+                (string-downcase line))))))
+
+CHARACTER-DISTRIBUTION</code></pre>
+<p>And the function that calculates the probabilities:</p>
+<pre><code>(defun experiment (distribution myfilter)
+   (let ((n 0)
+         (probs nil))
+
+      (maphash 
+         (lambda (x y) (if (funcall myfilter x) (incf n y)))
+         distribution)
+
+      (maphash 
+         (lambda (x y) (push (cons x (/ y n 1.0d0)) probs)) 
+         distribution)
+
+      (cons 
+         n 
+         (remove-if-not 
+             (lambda (x) (funcall myfilter (car x)))
+             (sort probs (lambda (x y) (&gt; (cdr x) (cdr y))))))))
+
+EXPERIMENT</code></pre>
+<p>I will need a filter function will drop all characters other than ‘a’
+to 'z’ or space. Then we perform the test on the text I chose:</p>
+<pre><code>(defvar text-result 
+          (experiment 
+             (character-distribution &quot;../data/twain-tom-sawyer.txt&quot;)
+             (lambda (x) (or (char= x #\Space) (char&lt;= #\a x #\z)))))
+
+TEXT-RESULT
+
+Character Probability</code></pre>
+<table style="width:36%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 19%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>e t a o n h i s r d l u w m y g c f b p k v j x q z N=367103</td>
+<td style="text-align: left;">0.1915 0.0974 0.0788 0.0641 0.0635 0.0551
+0.0532 0.0513 0.0485 0.0417 0.0406 0.0331 0.0245 0.0219 0.0195 0.0184
+0.0181 0.0179 0.0165 0.0135 0.0128 0.0083 0.0064 0.0018 0.0008 0.0005
+0.0004</td>
+</tr>
+<tr class="even">
+<td>cording to t ginning and e text. This rac{1}{0.198</td>
+<td style="text-align: left;">he data, the space character (which
+delineates the the end of each word) has a 19.8% chance of appearing in
+means the expected length of a word is <span class="math display">\[
+}-1 \approx 4.1 \]</span></td>
+</tr>
+<tr class="odd">
+<td>eoretically, (1-p_0 dot (1-0.198 ere are 4569 the <em>theore “Tom
+Sawyer ain’s texts, lineated bet xt appearing aracters bet And for $
+<span class="math display">\[ \frac{ 3
+pprox 0 \]</span> F treme. I wou mething of m -0.198)^ ell$ is appr not
+<span class="math inline">\(26^3\)</span> e approximat cording to [
+te](http://w mber of 3 le ere are </em>a l ample.</td>
+<td style="text-align: left;">the expected number of words of length
+<span class="math inline">\(\ell\)</span> is )^p_0$. So, for <span
+class="math inline">\(\ell=4\)</span> we have <span
+class="math display">\[ 367103
+)^4 0.198 \approx 30071. \]</span> Considering the fact that 76
+different words (meaningful, or meaningless) of length tical* chances of
+finding any of these words from the text ” is 6.58 %. If I were to match
+a pattern against the I would not choose a word of length 4 much less a
+word ween two spaces in either side. I would go for part of the between
+2 z’s as the expected length of the number of ween two z’s is <span
+class="math display">\[ \frac{1}{0.0004}-1 \approx 2499.0
+ll=2499$ the theoretical expected number of matches
+67103 \cdot (1-0.198)^{2499} 0.198}{26^{2499}}
+or computational reasons, length 2499 is rather
+ld need a letter used as delineation that creates
+anageable size, say about 0.1%: \]</span> $$ This means oximately 3.
+However, the number of words of length 3 = 17576 in English language. As
+a matter of fact there ely 1300 words of length 3 in the English
+language a reputable scrabble ww.scrabble.org.au/words/3sdefs.htm).
+Since the expected tter words in the text is 37495. we can safely say
+that ot* of repetitions in the text. Think of word 'the’ for</td>
+</tr>
+<tr class="even">
+<td>need a long tch, but not ch that the 367103 stance, if w e expected
+l th 'w’ is $</td>
+<td style="text-align: left;">enough sequence to reduce the chance of an
+accidental something unnecessarily long. I want a length <span
+class="math inline">\(\ell\)</span> expected number of words of length
+<span class="math inline">\(\ell\)</span><br />
+t (1-p)^p <span class="math display">\[ is manageably small. For
+e choose \&#39;w&#39; as our delimiter, $p\approx 0.0219$ then
+ength of substrings in &quot;Tom Sawyer&quot; that start and end
+$ \frac{1}{0.0219} - 1 \approx 44.7 \]</span></td>
+</tr>
+<tr class="odd">
+<td>ere are appr Tom Sawyer</td>
+<td style="text-align: left;">oximately 8041. substrings which start and
+end with a 'w’ (this comes from the probabilities). The actual count
+is</td>
+</tr>
+<tr class="even">
+<td>cat ../dat</td>
+<td style="text-align: left;">a/twain-tom-sawyer.txt | tr A-Z-z   | sed
+s/w//g | wc -l</td>
+</tr>
+<tr class="odd">
+<td>8056</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td>tween Tom Sa art with 'w</td>
+<td style="text-align: left;">wyer and Huckleberry Finn the overlapping
+substrings that ’ are:</td>
+</tr>
+<tr class="odd">
+<td>cat ../dat</td>
+<td style="text-align: left;">a/twain-* | tr A-Z-z   | sed s/w//g | uniq
+-c | sort -k 1 -n -r</td>
+</tr>
+<tr class="even">
+<td>2 e’re los 2 ell? 2 ell, 2 eeks and</td>
+<td style="text-align: left;">t!</td>
+</tr>
+<tr class="odd">
+<td>e rest are u</td>
+<td style="text-align: left;">nique. For example, the following short
+string</td>
+</tr>
+<tr class="even">
+<td>… with t</td>
+<td style="text-align: left;">heir toes pressed against a w…</td>
+</tr>
+<tr class="odd">
+<td>pears in Tom ring to use rker, we wou xt if there</td>
+<td style="text-align: left;">Sawyer but not in Huckleberry Finn, and
+therefore is good to match against Tom Sawyer: if a text contains this
+ld put the text through further tests, but discard the is no match.</td>
+</tr>
+<tr class="even">
+<td>Discussion</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td>man language lot of redun tacks I trie e same analy</td>
+<td style="text-align: left;">s are hard because the words are not that
+random. There is dancy is built-in which makes the type of statistical d
+to described above difficult. In few days, I will repeat sis for a
+genome sequence data.</td>
+</tr>
+<tr class="even">
+<td>: footnotes</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<ol type="1">
+<li><div id="fn:note">
+<p><a
+href="http://neil.fraser.name/software/diff_match_patch/bitap.ps">Here</a>
+is a good place to look at for these.<a href="#fnref:note"
+class="reversefootnote"> ↩︎</a></p>
+</div>
+:::</li>
+</ol>
+<div id="footer">
+<p><span id="timestamp">December 2nd, 2013 2:48pm</span></p>
+</div>
+</body>
+</html>

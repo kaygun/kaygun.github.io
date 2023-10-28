@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-08-11-gibbs_sampling_in_lisp_compared_with_c</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="gibbs-sampling-in-lisp-compared-with-c">Gibbs sampling in lisp
+compared with C</h1>
+<p>I was reading two posts on Gibbs sampling: one by <a
+href="http://darrenjw.wordpress.com/2011/07/16/gibbs-sampler-in-various-languages-revisited/">Daren
+Wilkinson</a> in which he compares the performance of different
+programming languages on the same problem, and the other by <a
+href="http://dmbates.blogspot.com/2012/05/simple-gibbs-example-in-julia.html">Douglas
+Bates</a> in which he performs the same task in <a
+href="http://julia.org">Julia</a> with impressive speed gains. For few
+weeks now, I’ve wanted to experiment with <a
+href="http://common-lisp.net/project/gsll/">gsll</a> (the <a
+href="http://www.gnu.org/software/gsl/">GNU Scientific Library</a> for
+lisp), specifically with their random number generators (by the way, <a
+href="http://jorgetavares.com/2009/09/05/more-random-number-generators-in-lisp-using-gsll/">here</a>
+is a nice post by Jorge Tavares on the subject of generating random
+numbers using <a href="http://common-lisp.net/project/gsll/">gsll</a>).
+I thought doing the same benchmark with lisp might be good idea.</p>
+<h2 id="the-reference-c-code">The reference C code</h2>
+<p>I will lift the C code from Daren Wilkinson:</p>
+<pre><code> #include &lt;stdio.h&gt;
+ #include &lt;math.h&gt;
+ #include &lt;stdlib.h&gt;
+ #include &lt;gsl/gsl_rng.h&gt;
+ #include &lt;gsl/gsl_randist.h&gt;
+
+ void main()
+ {
+   int N=50000;
+   int thin=1000;
+   int i,j;
+   gsl_rng *r = gsl_rng_alloc(gsl_rng_mt19937);
+   double x=0;
+   double y=0;
+   printf(&quot;Iter x y\n&quot;);
+   for (i=0;i&lt;N;i++) {
+     for (j=0;j&lt;thin;j++) {
+       x=gsl_ran_gamma(r,3.0,1.0/(y*y+4));
+       y=1.0/(x+1)+gsl_ran_gaussian(r,1.0/sqrt(2*x+2));
+     }
+     printf(&quot;%d %f %f\n&quot;,i,x,y);
+   }
+ }    </code></pre>
+<p>I compiled and ran the code as suggested.</p>
+<pre><code> gcc -O4 -lm -lgsl -lgslcblas gibbs.c -o gibbs
+ time ./gibbs &gt; datac.tab</code></pre>
+<p>As a matter of fact I ran ten times. The average came about 11.5
+seconds on my Debian box at work.</p>
+<h2 id="the-lisp-code">The lisp code</h2>
+<p>You will need the <a
+href="http://common-lisp.net/project/gsll/">gsll</a> library which is on
+<a href="http://quicklisp.org">quicklisp</a>. Get it and load it up.</p>
+<pre><code> (ql:quickload :gsll)</code></pre>
+<p>Here is Wilkinson’s code translated (with a slight modification) into
+Common Lisp:</p>
+<pre><code> (time 
+    (with-open-file (res &quot;datalisp.tab&quot; 
+                         :direction :output 
+                         :if-exists :supersede)
+      (let ((N 50000)
+            (thin 1000)
+            (rng (gsll:make-random-number-generator gsll:+mt19937+))
+            (x 1.0d0)
+            (y 0.0d0))
+        (dotimes (i N) 
+           (loop repeat thin do
+               (setf x (/ (+ 1.0d0 (gsll:sample rng :gamma 
+                                                     :a 3.0d0 
+                                                     :b (/ (+ 4.0d0 (* y y)))))))
+               (setf y (+ x (gsll:sample rng :gaussian 
+                                             :sigma (* (sqrt 5.0d-1) x)))))
+           (format res &quot;~5D ~8,6F ~8,6F&quot; i x y)))))</code></pre>
+<p>I ran the code 5 times on <a href="http://www.sbcl.org/">sbcl</a> on
+the same Debian box at work. The average was about 57.5 seconds. This
+makes the common lisp code better than python but worse than PyPy in
+Wilkinson’s scale.</p>
+<div id="footer">
+<p><span id="timestamp">August 11th, 2013 12:01pm</span></p>
+</div>
+</body>
+</html>

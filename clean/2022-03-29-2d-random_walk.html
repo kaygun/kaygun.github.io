@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2022-03-29-2d-random_walk</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="d-random-walk">2D-Random Walk</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a
+href="2022-03-28-trade_deficit_vs_exchange_rate_curve.html">Yesterday</a>
+I was looking at the deficit vs exchange rate curve. The curve
+suspiciously looks very similar to 2D-random walk. Today, I’ll sketch
+several 2D-random walk curves to see if I can get curves similar to what
+I had yesterday.</p>
+<h2 id="theory">Theory</h2>
+<p>A discrete 1D-random walk is a sequence of real numbers <span
+class="math inline">\((x_n)\)</span> such that<br />
+</p>
+<p><span class="math display">\[ \Delta x_n = x_n - x_{n-1} \sim
+N(0,\epsilon) \]</span><br />
+</p>
+<p>for some <span class="math inline">\(\epsilon\)</span>. In a
+2D-discrete random walk we have 2 of these sequences with possibly
+different <span class="math inline">\(\epsilon\)</span>’s.</p>
+<h2 id="code">Code</h2>
+<p>Let us start with the libraries</p>
+<pre><code>from numpy.random import normal
+from pandas import DataFrame as df
+import matplotlib.pyplot as plt</code></pre>
+<p>I’ll implement the 1D-random walk. For 2D-random walk, I will call
+this function twice:</p>
+<pre><code>def randomWalk1D(n,epsilon=0.1,m=3):
+    x = 0
+    xs = []
+    for i in range(n):
+        x += normal(loc=0, scale=epsilon)
+        xs.append(x)
+    return df(xs).rolling(m).mean()</code></pre>
+<p>Let us plot:</p>
+<pre><code>xs = randomWalk1D(250, 0.2, 10)
+ys = randomWalk1D(250, 0.2, 10)
+plt.plot(xs,ys)
+plt.savefig(&#39;2d-random-walk.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-height="480" data-orig-width="640">
+<img
+src="../media/2022-03-29-2d-random_walk_0.png"
+data-orig-height="480" data-orig-width="640" />
+</figure>
+<h2 id="analysis">Analysis</h2>
+<p>Well… The curve I got <a
+href="2022-03-28-trade_deficit_vs_exchange_rate_curve.html">yesterday</a>
+looks very similar to these curves. So, really if there is a functional
+dependence between exchange rate and the trade deficit, it is not easy
+to see using a simple minded plot of these values against here.</p>
+<div id="footer">
+<p><span id="timestamp">March 29th, 2022 12:12pm</span></p>
+</div>
+</body>
+</html>

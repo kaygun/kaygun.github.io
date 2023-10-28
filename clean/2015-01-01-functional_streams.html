@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-01-01-functional_streams</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="functional-streams">Functional Streams</h1>
+<p>I was reading <a
+href="https://mitpress.mit.edu/sicp/full-text/sicp/book/node69.html">SICP</a>’s
+implementation of streams. In the process of thinking about it, and
+possible implementations in common lisp, I came up with two different
+approaches. A <em>stateful</em> approach and a <em>functional</em>
+approach.</p>
+<h2 id="statefulstreams">Stateful Streams</h2>
+<p>In this first iteration, a stream is a function which accepts no
+arguments and has an internal state that changes every time you call it.
+For obvious reasons, I will implement it using a macro:</p>
+<pre><code>(defmacro make-stream (fn init)
+   (let ((v (gensym)))
+     `(let (v)
+        (lambda () 
+           (setf v (if (null v) 
+                       ,init 
+                       (funcall ,fn v)))))))
+MAKE-STREAM</code></pre>
+<p>I will also need a function which would take a specific number of
+items, or until a predicate is satisfied.</p>
+<pre><code>(defun take (n stream)
+  (loop repeat n collect (funcall stream)))
+TAKE
+
+(defun take-until (pred stream)
+  (loop for i from (funcall stream) until (funcall pred i) 
+        collect (funcall stream)))
+TAKE-UNTIL</code></pre>
+<p>Let us test:</p>
+<pre><code>(defvar natural (make-stream #&#39;1+ 0))
+NATURAL
+(take 12 natural)
+(0 1 2 3 4 5 6 7 8 9 10 11)
+
+(defvar even (make-stream (lambda (x) (+ x 2)) 0))
+EVEN
+(take 8 even)
+(0 2 4 6 8 10 12 14)
+
+(defvar odd (make-stream (lambda (x) (+ x 2)) 1))
+ODD
+(take-until (lambda (x) (&gt; x 10)) odd)
+(3 5 7 9 11 13 15 17 19 21)</code></pre>
+<p>The problem with this approach is that each stream has its own state
+and when we call them again, or if some other piece of code calls the
+stream in the process, it will be effected. For example,</p>
+<pre><code>(take 6 even)
+(16 18 20 22 24 26)</code></pre>
+<p>will continue taking more even integers from where we left off. If we
+wanted to start from the beginning we must create a new stream.</p>
+<pre><code>(defvar new-even (make-stream (lambda (x) (+ x 2)) 0))
+NEW-EVEN
+(take 6 new-even)
+(0 2 4 6 8 10)</code></pre>
+<h2 id="functionalstreams">Functional Streams</h2>
+<p>In this iteration, I will implement a stream as a recursive function
+which calculates the next item from the head of the stream, i.e. the
+values calculated up until that point. This time I am not going to need
+<code>make-stream</code> but I need to modify <code>take</code> and
+<code>take-until</code> as</p>
+<pre><code>(defun f-take (n stream)
+   (let (res)
+      (dotimes (i n (reverse res))
+         (push (funcall stream res) res))))
+F-TAKE
+
+(defun f-take-until (pred stream)
+   (let ((res (list (funcall stream nil))))
+      (loop for i from (car res) until (funcall pred (car res))
+          do (push (funcall stream res) res))
+      (reverse res)))
+F-TAKE-UNTIL</code></pre>
+<p>This time, a stream has to know what its initial value is:</p>
+<pre><code>(defvar f-even 
+   (lambda (x)
+      (if (null x)
+         0
+         (+ (car x) 2))))
+F-EVEN
+(f-take 10 f-even)
+(0 2 4 6 8 10 12 14 16 18)
+
+(defvar f-odd
+   (lambda (x)
+      (if (null x)
+         1
+         (+ (car x) 2))))
+F-ODD
+(f-take-until (lambda (x) (&gt; x 10)) f-odd)
+(1 3 5 7 9 11)</code></pre>
+<p>This implementation is more flexible since now I can do things
+like</p>
+<pre><code>(defvar fibonacci
+   (lambda (x)
+      (cond ((null x) 0)
+            ((= (length x) 1) 1)
+            (t (+ (car x) (cadr x))))))
+FIBONACCI
+(f-take 12 fibonacci)
+(0 1 1 2 3 5 8 13 21 34 55 89)</code></pre>
+<p>or even</p>
+<pre><code>(defvar prime
+   (lambda (x)
+      (cond ((null x) 2)
+            ((= (length x) 1) 3)
+            (t (let ((y (reverse x))
+                     (m (1+ (floor (sqrt (car x))))))
+                  (do ((i (+ (car x) 2) (+ i 2)))
+                      ((do ((j y (cdr j)))
+                           ((or (&gt; (car j) m)
+                                (zerop (mod i (car j))))
+                            (&gt; (car j) m)))
+                       i)))))))
+PRIME
+(f-take-until (lambda (x) (&gt; x 1234)) prime)
+(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101
+ 103 107 109 113 127 131 137 139 149 151 157 163 167 173 179 181 191 193
+ 197 199 211 223 227 229 233 239 241 251 257 263 269 271 277 281 283 293
+ 307 311 313 317 331 337 347 349 353 359 367 373 379 383 389 397 401 409
+ 419 421 431 433 439 443 449 457 461 463 467 479 487 491 499 503 509 521
+ 523 541 547 557 563 569 571 577 587 593 599 601 607 613 617 619 631 641
+ 643 647 653 659 661 673 677 683 691 701 709 719 727 733 739 743 751 757
+ 761 769 773 787 797 809 811 821 823 827 829 839 853 857 859 863 877 881
+ 883 887 907 911 919 929 937 941 947 953 967 971 977 983 991 997 1009 1013
+ 1019 1021 1031 1033 1039 1049 1051 1061 1063 1069 1087 1091 1093 1097 1103
+ 1109 1117 1123 1129 1151 1153 1163 1171 1181 1187 1193 1201 1213 1217 1223
+ 1229 1231 1237)</code></pre>
+<p>The advantage of this approach is that since the implementation is
+functional, there is no internal state. Therefore, whoever holds the
+head of the stream also controls the stream.</p>
+<div id="footer">
+<p><span id="timestamp">January 1st, 2015 6:59pm</span></p>
+</div>
+</body>
+</html>

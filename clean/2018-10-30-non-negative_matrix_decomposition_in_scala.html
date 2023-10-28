@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2018-10-30-non-negative_matrix_decomposition_in_scala</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="non-negative-matrix-decomposition-in-scala">Non-negative Matrix
+Decomposition in Scala</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Imagine you have a large <span class="math inline">\(m\times
+n\)</span>-matrix <span class="math inline">\(D\)</span> which consists
+of nonnegative real numbers, and we would like to decompose it as <span
+class="math inline">\(D = W H\)</span> where <span
+class="math inline">\(W\)</span> is a <span
+class="math inline">\(m\times k\)</span>-matrix and <span
+class="math inline">\(H\)</span> is <span class="math inline">\(k\times
+n\)</span>-matrix for a relatively small <span
+class="math inline">\(k\)</span> and both of the matrices consist of
+only nonnegative numbers. This is called <a
+href="https://en.wikipedia.org/wiki/Non-negative_matrix_factorization">non-negative
+matrix decomposition</a>. I am going to use algorithms described in the
+paper <a
+href="https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization.pdf"><em>Algorithms
+for Non-negative Matrix Factorization</em></a> by D.D.Lee and H.S.Seung,
+and implement them in scala.</p>
+<h2 id="an-implementation-in-scala">An implementation in Scala</h2>
+<p>I am using the scala kernel <a
+href="http://almond-sh.github.io/almond/stable/docs/intro">almond</a>
+for <a href="http://jupyter.org">jupyter</a> to write this blog
+post.</p>
+<pre><code>import $ivy.`org.scalanlp:breeze_2.13:1.0`
+import breeze.linalg.{DenseVector,DenseMatrix}
+
+def nnmd(D:DenseMatrix[Double], 
+         k:Int, 
+         costFn:(DenseMatrix[Double],DenseMatrix[Double])=&gt;Double,
+         epocs:Int=500,
+         tol:Double=1e-2): (DenseMatrix[Double],DenseMatrix[Double],Int) = {
+    var w = DenseMatrix.rand[Double](D.rows, k)
+    var h = DenseMatrix.rand[Double](k, D.cols)
+    val u = DenseMatrix.fill[Double](D.rows, D.cols)(1.0)
+    var i = 0
+    while(i &lt; epocs &amp;&amp; tol &lt; costFn(D, w*h)/D.size) {
+      val wt = w.t
+      val ht = h.t
+      val tm = D /:/ (w*h) - u
+      val et = h /:/ (wt*u)
+      val mu = w /:/ (u*ht)
+      h += et *:* (wt*tm)
+      w += mu *:* (tm*ht)
+      i += 1
+    }
+    return((w,h,i))
+}</code></pre>
+<p>For this implementation, one can pass his/her own error function.
+Today, I am going to use the total square error function:</p>
+<pre><code>def totSq(A:DenseMatrix[Double], B:DenseMatrix[Double]) = 
+    (A - B).map(x=&gt;x*x).sum</code></pre>
+<p>Now, let us test the code on a random matrix of size (300,100):</p>
+<pre><code>val a = DenseMatrix.rand[Double](300,100)
+val b = nnmd(a,30,totSq)
+println(&quot;result=%f\n&quot;.format(totSq(a, b._1*b._2)/a.size))
+
+
+result=0.049115</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 30th, 2018 5:27pm</span></p>
+</div>
+</body>
+</html>

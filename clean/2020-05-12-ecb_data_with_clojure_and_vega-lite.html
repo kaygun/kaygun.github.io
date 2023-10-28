@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-05-12-ecb_data_with_clojure_and_vega-lite</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="ecb-data-with-clojure-and-vega-lite">ECB Data with Clojure and
+Vega-Lite</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I have been exploring <a
+href="https://www.ecb.europa.eu/stats/html/index.en.html">ECB data</a>
+through their <a href="https://sdw.ecb.europa.eu/">API</a>. I have done
+<a
+href="2020-05-06-processing_ecb_data_with_common_lisp.html">python</a>,
+<a
+href="2018-08-30-working_with_european_central_bank_data_in_scala.html">scala</a>
+and <a
+href="2020-05-06-processing_ecb_data_with_common_lisp.html">common
+lisp</a> before. Now, it is clojure’s turn.</p>
+<h2 id="the-code">The code</h2>
+<p>Let us start with the namespace and <code>deps.edn</code>. This is
+what I have for the <code>deps.edn</code>:</p>
+<pre><code>{:deps {org.clojure/data.json {:mvn/version &quot;1.0.0&quot;}
+        clj-http/clj-http {:mvn/version &quot;3.10.1&quot;}
+        metasoarous/oz {:mvn/version &quot;1.6.0-alpha6&quot;}}
+}</code></pre>
+<p>which I use in the <code>ns</code></p>
+<pre><code>(ns ecb
+  (:require [clojure.data.json :as json]
+            [clj-http.client :as client]
+            [oz.core :as oz]))</code></pre>
+<p>I need <a
+href="https://github.com/clojure/data.json"><code>data.json</code></a>
+for JSON parsing, <a
+href="https://github.com/dakrone/clj-http"><code>clj-http</code></a> for
+the http client, <a
+href="https://github.com/metasoarous/oz"><code>oz</code></a> for <a
+href="https://vega.github.io/vega-lite/">vega-lite</a>
+visualization.</p>
+<p>The code snippet below, queries <a
+href="https://sdw.ecb.europa.eu/">ECB data repository</a>. The hard part
+is to figure out the ECB’s designation for the dataset one needs to
+query.</p>
+<pre><code>(defn request [dataset]
+  (let [raw (-&gt; (str &quot;https://sdw-wsrest.ecb.europa.eu/service/data/ECB,&quot; dataset)
+                (client/get {:accept :json})
+                :body 
+                json/read-str)
+        dates (map (fn [k] (get k &quot;name&quot;))
+                   (-&gt; raw
+                       (get &quot;structure&quot;)
+                       (get &quot;dimensions&quot;)
+                       (get &quot;observation&quot;)
+                       first
+                       (get &quot;values&quot;)))
+        values (-&gt; raw
+                   (get &quot;dataSets&quot;)
+                   first
+                   (get &quot;series&quot;)
+                   vals
+                   first
+                   (get &quot;observations&quot;))]
+    (-&gt;&gt; (into [] values)
+         (mapcat (fn [[k v]]
+                   {(nth dates (read-string k)) (first v)}))
+         (into {}))))
+
+#&#39;ecb/request</code></pre>
+<p>The function below queries the ECB data server for European total
+imports and exports to a specific country to calculate the trade
+imbalance over time, and then plots the result via <a
+href="https://vega.github.io/vega-lite/">vega-lite</a> library <a
+href="https://github.com/metasoarous/oz">oz</a>.</p>
+<pre><code>(defn experiment [country]
+  (let [imports (request (str &quot;TRD/M.I8.Y.M.TTT.&quot; country &quot;.4.VAL&quot;))
+        exports (request (str &quot;TRD/M.I8.Y.X.TTT.&quot; country &quot;.4.VAL&quot;))
+        data (map (fn [k] {:date k
+                           :value (/ (get imports k) (get exports k))})
+                  (keys imports))
+        plot {:data {:values data}
+              :encoding {:x {:field :date :type &quot;nominal&quot; :title &quot;Time&quot;}
+                         :y {:field :value :type &quot;quantitative&quot; :title &quot;Trade Imbalance of EU = Imports/Exports&quot;}}
+              :mark &quot;line&quot;}]
+    (oz/view! plot :port 12345)))
+
+#&#39;ecb/experiment</code></pre>
+<p>Let us run this for Great Britain: If you run this on your machine,
+the visualization you will get from oz on your browser is better than
+the PNG I am including here.</p>
+<pre><code>(oz/start-server! 12345)
+(experiment &quot;GB&quot;)</code></pre>
+<figure class="tmblr-full" data-orig-height="283" data-orig-width="987">
+<img
+src="../media/2020-05-12-ecb_data_with_clojure_and_vega-lite_0.png"
+data-orig-height="283" data-orig-width="987" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">May 12th, 2020 1:18pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2022-03-09-working_with_european_central_bank_data_in_python_revisited</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="working-with-european-central-bank-data-in-python-revisited">Working
+with European Central Bank data in python (revisited)</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I have looked at pulling European Central Bank data using <a
+href="2020-05-06-processing_ecb_data_with_common_lisp.html">lisp</a>, <a
+href="2020-05-12-ecb_data_with_clojure_and_vega-lite.html">clojure</a>,
+<a
+href="2018-08-30-working_with_european_central_bank_data_in_scala.html">scala</a>,
+and <a
+href="2017-10-01-working_with_european_central_bank_data_in_python.html">python</a>.
+Today, I am going to revisit my python code and clean it up, and maybe,
+improve some.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Let us start with the imports:</p>
+<pre><code>import json
+import pandas as pd
+from matplotlib import pyplot as plt
+from urllib.request import urlopen</code></pre>
+<p>Next, our work-horse that will query ECB data warehouse:</p>
+<pre><code>def ecbProbe(dataset,name,m):
+    mid = &#39;:&#39;.join([&#39;0&#39; for i in range(m)])
+    base = &#39;https://sdw-wsrest.ecb.europa.eu/service/data/&#39;
+    with urlopen(f&#39;{base}{dataset}?format=jsondata&#39;) as url:
+         raw = json.load(url)
+
+    dates = [x[&#39;name&#39;] for x in raw[&#39;structure&#39;][&#39;dimensions&#39;][&#39;observation&#39;][0][&#39;values&#39;]]
+    values = [x[0] for x in raw[&#39;dataSets&#39;][0][&#39;series&#39;][mid][&#39;observations&#39;].values()]
+
+    return pd.DataFrame({name: values}, index=dates)</code></pre>
+<p>There is a specific parameter that I couldn’t figure out. Each
+dataset has a specific key with specific number of ’0’s. So, I passed
+the number of these zeros as a parameter m.</p>
+<p>Let us look at EU area trade deficit with China (imports divided by
+exports). For this dataset the parameter m is 8.</p>
+<pre><code>df1 = ecbProbe(f&#39;ECB,TRD/M.I8.Y.M.TTT.CN.4.VAL&#39;,&#39;Imports&#39;,8)
+df2 = ecbProbe(f&#39;ECB,TRD/M.I8.Y.X.TTT.CN.4.VAL&#39;,&#39;Exports&#39;,8)
+
+pd.DataFrame(df1[&#39;Imports&#39;]/df2[&#39;Exports&#39;]).plot(figsize=(12,6))
+plt.savefig(&#39;ecb-with-python-trade-deficit.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-height="600" data-orig-width="1200">
+<img
+src="../media/2022-03-09-working_with_european_central_bank_data_in_python_revisited_0.png"
+data-orig-height="600" data-orig-width="1200" />
+</figure>
+<p>Next, we’ll get the consumer price index for the Euro area:</p>
+<pre><code>df = ecbProbe(&#39;ICP/M.U2.N.000000.4.ANR&#39;,&#39;CPI Euro Area&#39;,6)
+
+df.plot(figsize=(12,6))
+plt.savefig(&#39;ecb-with-python-cpi.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-height="600" data-orig-width="1200">
+<img
+src="../media/2022-03-09-working_with_european_central_bank_data_in_python_revisited_1.png"
+data-orig-height="600" data-orig-width="1200" />
+</figure>
+<p>Finally, let us do the labor productivity for the Euro area:</p>
+<pre><code>dataset = &#39;MNA/Q.Y.I8.W0.S1.S1._Z.LPR_PS._Z._T._Z.EUR.LR.GY&#39;
+df = ecbProbe(dataset,&#39;Labor Productivity&#39;,14)
+
+df.plot(figsize=(12,6))
+plt.savefig(&#39;ecb-with-python-labor-productivity.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-height="600" data-orig-width="1200">
+<img
+src="../media/2022-03-09-working_with_european_central_bank_data_in_python_revisited_2.png"
+data-orig-height="600" data-orig-width="1200" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">March 9th, 2022 4:43pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-09-26-listing_partitions</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="listingpartitions">Listing partitions</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Given a natural number N, an ordered k-partition of N is a sequence
+<span class="math inline">\(a_1,\ldots,a_k\)</span> of natural numbers
+such that <span class="math inline">\(N = a_1 + \cdots + a_k\)</span>.
+For the purposes of this note, we assume <span
+class="math inline">\(a_i\geq 0\)</span>. In this decomposition, we may
+assume that the sequence is ordered, that is, we are not allowed to
+alter the order of the terms <span class="math inline">\(a_i\)</span>.
+Then the partition is called an <em>ordered</em> k-partition of N. If we
+want a decomposition which is oblivious to the ordering of the numbers
+appearing in the decomposition of N, then the partition is called an
+<em>unordered</em> k-partition of N. In that case, we can assume without
+loss of generality that <span class="math inline">\(a_1\leq a_2\leq
+\cdots\leq a_k\)</span>.</p>
+<p>In this note, I would like to describe a recursive algorithm which
+gives the ordered and unordered k-partitition of a natural number N
+together with the python code which implements the algorithm.</p>
+<h2 id="orderedpartitions.">Ordered partitions.</h2>
+<p>The case of ordered partitions is slightly easier that the unordered
+partition using recursion. Notice that if we have a k-partition of N of
+the form <span class="math display">\[ N = a_1 + \cdots + a_k \]</span>
+then we have a <span class="math inline">\((k-1)\)</span>-partition of
+<span class="math inline">\(N - a_1\)</span> <span
+class="math display">\[ N - a_1 = a_2 + \cdots + a_k
+\]</span> The smallest value for <span
+class="math inline">\(a_1\)</span> is 1, and the largest value we can
+chose for <span class="math inline">\(a_1\)</span> is such that <span
+class="math inline">\(N - a_1 = (k-1)\)</span>. Then means <span
+class="math inline">\(a_1\)</span> can be at most <span
+class="math inline">\(N - k + 1\)</span>. Thus we can write our
+function</p>
+<pre><code> def OrdPart(N,k):
+
+     if N&lt;0 or k&lt;1 or N&lt;k:
+        return([])
+
+     if N == k:
+        Ret = [ [ 1 for i in range(N) ] ]
+
+     elif k == 1:
+        Ret = [ [N] ]
+
+     elif k == 2:
+        Ret = [ [i,N-i] for i in range(1,N) ]
+
+     else:
+        Ret = []
+        for i in range(1,N-k+2):
+            for x in OrdPart(N-i,k-1):
+                Ret = Ret + [ [i] + x ]
+
+     return(Ret)</code></pre>
+<p>A short note here: the <code>range</code> function in python starts
+counting from 0. But if one starts at another number (say 1) it still
+goes 1 short of the upper bound. One must increase the upper bound
+number is such cases.</p>
+<p>I don’t have to tell you that what we gain in clarity in writing the
+code recursively, we lose <strong>big time</strong> in computation time.
+<em>Memoization</em> is a good tool to cut down the computation time. I
+will a hash list (a <em>dictionary</em> in python lingo) whose keys were
+the parameters of the function call and whose value is the return value
+of the function. Here is the same function with memoization:</p>
+<pre><code> OrdPartStack = {}
+
+ def OrdPart(N,k):
+
+     if N&lt;0 or k&lt;1 or N&lt;k:
+        return([])
+
+     if N == k:
+        Ret = [ [ 1 for i in range(N) ] ]
+
+     elif k == 1:
+        Ret = [ [N] ]
+
+     elif k == 2:
+        Ret = [ [i,N-i] for i in range(1,N) ]
+
+     else:
+        try:
+           Ret = OrdPartStack[(N,k)]
+        except:
+           Ret = []
+           for i in range(1,N-k+2):
+               for x in OrdPart(N-i,k-1):
+                   Ret = Ret + [ [i] + x ]
+
+           OrdPartStack.update({(N,k):Ret})
+
+     return(Ret)</code></pre>
+<p>I have a basic checking at the beginning to make sure that the
+arguments of the function are kosher. The special cases <span
+class="math inline">\(k=1\)</span>, <span
+class="math inline">\(k=2\)</span> and <span
+class="math inline">\(N=k\)</span> are needed for the recursion to
+terminate.</p>
+<p>Let us see if the code works. I’ll start with the special cases</p>
+<pre><code> print OrdPart(7,1)
+ [[7]]
+
+ print OrdPart(9,9)
+ [[1, 1, 1, 1, 1, 1, 1, 1, 1]]
+
+ print OrdPart(5,2)
+ [[1, 4], [2, 3], [3, 2], [4, 1]]</code></pre>
+<p>Now a small <span class="math inline">\(N\)</span> with a small <span
+class="math inline">\(k\)</span></p>
+<pre><code> print OrdPart(6,4)
+ [[1, 1, 1, 3], [1, 1, 2, 2], [1, 1, 3, 1], [1, 2, 1, 2], [1, 2, 2,
+1], [1, 3, 1, 1], [2, 1, 1, 2], [2, 1, 2, 1], [2, 2, 1, 1], [3, 1, 1,
+1]]</code></pre>
+<p>They return correctly. But try to look at the result of the following
+function call, it is not that easy to inspect the result one by one due
+to its length</p>
+<pre><code> A = OrdPart(8,6)
+ print(A)
+ [[1, 1, 1, 1, 1, 3], [1, 1, 1, 1, 2, 2], [1, 1, 1, 1, 3, 1], [1, 1,
+1, 2, 1, 2], [1, 1, 1, 2, 2, 1], [1, 1, 1, 3, 1, 1], [1, 1, 2, 1, 1,
+2], [1, 1, 2, 1, 2, 1], [1, 1, 2, 2, 1, 1], [1, 1, 3, 1, 1, 1], [1, 2,
+1, 1, 1, 2], [1, 2, 1, 1, 2, 1], [1, 2, 1, 2, 1, 1], [1, 2, 2, 1, 1,
+1], [1, 3, 1, 1, 1, 1], [2, 1, 1, 1, 1, 2], [2, 1, 1, 1, 2, 1], [2, 1,
+1, 2, 1, 1], [2, 1, 2, 1, 1, 1], [2, 2, 1, 1, 1, 1], [3, 1, 1, 1, 1,
+1]]</code></pre>
+<p>Instead, I’ll use</p>
+<pre><code> for x in A:
+   if len(x)!=6 and sum(x)!=8:
+      print &quot;Error at &quot;,x</code></pre>
+<h2 id="unorderedpartitions">Unordered partitions</h2>
+<p>The situation is more complicated with the unordered partitions but
+it is not too bad. Remember that we require <span
+class="math inline">\(N = a_1 + \cdots + a_k\)</span> and <span
+class="math inline">\(a_1 \leq a_2 \leq \cdots \leq a_k\)</span>. So, if
+we re-write <span class="math display">\[ N -
+a_1 = a_2 + \cdots + a_k \]</span> this really does not give us a <span
+class="math inline">\((k-1)\)</span>-partition of <span
+class="math inline">\(N - a_1\)</span> because <span
+class="math inline">\(a_2\)</span> must be greater than or equal to
+<span class="math inline">\(a_1\)</span>. Instead we write <span
+class="math display">\[ (a_2 - a_1 + 1) + \cdots +
+(a_k - a_1 + 1) = N - a_ 1 - (k-1) (a_1-1) = N + k - 1 - k a_1 \]</span>
+In other words, reducing the parameter <span
+class="math inline">\(k\)</span> by 1 forces us to change <span
+class="math inline">\(N\)</span> to <span class="math inline">\(N + k -
+1 - k a_1\)</span>. Also, this equation also tells us the upper bound
+for <span class="math inline">\(a_1\)</span>: <span
+class="math display">\[ N + k - 1 - k a_1 \geq k-1
+\quad\Rightarrow\quad N \geq k a_1 \]</span> Hence, the upper bound for
+<span class="math inline">\(a_1\)</span> is <span
+class="math inline">\(\rfloor N/k\lfloor\)</span>.</p>
+<p>So, let us write the code. I will write the implementation with
+memoization:</p>
+<pre><code> UnOrdPartStack = {}
+
+ def UnOrdPart(N,k):
+
+     if N&lt;0 or k&lt;0 or N&lt;k:
+        return([])
+
+     if k == 1:
+        Ret = [ [N] ]
+
+     elif k == 2:
+        Ret = [ [i,N-i] for i in range(1,1+int(N/2)) ]
+
+     elif N == k:
+        Ret = [ [1 for i in range(N)] ]
+
+     else:
+        try:
+            Ret = UnOrdPartStack[(N,k)]
+        except:
+            Ret = []
+            for i in range(1,1+int(N/k)):
+                for x in UnOrdPart(N + k - 1 - k*i, k-1):
+                    Ret = Ret + [ [i] + [(j+i-1) for j in x] ]
+
+            UnOrdPartStack.update({(N,k):Ret})
+
+     return(Ret)</code></pre>
+<p>The recursion looks different from the previous case. The reason is
+that when we get the list of <span
+class="math inline">\((k-1)\)</span>-partitions of <span
+class="math inline">\(N + k - 1 - k\cdot a_1\)</span> we must shift each
+of the terms by <span class="math inline">\((a_1-1)\)</span> to get an
+admissible partition. This is reflected in the code.</p>
+<p>Let me test the code: the special case with an odd <span
+class="math inline">\(N\)</span></p>
+<pre><code> print UnOrdPart(5,2)
+ [[1, 4], [2, 3]]</code></pre>
+<p>The special case with an even <span
+class="math inline">\(N\)</span></p>
+<pre><code> print UnOrdPart(8,2)
+ [[1, 7], [2, 6], [3, 5], [4, 4]]</code></pre>
+<p>A smalll <span class="math inline">\(N\)</span> and a small <span
+class="math inline">\(k\)</span></p>
+<pre><code> print UnOrdPart(9,4)
+ [[1, 1, 1, 6], [1, 1, 2, 5], [1, 1, 3, 4], [1, 2, 2, 4], [1, 2, 3,
+3], [2, 2, 2, 3]]</code></pre>
+<p>and a large <span class="math inline">\(N\)</span> with a largish
+<span class="math inline">\(k\)</span></p>
+<pre><code> A = UnOrdPart(32,8)
+ for x in A:
+     if len(x)!=8 and sum(x)!=32:
+        print &quot;Error at&quot;, x</code></pre>
+<p>Here is the code in lisp with memoization which does the same
+thing.</p>
+<pre><code>(setq OrdPart-stack (make-hash-table :test #&#39;equal))
+(defun OrdPart-lookup (x) (gethash x OrdPart-stack))
+(defun OrdPart-push (x y) (setf (gethash x OrdPart-stack) y))
+
+(defun OrdPart (N k)
+    (cond ((or (&lt; N 0) (&lt; k 1) (&lt; N k)) nil)
+          ((= k 1) (list (list N))
+          ((= k N) (list (loop for i from 1 to N collect 1)))
+          ((= k 2) (loop for i from 1 to (1- N) collect (list i (- N i))))
+          (t (or (OrdPart-lookup (list N k))
+                 (OrdPart-push (list N k) 
+                      (loop for i from 1 to (- (1+ N) k) 
+                            append (mapcar (lambda (x) (append (list i) x)) (OrdPart (- N i) (1- k)))))))))
+
+(setq UnOrdPart-stack (make-hash-table :test #&#39;equal))
+(defun UnOrdPart-lookup (x) (gethash x UnOrdPart-stack))
+(defun UnOrdPart-push (x y) (setf (gethash x UnOrdPart-stack) y))
+
+(defun UnOrdPart (N k)
+    (cond ((or (&lt; N 0) (&lt; k 1) (&lt; N k)) nil)
+          ((= k 1) (list (list N))
+          ((= k N) (list (loop for i from 1 to N collect 1)))
+          ((= k 2) (loop for i from 1 to (floor (/ N 2)) collect (list i (- N i))))
+          (t (or (UnOrdPart-lookup (list N k)) 
+                 (UnOrdPart-push (list N k)                
+                      (loop for i from 1 to (floor (/ N k))
+                            append (mapcar (lambda (x) (append (list i) (mapcar (lambda (j) (+ i j -1)) x))) 
+                                          (UnOrdPart (+ N (1- k) (* k i -1)) (1- k)))))))))</code></pre>
+<div id="footer">
+<p><span id="timestamp">September 26th, 2012 2:02pm</span></p>
+</div>
+</body>
+</html>

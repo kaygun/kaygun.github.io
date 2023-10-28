@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-09-26-transitive_closure_of_a_directed_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="transitive-closure-of-a-directed-graph">Transitive closure of a
+directed graph</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>A directed graph <span class="math inline">\(G=(V,E)\)</span> is
+called <em>transitive</em> if for every pair of vertices <span
+class="math inline">\(a,b\in V\)</span> if there is a path from <span
+class="math inline">\(a\)</span> to <span
+class="math inline">\(b\)</span> then <span
+class="math inline">\((a,b)\in E\)</span>. The transitive closure of
+<span class="math inline">\(G\)</span> is the smallest transitive
+subgraph of the complete graph <span class="math inline">\(K(V) := (V,
+V\times V)\)</span> containing <span
+class="math inline">\(G\)</span>.</p>
+<p>Today I will look into developing an algorithm which constructs the
+transitive closure of a directed graph.</p>
+<h2 id="a-solution">A solution</h2>
+<p>The algorithm works as follows: for every pair of vertices <span
+class="math inline">\(a,b\in V\)</span> we will check if there is a path
+between them. If this is the case, then we will add an edge of the form
+<span class="math inline">\((a,b)\)</span> to <span
+class="math inline">\(E\)</span>.</p>
+<pre><code> import igraph
+
+ def transitiveClosure(G):
+     for a in G.vs():
+         for b in G.vs():
+             u = a.get_shortest_paths(b)
+             if len(u[0]) &gt; 2:
+                G.add_edge(a,b)
+     return G</code></pre>
+<p>Consider the following graph before the closure operator.</p>
+<pre><code> g = igraph.Graph(4)
+ g.to_directed()
+ g.add_edges([(0,1),(1,2),(0,2),(2,3)])</code></pre>
+<figure data-orig-height="347" data-orig-width="119">
+<img
+src="../media/2012-09-26-transitive_closure_of_a_directed_graph_0.png"
+data-orig-height="347" data-orig-width="119" alt="image" />
+</figure>
+<p>And now, after the closure operator.</p>
+<figure data-orig-height="347" data-orig-width="163">
+<img
+src="../media/2012-09-26-transitive_closure_of_a_directed_graph_1.png"
+data-orig-height="347" data-orig-width="163" alt="image" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">September 26th, 2012 5:26pm</span></p>
+</div>
+</body>
+</html>

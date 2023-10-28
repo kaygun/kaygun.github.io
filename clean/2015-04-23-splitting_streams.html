@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-04-23-splitting_streams</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="splitting-streams">Splitting Streams</h1>
+<p>I was watching <a href="http://gfredericks.com/">Gary Fredericks’</a>
+<a href="https://youtu.be/u0t-6lUvXHo">talk</a> at <a
+href="http://clojurewest.org/">Clojure West</a> on splitting streams of
+random numbers. He has a solution to the problem that works for him. I
+will do something a little more general, and show along the line that
+every random stream of objects can be split including what he calls
+linear random streams. There is no need to fiddle with the PRNG’s to
+make them split-able.</p>
+<p>As per his talk, random sequence here means deterministic
+pseudo-random sequence: given an initial seed, the pseudo-random
+sequence will be the same as long as one uses the same PRNG.</p>
+<h2 id="what-do-we-mean-by-splitting">What do we mean by splitting?</h2>
+<p>Given a stream of objects <code>stream</code>, a split (the
+mathematical name for the operation is `de-shuffle’ by the way) would
+create two streams <code>stream-1</code> and <code>stream-2</code> which
+are mutually disjoint and ordered. This means first that objects in both
+<code>stream-1</code> and <code>stream-2</code> are chosen from
+<code>stream</code> by preserving their order. In other words, if
+<code>a</code> appears before <code>b</code> in <code>stream</code> and
+if both appear in the same stream <code>stream-i</code> then
+<code>a</code> should appear before <code>b</code> also in
+<code>stream-i</code>. Mutual disjoint-ness condition states that there
+is no overlap in <code>stream-1</code> and <code>stream-2</code> in
+terms of the indices of the objects chosen: every object <code>x</code>
+in <code>stream</code> is either in <code>stream-1</code> or in
+<code>stream-2</code> but not both.<br />
+</p>
+<h2 id="streams-of-random-numbers">Streams of random numbers</h2>
+<p>I will use stateful random number generators. I will need the state
+later for splitting.</p>
+<pre><code>(defun make-a-number-stream (seed m)
+   (cons (seed-random-state seed)
+         (lambda (rng) (values (random m rng) rng))))
+MAKE-A-NUMBER-STREAM</code></pre>
+<p>Here is the <code>take</code> function:</p>
+<pre><code>(defun take (stream n)
+   (loop repeat n collect (funcall (cdr stream) (car stream))))
+TAKE</code></pre>
+<p>Let me test it:</p>
+<pre><code>(let ((str (make-a-number-stream 0 15)))
+   (take str 20))
+(12 5 0 3 11 3 7 9 3 5 2 4 7 6 8 8 12 10 1 6)</code></pre>
+<p>If I call the same random stream (another stream created with the
+same seed) I would get the same sequence:</p>
+<pre><code>(let ((str (make-a-number-stream 0 15)))
+   (take str 20))
+(12 5 0 3 11 3 7 9 3 5 2 4 7 6 8 8 12 10 1 6)</code></pre>
+<p>but the results would be different if I use a different seed</p>
+<pre><code>(let ((str (make-a-number-stream 1 15)))
+   (take str 20))
+(5 11 12 8 9 11 5 0 0 1 12 7 13 12 6 9 2 4 14 5)</code></pre>
+<h2 id="splitting-a-stream">Splitting a stream</h2>
+<p>In order to split a stream, I am going to need an additional random
+stream of binary values of 0’s and 1’s. Then the original stream will be
+split into two using this new stream:</p>
+<pre><code>(defun filter (str seed val)
+  (let* ((rng (seed-random-state seed))
+         (cut (lambda () (= val (random 2 rng)))))
+     (cons (seed-random-state (car str))
+           (lambda (rng)
+               (do ((x (funcall (cdr str) rng)
+                       (funcall (cdr str) rng)))
+                   ((funcall cut) x))))))
+FILTER
+(defun split-stream (stream seed)
+   (values 
+      (filter stream seed 1)
+      (filter stream seed 0)))
+SPLIT-STREAM</code></pre>
+<p>Remember the last example of the previous section? Let us split that.
+Aaand, voila!</p>
+<pre><code>(let ((str (make-a-number-stream 1 15)))
+   (multiple-value-bind (left right)
+         (split-stream str 10)
+     (list (take left 10) (take right 10))))
+((5 11 8 11 5 0 1 7 13 9) (12 9 0 12 12 6 2 4 14 5))</code></pre>
+<h2 id="addendum">Addendum</h2>
+<p><a href="https://twitter.com/gfredericks_">Garry</a> explained to me
+that performance-wise what I did is horrible, and does not scale at all
+for the applications he has in mind. It is essentially a filtering
+procedure, and after say <span class="math inline">\(n\)</span> split,
+each split stream would be <span class="math inline">\(2^n\)</span>
+times slower than the original which, as anyone can imagine, is bad. But
+then again, what I did is very general and that level of generality
+comes with a price. This reminds me an <a
+href="http://en.wikipedia.org/wiki/Alan_Perlis">Alan Perlis</a> quote
+“LISP programmers know the value of everything and the cost of
+nothing.”</p>
+<div id="footer">
+<p><span id="timestamp">April 23rd, 2015 9:11pm</span></p>
+</div>
+</body>
+</html>

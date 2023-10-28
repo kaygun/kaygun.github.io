@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="the-poset-of-connected-subgraphs-of-a-connected-graph">The poset
+of connected subgraphs of a connected graph</h1>
+<p>Today I will give you some nice pictures. But first, let me give you
+the basic setup.</p>
+<h2 id="posets-total-orders-and-hasse-diagrams">Posets, total orders and
+Hasse diagrams</h2>
+<p>A <a
+href="https://en.wikipedia.org/wiki/Partially_ordered_set">poset</a> is
+a set with what is called a <em>partial order</em>. This order relation
+allows us to compare elements.  A <em>total order</em> is a partial
+order where any two elements can be compared. Think of natural numbers
+and the <em>less than or equal to</em> relation. Not every partial order
+is a total order though. For example, the <em>subset</em> relation on a
+collection of sets need not be total.</p>
+<p>We can represent posets with their <a
+href="https://en.wikipedia.org/wiki/Hasse_diagram">Hasse diagrams</a>. I
+have written about Hasse diagrams <a
+href="2012-09-26-hasse_subgraph_of_a_directed_graph.html">before</a>.
+Here is the reverse Hasse diagram for the set of subsets of <span
+class="math inline">\(\{0,1\}\)</span>.</p>
+<figure data-orig-width="160" data-orig-height="334">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_0.png" data-orig-width="160"
+data-orig-height="334" alt="image" />
+</figure>
+<p>I call it “reverse” because <code>nil</code> had to be at the bottom.
+I am using <a href="http://www.graphviz.org/">graphviz</a> and most of
+the time I don’t care what the graph layout should be. I am not going to
+start now.</p>
+<p>As you can see in this example that our poset <span
+class="math inline">\(\{\emptyset,\{0\},\{1\},\{0,1\}\}\)</span>
+together with the subset relation is not totally ordered since <span
+class="math inline">\(\{0\}\)</span> and <span
+class="math inline">\(\{1\}\)</span> can not be compared.</p>
+<p>A <em>chain</em> is a totally ordered subset of a poset. For example,
+<span class="math inline">\(\{\emptyset,\{0\},\{0,1\}\}\)</span> is a
+chain in the previous example.</p>
+<h2 id="graphs">Graphs</h2>
+<p>Now, consider a connected graph <span
+class="math inline">\(G=(V,E)\)</span> where <span
+class="math inline">\(V\)</span> is the set of vertices and <span
+class="math inline">\(E\)</span> is the set of edges between vertices.
+Today, I am going to consider <em>simple</em> graphs. This means if two
+vertices are connected by an edge, then they are connected with a single
+edge only.</p>
+<p>If we take a subset <span class="math inline">\(W\subset V\)</span>
+of vertices there is an induced subgraph of <span
+class="math inline">\(G\)</span> on these vertices. I will call a subset
+<em>connected</em> if the induced subgraph is connected.</p>
+<p>Now, our graph <span class="math inline">\(G\)</span> comes with a
+poset: the poset of connected subgraphs of <span
+class="math inline">\(G\)</span>. Today, I going to draw you the Hasse
+diagram of the poset of connected subgraphs of some standard graphs.</p>
+<h2 id="the-poset-of-connected-subgraphs">The poset of connected
+subgraphs</h2>
+<p>For the code today, I am going to need a functions that checks
+equality of sets</p>
+<pre><code>(defun set-equal-p (xs ys)
+  (and (subsetp xs ys) (subsetp ys xs)))
+
+SET-EQUAL-P</code></pre>
+<p>Next, I will write three functions that give three classes of graphs:
+the line graph on <span class="math inline">\(n\)</span> vertices, the
+cycle graph on <span class="math inline">\(n\)</span> vertices and the
+complete graph on <span class="math inline">\(n\)</span>-vertices:</p>
+<pre><code>(defun a (n)
+  (loop for i from 0 below (1- n) collect
+       (list i (1+ i))))
+
+(defun c (n)
+  (loop for i from 0 below n collect
+       (list i (mod (1+ i) n))))
+       
+(defun k (n)
+  (loop for i from 0 below (1- n) append
+       (loop for j from (1+ i) to (1- n) collect (list i j))))
+
+A
+C
+K</code></pre>
+<p>Our next piece is</p>
+<pre><code>(defun extend (xs G)
+   (mapcar (lambda (x) (union xs (list x)))
+           (set-difference
+              (reduce #&#39;union
+                      (remove-if-not
+                          (lambda (e) (some (lambda (v) (member v e)) xs))
+                          G))
+              xs)))
+
+EXTEND</code></pre>
+<p>For a given graph (as list of edges) and a collection of vertices,
+the function <code>extend</code> finds the list of vertices that are
+connected to a vertex in <code>xs</code> in <span
+class="math inline">\(G\)</span>, and then gives the list of all
+connected subsets extending <code>xs</code>. Let us test it on an
+example. So, consider the cycle graph on 4 vertices:</p>
+<figure data-orig-width="242" data-orig-height="242">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_1.png" data-orig-width="242"
+data-orig-height="242" />
+</figure>
+<p>Let us find the connected subsets extending already connected subset
+<span class="math inline">\({0,3}\)</span></p>
+<pre><code>(extend &#39;(0 3) (c 4))
+
+((3 0 1) (3 0 2))</code></pre>
+<p>Now, the following function gives us a collection of subsets of <span
+class="math inline">\(V\)</span> whose induced subgraphs are connected
+in <span class="math inline">\(G\)</span>.</p>
+<pre><code>(defun poset (G)
+  (let ((vs (reduce #&#39;union G)))
+     (remove-duplicates
+       (mapcan (lambda (x)
+                 (do* ((xss (list (list x)) yss)
+                       (yss (mapcan (lambda (xs) (extend xs G)) xss)
+                            (mapcan (lambda (xs) (extend xs G)) xss))
+                       (zss (union xss yss) (union zss yss)))
+                      ((null yss) zss)))
+               vs)
+       :test #&#39;set-equal)))
+
+POSET</code></pre>
+<p>Let us test it on the cycle graph on 4 vertices:</p>
+<pre><code>(poset (c 4))
+
+((2) (1 2) (1) (2 3 1) (3 2) (3) (1 0 3 2) (1 0 2) (3 0 2) (3 0 1) (0 1) (0 3)
+ (0))</code></pre>
+<p>The following is <em>definitely not</em> the Hasse diagram, but it is
+a nice visualization. Vertices are connected subsets. I put an edge
+between two such subsets only if one extends the other with a single
+element.</p>
+<figure class="tmblr-full" data-orig-width="528" data-orig-height="949">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_2.png" data-orig-width="528"
+data-orig-height="949" alt="image" />
+</figure>
+<p>Here are the code for the Hasse graph of the poset and the drawing
+routine:</p>
+<pre><code>(defun write-dot (G filename &amp;optional (engine &quot;neato&quot;) (shape &quot;point&quot;))
+  (progn 
+     (with-open-file (dot-file (format nil &quot;~A.dot&quot; filename) 
+                   :direction :output 
+                   :if-exists :supersede
+                   :if-does-not-exist :create)      
+          (format dot-file &quot;graph G {~% node[shape=~A]; ~% ~{ ~{\&quot;~A\&quot; -- \&quot;~A\&quot;; ~} ~% ~} }~%&quot; shape G))
+     (uiop:run-program 
+          (format nil &quot;~A -T png -o ~A.png ~:*~A.dot&quot; engine filename))
+     (format nil &quot;![](~a.png)~%&quot; filename)))
+
+(defun hasse (xs &amp;optional acc)
+  (if (null (cdr xs))
+      acc
+      (let ((x (car xs))
+            (zs (cdr xs))
+            (ys acc))
+        (hasse (cdr xs)
+               (dolist (z zs ys)
+                 (if (= 1 (+ (length (set-difference z x))
+                             (length (set-difference x z))))
+                     (push (list x z) ys)))))))
+
+WRITE-DOT
+HASSE</code></pre>
+<p>Let us do few others. In order to simplify the pictures, I will not
+put labels on the vertices:</p>
+<p>The graph for the poset of connected subgraphs of the complete graph
+on 4 vertices:<br />
+</p>
+<figure data-orig-width="103" data-orig-height="103">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_3.png" data-orig-width="103"
+data-orig-height="103" />
+</figure>
+<figure class="tmblr-full" data-orig-width="303" data-orig-height="305">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_4.png" data-orig-width="303"
+data-orig-height="305" />
+</figure>
+<p>The graph for the poset of connected subgraphs of the line graph on 5
+vertices<br />
+</p>
+<figure data-orig-width="175" data-orig-height="15">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_5.png" data-orig-width="175"
+data-orig-height="15" />
+</figure>
+<figure class="tmblr-full" data-orig-width="537" data-orig-height="503">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_6.png" data-orig-width="537"
+data-orig-height="503" alt="image" />
+</figure>
+<p>The graph for the poset of connected subgraphs of the cycle graph on
+8 vertices</p>
+<figure data-orig-width="135" data-orig-height="134">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_7.png" data-orig-width="135"
+data-orig-height="134" />
+</figure>
+<figure class="tmblr-full" data-orig-width="773" data-orig-height="773">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_8.png" data-orig-width="773"
+data-orig-height="773" alt="image" />
+</figure>
+<p>The poset of connected subgraphs on a random tree with 5 vertices</p>
+<pre><code>(defun random-tree (n)
+   (loop for i from 1 below n 
+         collect (list (random i) i)))
+
+(defparameter tree (random-tree 6))
+
+RANDOM-TREE
+TREE</code></pre>
+<figure data-orig-height="97" data-orig-width="192">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_9.png" data-orig-height="97"
+data-orig-width="192" />
+</figure>
+<figure class="tmblr-full" data-orig-height="709" data-orig-width="458">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_10.png" data-orig-height="709"
+data-orig-width="458" />
+</figure>
+<p>Poset of connected subgraphs of a random connected graph on 4
+vertices and 6 edges</p>
+<pre><code>    (defun take (xs n &amp;optional res)
+      (if (or (zerop n) (null xs))
+         (reverse res)
+         (take (cdr xs) (1- n) (cons (car xs) res))))
+         
+    (defun pool (n)
+       (mapcar #&#39;cdr
+               (sort (loop for i from 0 below (1- n) append
+                          (loop for j from (1+ i) below n collect
+                               (list (random 1.0) i j)))
+                     #&#39;&lt;
+                     :key #&#39;car)))
+                     
+    (defun random-graph (n k)
+      (let ((edges (pool n))
+            (tree (random-tree n)))
+        (do* ((xs edges (remove (car ys) xs :test #&#39;equal))
+              (ys tree (cdr ys)))
+             ((null ys) (append tree (take xs (1+ (- k n))))))))
+
+(defparameter graph (random-graph 5 6))
+
+TAKE
+POOL
+RANDOM-GRAPH
+GRAPH</code></pre>
+<figure data-orig-height="55" data-orig-width="176">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_11.png" data-orig-height="55"
+data-orig-width="176" />
+</figure>
+<figure class="tmblr-full" data-orig-height="584" data-orig-width="363">
+<img src="../media/2017-06-28-the_poset_of_connected_subgraphs_of_a_connected_graph_12.png" data-orig-height="584"
+data-orig-width="363" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">June 28th, 2017 3:39pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-11-25-strictly_increasing_labels_of_directed_graphs</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="strictly-increasing-labels-of-directed-graphs">Strictly
+Increasing Labels of Directed Graphs</h1>
+<p>In a <a
+href="2012-11-19-strictly_increasing_labellings_of_directed_graphs.html">previous
+post</a> I described how one can relabel a cycle-free directed graph so
+that labels are stricly increasing on all paths. I did not get into
+this, but this simple fact allows one to re-write the incidence matrix
+of the directed graph as an upper triangular (or lower triangular
+depending on how you read the indices) matrix.</p>
+<p>Today, I will post a lisp implementation of the algorithm. So, let me
+start by defining the data structure: a graph is a list of ordered pairs
+of integers. These integers are the original labelling of the graph. For
+instance,</p>
+<pre><code>(defparameter G &#39;((4 2) (2 3) (1 3) (3 0)))
+G</code></pre>
+<p>is a graph on 5 vertices. Next, I need a function which extracts the
+set of vertices from the set of edges.</p>
+<pre><code>(defun vertices (G)
+   (let (res)
+      (dolist (x G) 
+         (dolist (u x) (if (not (member u res)) (push u res))))
+      (sort res &#39;&lt;)))
+VERTICES</code></pre>
+<p>Let us test it on our graph <code>G</code>:</p>
+<pre><code>(vertices G)
+(0 1 2 3 4)</code></pre>
+<p>The functions below test whether a given vertex is respectively a
+source or a sink.</p>
+<pre><code>(defun sourcep (x G)
+   (let ((H (remove-if (lambda (x) (equal (car x) (cadr x))) G)))
+       (if (member x (mapcar &#39;cadr H))
+           nil
+          &#39;t)))
+
+(defun sinkp (x G)
+   (let ((H (remove-if (lambda (x) (equal (car x) (cadr x))) G)))
+       (if (member x (mapcar &#39;car H))
+           nil
+           &#39;t)))
+SINKP</code></pre>
+<p>I need to remove the trivial edges before I check if a given vertex
+is a source or a sink. This is reflected in the copy <code>H</code> of
+the graph <code>G</code> passed to the function. Again, let us test this
+on the vertices of <code>G</code>:</p>
+<pre><code>(mapcar (lambda (x) (list x (sourcep x G))) (vertices G))
+((0 NIL) (1 T) (2 NIL) (3 NIL) (4 T))</code></pre>
+<p>and</p>
+<pre><code>(mapcar (lambda (x) (list x (sinkp x G))) (vertices G))
+((0 T) (1 NIL) (2 NIL) (3 NIL) (4 NIL))</code></pre>
+<p>In the main part of the implementation, I will need a function which
+returns a source (any source) from a given graph, and a function which
+removes a vertex <code>x</code> together with all edges <code>x</code>
+is incident:</p>
+<pre><code>(defun get-a-source (G)
+   (loop for vertex in (vertices G) 
+         while (not (sourcep vertex G)) 
+         finally (return vertex)))
+
+(defun remove-vertex (x G)
+   (remove-if (lambda (edge) (member x edge)) G))
+REMOVE-VERTEX</code></pre>
+<p>Now, we are ready to implement the heart of the algorithm. The
+following function <code>translate</code> returns a list of CONS pairs
+in which the CAR is the old label and the CDR is the new label.</p>
+<pre><code>(defun translate (G &amp;optional (m 0))
+   (if (not (null G))
+      (let ((x (get-a-source G)))
+          (append (list (cons x m)) (translate (remove-vertex x G) (1+ m))))))
+TRANSLATE</code></pre>
+<p>If we test <code>translate</code> on our graph <code>G</code> we
+get:</p>
+<pre><code>(translate G)
+((1 . 0) (4 . 1) (2 . 2) (3 . 3))</code></pre>
+<p>Finally, we came to the relabelling function.</p>
+<pre><code>(defun relabel (G)
+   (let ((H G) (mytable nil))
+       (loop for x in (vertices G) do
+             (if (not (member (list x x) H)) (push (list x x) H)))
+       (setf mytable (translate H))
+       (mapcar (lambda (edge) (mapcar (lambda (vertex) (cdr (assoc vertex mytable))) edge)) G)))
+RELABEL</code></pre>
+<p>Here the code requires a little explanation, especially the part in
+which I add trivial edges of the form <code>(list x x)</code>. This is
+because of the following extreme case: imagine we have a graph
+<code>((0 1) (1 2))</code> and we removed the vertex <code>1</code></p>
+<pre><code>(defparameter H &#39;((0 1) (1 2)))
+(remove-vertex 1 H)
+NIL</code></pre>
+<p>which really is not what we want. It is better to add the trivial
+edges in the translation process. Now, on our graph <code>G</code> the
+function <code>relabel</code> returns</p>
+<pre><code>(relabel G)
+((1 2) (2 3) (0 3) (3 4))</code></pre>
+<div id="footer">
+<p><span id="timestamp">November 25th, 2012 6:46am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2022-01-24-a_clique_analysis_of_quakers_in_early_modern_britain_1500-1700</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="a-clique-analysis-of-quakers-in-early-modern-britain-1500-1700">A
+Clique Analysis of Quakers in early modern Britain (1500-1700)</h1>
+<h2 id="a-description-of-the-problem">A description of the problem</h2>
+<p>Today, I am going to re-implement in <a
+href="https://clojure.org">clojure</a> a part of a networking analysis
+done by John R. Ladd, Jessica Otis, Christopher N. Warren, and Scott
+Weingart titled “<strong><a
+href="https://programminghistorian.org/en/lessons/exploring-and-analyzing-network-data-with-python">Exploring
+and Analyzing Network Data with Python</a></strong>” at <a
+href="https://programminghistorian.org/">Programming Historian</a>. The
+original analysis is done with <a
+href="https://networkx.org/documentation/stable/index.html">python</a>
+using <a
+href="http://www.sixdegreesoffrancisbacon.com/?ids=10000473&amp;min_confidence=60&amp;type=network">networkx</a>.
+I am going to re-implement the part of the analysis about finding
+maximum cliques within the network. I am going to use <a
+href="http://www.sixdegreesoffrancisbacon.com/?ids=10000473&amp;min_confidence=60&amp;type=network">JGraphT</a>
+which is as extensive as networkx in its functionality. The rest of the
+analysis can too be repeated within clojure.</p>
+<h2 id="data">Data</h2>
+<p>The network data is from <a
+href="http://www.sixdegreesoffrancisbacon.com/?ids=10000473&amp;min_confidence=60&amp;type=network">the
+Six Degrees of Francis Bacon</a> project. Project aims to show and
+analyze the social networks of early modern Britain (1500-1700). The
+dataset composed of pairs of important Quaker figures that know each
+other. The data is culled from the Oxford Dictionary of National
+Biography. I collected two files: a <a
+href="https://programminghistorian.org/assets/exploring-and-analyzing-network-data-with-python/quakers_nodelist.csv">list
+of nodes</a> and <a
+href="https://programminghistorian.org/assets/exploring-and-analyzing-network-data-with-python/quakers_edgelist.csv">a
+list of edges</a> from Programming Historian.</p>
+<p>Here is a small sample from the nodes list:</p>
+<pre><code> Name, Historical Significance, Gender, Birthdate, Deathdate, ID
+ Joseph Wyeth, religious writer, male, 1663, 1731, 10013191
+ Alexander Skene of Newtyle, local politician and author, male, 1621, 1694, 10011149
+ James Logan, colonial official and scholar, male, 1674, 1751, 10007567
+ Dorcas Erbery, Quaker preacher, female, 1656, 1659, 10003983
+ Lilias Skene, Quaker preacher and poet, male, 1626, 1697, 10011152</code></pre>
+<p>and a sample from the edge list:</p>
+<pre><code> Source, Target
+ George Keith, Robert Barclay
+ George Keith, Benjamin Furly
+ George Keith, Anne Conway Viscountess Conway and Killultagh
+ George Keith, Franciscus Mercurius van Helmont
+ George Keith, William Penn
+ George Keith, George Fox
+ George Keith, George Whitehead
+ George Keith, William Bradford
+ James Parnel, Benjamin Furly
+ James Parnel, Stephen Crisp
+ Peter Collinson, John Bartram
+ Peter Collinson, James Logan</code></pre>
+<h2 id="the-code">The Code</h2>
+<h3 id="preamble">Preamble</h3>
+<p>I am going to use <a
+href="http://www.sixdegreesoffrancisbacon.com/?ids=10000473&amp;min_confidence=60&amp;type=network">JGraphT</a>,
+and it needs to declared in the list of dependencies. Here’s my
+<code>deps.edn</code> dependencies:</p>
+<pre><code> { :deps {org.jgrapht/jgrapht-ext  {:mvn/version &quot;1.5.1&quot;}
+          org.jgrapht/jgrapht-opt  {:mvn/version &quot;1.5.1&quot;}
+          org.jgrapht/jgrapht-io   {:mvn/version &quot;1.5.1&quot;}
+          org.jgrapht/jgrapht-core {:mvn/version &quot;1.5.1&quot;}}
+   :mvn/repos { &quot;central&quot; {:url &quot;https://repo1.maven.org/maven2/&quot;}
+                &quot;clojars&quot; {:url &quot;https://repo.clojars.org/&quot;}}}</code></pre>
+<p>Next, the namespace:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> quakers</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [clojure.<span class="kw">set</span> <span class="at">:as</span> s])</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [clojure.java.io <span class="at">:as</span> io])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:import</span> [java.io File])</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:import</span> [org.jgrapht.alg.clique BronKerboschCliqueFinder])</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:import</span> [org.jgrapht.alg.scoring PageRank])</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:import</span> [org.jgrapht.graph DefaultEdge SimpleGraph DefaultEdge]))</span></code></pre></div>
+<p>Let me start by a utility code that reads the necessary file and
+converts into a usable sequence:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> from-file </span>[file processor]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;&gt;</span> file</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>         File. </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>         io/reader </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>         <span class="kw">line-seq</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">map</span> processor)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>         <span class="kw">rest</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;quakers/from-file</span></span></code></pre></div>
+<p>Let us first ingest the nodes. For this analysis, I care only about
+the names. So, I’ll ingest just those. Instead of showing the whole
+list, I’ll show the first 5 names.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> nodes </span>(from-file <span class="st">&quot;quakers_nodelist.csv&quot;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                      #(<span class="kw">-&gt;</span> <span class="va">%</span> (clojure.string/split <span class="ss">#&quot;,&quot;</span>) <span class="kw">first</span>)))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;&gt;</span> nodes (<span class="kw">take</span> <span class="dv">5</span>) (<span class="kw">into</span> []))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;quakers/nodes</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>[<span class="st">&quot;Joseph Wyeth&quot;</span> <span class="st">&quot;Alexander Skene of Newtyle&quot;</span> <span class="st">&quot;James Logan&quot;</span> <span class="st">&quot;Dorcas Erbery&quot;</span> <span class="st">&quot;Lilias Skene&quot;</span>]</span></code></pre></div>
+<p>Next, I’ll ingest the edges which are pairs of nodes. As before, I’ll
+show only the first 5:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> edges </span>(from-file <span class="st">&quot;quakers_edgelist.csv&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                      #(<span class="kw">-&gt;</span> <span class="va">%</span> (clojure.string/split <span class="ss">#&quot;,&quot;</span>))))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;&gt;</span> edges (<span class="kw">take</span> <span class="dv">5</span>) (<span class="kw">into</span> []))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;quakers/edges</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>[[<span class="st">&quot;George Keith&quot;</span> <span class="st">&quot;Robert Barclay&quot;</span>] [<span class="st">&quot;George Keith&quot;</span> <span class="st">&quot;Benjamin Furly&quot;</span>] [<span class="st">&quot;George Keith&quot;</span> <span class="st">&quot;Anne Conway Viscountess Conway and Killultagh&quot;</span>] [<span class="st">&quot;George Keith&quot;</span> <span class="st">&quot;Franciscus Mercurius van Helmont&quot;</span>] [<span class="st">&quot;George Keith&quot;</span> <span class="st">&quot;William Penn&quot;</span>]]</span></code></pre></div>
+<p>Now, I’ll construct the graph.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> graph </span>(SimpleGraph. DefaultEdge))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">doseq</span> [x nodes] (.addVertex graph x))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">doseq</span> [[x y] edges] (.addEdge graph x y))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;quakers/graph</span></span></code></pre></div>
+<h3 id="maximal-cliques">Maximal cliques</h3>
+<p>The next step is to calculate the maximal cliques within the network
+and list them:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> result </span>(<span class="kw">-&gt;&gt;</span> graph</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                 BronKerboschCliqueFinder.</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                 .maximumIterator</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">iterator-seq</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">map</span> <span class="kw">seq</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">into</span> [])))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>result</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;quakers/result</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>[(<span class="st">&quot;Edward Burrough&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;John Crook&quot;</span> <span class="st">&quot;William Dewsbury&quot;</span>) (<span class="st">&quot;Edward Burrough&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;John Crook&quot;</span> <span class="st">&quot;John Perrot&quot;</span>) (<span class="st">&quot;James Nayler&quot;</span> <span class="st">&quot;Edward Burrough&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;Francis Howgill&quot;</span>) (<span class="st">&quot;James Nayler&quot;</span> <span class="st">&quot;Edward Burrough&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;Thomas Ellwood&quot;</span>) (<span class="st">&quot;James Nayler&quot;</span> <span class="st">&quot;Edward Burrough&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;John Perrot&quot;</span>) (<span class="st">&quot;William Penn&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;George Keith&quot;</span> <span class="st">&quot;George Whitehead&quot;</span>) (<span class="st">&quot;Benjamin Furly&quot;</span> <span class="st">&quot;William Penn&quot;</span> <span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;George Keith&quot;</span>) (<span class="st">&quot;James Nayler&quot;</span> <span class="st">&quot;Richard Farnworth&quot;</span> <span class="st">&quot;Margaret Fell&quot;</span> <span class="st">&quot;Anthony Pearson&quot;</span>)]</span></code></pre></div>
+<p>There are 8 maximal cliques each with 4 names in them:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>[(<span class="kw">count</span> result) (<span class="kw">map</span> <span class="kw">count</span> result)]</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">8</span> (<span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span>)]</span></code></pre></div>
+<h3 id="pagerank">PageRank</h3>
+<p>In this part of the post, I’ll do something different. Let me apply
+the <a href="https://en.wikipedia.org/wiki/PageRank">PageRank</a>
+algorithm to this network to find the important nodes. As before, I’ll
+display the top 5 nodes.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> result2 </span>(<span class="kw">-&gt;&gt;</span> graph</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                 PageRank.</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                 .getScores</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">into</span> {})</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">sort-by</span> <span class="kw">second</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">reverse</span>))</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;&gt;</span> result2 (<span class="kw">map</span> <span class="kw">first</span>) (<span class="kw">take</span> <span class="dv">5</span>) (<span class="kw">into</span> []))</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;quakers/result2</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>[<span class="st">&quot;George Fox&quot;</span> <span class="st">&quot;William Penn&quot;</span> <span class="st">&quot;James Nayler&quot;</span> <span class="st">&quot;George Whitehead&quot;</span> <span class="st">&quot;Margaret Fell&quot;</span>]</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">January 24th, 2022 11:03am</span></p>
+</div>
+</body>
+</html>

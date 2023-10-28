@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-12-10-counting_strings_that_contain_intervals_of_same_letter_repetitions</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="counting-strings-that-contain-intervals-of-same-letter-repetitions">Counting
+strings that contain intervals of same letter repetitions</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Today, I will look at a simple combinatorics problem that came up in
+my discrete math class.</p>
+<blockquote>
+<p>Assume we have an alphabet <span
+class="math inline">\(a_1,\ldots,a_r\)</span> of size <span
+class="math inline">\(r\)</span>. How many different strings of length
+<span class="math inline">\(n\)</span> can I construct in which the
+intervals of same letter repetitions have length at most <span
+class="math inline">\(k\)</span>?</p>
+</blockquote>
+<p>For example if <span class="math inline">\(n=5\)</span> and <span
+class="math inline">\(k=3\)</span> the strings “ababa” “aabaa” “aabba”
+are ok but “aaaab” is not because the upper limit for lengths of
+intervals of same letter repetitions was <span
+class="math inline">\(3\)</span>.</p>
+<h2 id="a-solution">A solution</h2>
+<p>First, I need to determine the shape of the string. For that I need
+to count the number of solutions for the equation <span
+class="math display">\[ x_1 + \cdots + x_m
+= n \quad\text{ with }\quad 0&lt; x_i\leq k \]</span> The number of
+solutions of this equation counts the number of strings of the shape
+<span class="math display">\[ \underbrace{a_1\cdots
+a_1}_{\text{$x_1$-times}}\cdots
+\underbrace{a_m\cdots a_m}_{\text{$x_m$-times}} \]</span> where <span
+class="math inline">\(a_i\neq a_{i+1}\)</span>. If <span
+class="math inline">\(N(n,m,k)\)</span> is the number of solutions for
+the equation above, then the number of strings of this shape is <span
+class="math display">\[
+N(n,m,k)\cdot r(r-1)^{m-1} \]</span> Then the number of strings I want
+is <span class="math display">\[ \sum_{m=1}^n N(n,m,k)\cdot r(r-1)^{m-1}
+\]</span></p>
+<p>I will describe the function <span
+class="math inline">\(N(n,m,k)\)</span> recursively. We have a simple
+recurrence relation of the form <span class="math display">\[ N(n,m,k) =
+\sum_{i=0}^m
+\binom{m}{i} N(n-m,m-i,k-1) \]</span> with the base cases <span
+class="math display">\[ N(n,m,k) =
+\begin{cases} 0 &amp; \text{ if } km &lt; n\\ 1 &amp; \text{ if $m=n$ or
+$km=n$}\\ 0 &amp; \text{ if $m=1$ and $k &lt; n$}\\ 1 &amp; \text{ if
+$m=1$ and $k\geq n$} \end{cases} \]</span> The recursive equation comes
+from the following argument: in the equation <span
+class="math display">\[ x_1 + \cdots + x_m =
+n \quad\text{ with }\quad 1\leq x_i\leq k \]</span> if we reduce every
+term by one, the upper bound <span class="math inline">\(k\)</span> is
+also reduced by one and we get <span class="math display">\[ y_1 +
+\cdots + y_m = n-m \quad\text{ with }\quad 0\leq
+y_i\leq k-1 \]</span> Now, we have to control the terms which are equal
+to <span class="math inline">\(0\)</span> and we go over all
+possibilities in which <span class="math inline">\(y_j\)</span>’s are 0
+in the sum.</p>
+<p>There is also a functional relation of the form <span
+class="math display">\[ N(n,m,k) =
+N(m(k+1)-n,m,k) \]</span> because the set of solutions to the equation
+<span class="math display">\[
+x_1 + \cdots + x_m = n \]</span> with the constraint <span
+class="math inline">\(1\leq x_i\leq k\)</span> is bijective to the set
+of solutions of the equation <span class="math display">\[ z_1 +
+\cdots + z_m = mk - n \]</span> with the constraint <span
+class="math inline">\(0\leq z_i\leq k-1\)</span> since every <span
+class="math inline">\(x_i\)</span> in the first equation has a unique
+conjugate <span class="math inline">\(z_i = k-x_i\)</span> in the second
+equation. By increasing the elements <span
+class="math inline">\(z_i\)</span> by 1 we get <span
+class="math display">\[ y_1 + \cdots + y_m = m(k+1) - n\]</span> with
+the constraint <span class="math inline">\(1\leq y_i\leq k\)</span>.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>I will start by implementing a function for the binomial numbers.</p>
+<pre><code>(defun binom (n k)
+   (cond ((&lt; (- n k) k) (binom n (- n k)))
+         ((= k 0) 1)
+         ((= k 1) n)
+         (t (reduce &#39;* (loop for i from 0 to (1- k)
+                             collect (/ (- n i) 
+                                        (- k i)))))))
+
+BINOM</code></pre>
+<p>Here is a simple implementation for the number of solutions for the
+integer-linear equation I was considering earlier with built-in
+memoization:</p>
+<pre><code>(let ((lookup (make-hash-table :test &#39;equal)))
+   (defun solutions (n m k)
+      (cond ((or (&lt;= k 0) (&lt;= m 0) (&lt;= n 0) (&gt; n (* m k))) 0)
+            ((= m 1) (if (&lt; k n) 0 1))
+            ((= m n) 1)
+            ((= n (* m k)) 1)
+            ((&gt; n (- (* m (1+ k)) n)) (solutions (- (* m (1+ k)) n) m k))
+            (t (or (gethash (list n m k) lookup)
+                   (setf (gethash (list n m k) lookup)
+                         (loop for i from 0 to (1- m)
+                               sum (* (binom m i) 
+                                      (solutions (- n m) (- m i) (1- k))))))))))
+
+SOLUTIONS</code></pre>
+<p>And finally the number of words</p>
+<pre><code>(defun count-solutions (n k r)
+   (loop for m from (truncate (/ n k)) to n
+         sum (* r
+                (solutions n m k) 
+                (expt (1- r) (1- m)))))
+
+COUNT-SOLUTIONS</code></pre>
+<p>The following is a test function.</p>
+<pre><code>(defun test-solutions (a b)
+   (loop for i from 1 to a collect (count-solutions a i b)))
+
+TEST-SOLUTIONS</code></pre>
+<p>For <span class="math inline">\(n=3\)</span> the list of bit strings
+of length 3 are</p>
+<pre><code>101 010
+001 110 100 011
+000 111</code></pre>
+<p>grouped together according to the largest repeating intervals. For
+<span class="math inline">\(n=4\)</span> the list is</p>
+<pre><code>1010 0101
+0010 1101 0100 1011 0011 1100 0110 1001
+0001 1110 1000 0111
+0000 1111</code></pre>
+<p>And finally for <span class="math inline">\(n=5\)</span></p>
+<pre><code>10101 01010
+00101 11010 10100 01011 00110 11001 01100 10011 10010 01101 01001 10110 00100 11011 
+00010 11101 01000 10111 10001 01110 00111 11000 11100 00011
+00001 11110 10000 01111
+00000 11111</code></pre>
+<p>The numbers below confirm these results.</p>
+<pre><code>(test-solutions 3 2)
+
+(2 6 8)
+
+(test-solutions 4 2)
+
+(2 10 14 16)
+
+(test-solutions 5 2)
+
+(2 16 26 30 32)</code></pre>
+<p>The following is the number of strings of length 50 using only the
+letters ‘a’, 'c’, 'g’ and ‘t’ that contain same letter intervals of
+length at most 5.</p>
+<pre><code>(count-solutions 50 5 4)
+
+1226096552838244254073677630864</code></pre>
+<p>This is approximately 96.72 percent of all words of length 50 using
+the alphabet “a,c,g,t”,</p>
+<div id="footer">
+<p><span id="timestamp">December 10th, 2013 5:14am</span></p>
+</div>
+</body>
+</html>

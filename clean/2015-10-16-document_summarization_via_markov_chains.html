@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-10-16-document_summarization_via_markov_chains</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="document-summarization-via-markov-chains">Document Summarization
+via Markov Chains</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Today’s question is this: we have a long text and we want a machine
+generated summary of the text. Below, I will describe an algorithmic and
+language agnostic method to do just that.</p>
+<h2 id="sentences-overlaps-and-markov-chains.">Sentences, overlaps and
+Markov chains.</h2>
+<p>In my <a
+href="2015-10-07-computational_literary_analysis.html">previous post</a>
+I described a method to measure the overlap between two sentences in
+terms of common words. Today, we will use the same measure, or a
+variation, to develop a <a
+href="https://en.wikipedia.org/wiki/Markov_chain">discrete Markov
+chain</a> whose nodes are labeled by individual sentences appearing in
+our text. This is essentially <a
+href="https://en.wikipedia.org/wiki/PageRank">page rank</a> applied to
+sentences.</p>
+<pre><code>Algorithm SentenceRank
+Input: T text to be summarized, L a real number parameter 
+Output: ST summary of the text
+Begin
+  Split the text into an ordered sequence S of sentences.
+  Convert each sentence into a hash map where keys are
+     the (stemmed) words appearing in each sentence, and the 
+     values are the number of times that particular key 
+     appear in the sentence. Store the results in SH.
+  Let A be a |SH|x|SH| matrix initialized to 0.
+  For each a in SH do
+      For each b in SH do
+          Let A(a,b) be the overlap measure of a and b
+      End for
+  End for
+  Normalize each column of A so that sum(A(.,b))=1 for each b
+  Calculate v the unique 1-eigen-vector of A
+  Let ST be the empty ordered sequence ()
+  For each a in S do
+      If the value v(a)*|S|&gt;L then add a to ST
+  End for
+  Return ST
+End</code></pre>
+<h2 id="implementation">Implementation</h2>
+<p>I am going to recycle most of the code from my <a
+href="2015-10-07-computational_literary_analysis.html">previous
+post</a></p>
+<pre><code>(defun slurp (filename)
+   (with-open-file (input filename :direction :input)
+      (do* ((line (read-line input nil) (read-line input nil))
+            (res line (concatenate &#39;string res &quot; &quot; line)))
+           ((null line) res))))
+SLURP
+
+(defun merge-with (fn &amp;rest xs)
+   (let ((res nil))
+      (dolist (x (reduce #&#39;append xs) res)
+         (let ((val (cdr (assoc (car x) res :test #&#39;equal))))
+             (if (null val)
+                (push x res)
+                (rplacd (assoc (car x) res :test #&#39;equal)
+                        (funcall fn val (cdr x))))))))
+MERGE-WITH
+
+(defmacro -&gt;&gt; (x &amp;rest forms)
+  (dolist (f forms x)
+     (if (listp f)
+        (setf x (append f (list x)))
+        (setf x (list f x)))))
+-&gt;&gt;
+
+(defun clean (str)
+   (-&gt;&gt; (string-downcase str)
+        (remove-if
+        (lambda (x)
+            (member x (coerce &quot;!\@#$%^&amp;*[]_+-=(){};\&#39;\:\&quot;,/&lt;&gt;?“”’‘–—\&quot;&quot; &#39;list))))))
+CLEAN</code></pre>
+<p>I am going to modify the code that converts a sentence into a hash
+table, because I am also going to need the sentence itself for
+later.</p>
+<pre><code>(defun bag-of-words (text &amp;optional (threshold 80))
+   (if (&gt; (length text) threshold)
+      (cons (-&gt;&gt; text
+                 (ppcre:split &quot;\s+&quot;)
+                 (mapcar (lambda (x) (cons (stem:stem x) 1)))
+                 (merge-with #&#39;+))
+            text)))
+BAG-OF-WORDS</code></pre>
+<p>Now, the similarity, or the overlap measure:</p>
+<pre><code>(defun dot (a b)
+   (labels ((loc (x) (or (cdr x) 0.0))
+            (len (x) (reduce #&#39;+ x :key #&#39;cdr :initial-value 0)))
+      (let ((keys (mapcar #&#39;car (append a b)))
+            (res  0.0d0))
+         (dolist (x keys (/ res (min (len a) (len b))))
+            (incf res (* (loc (assoc x a :test #&#39;equal))
+                      (loc (assoc x b :test #&#39;equal))))))))
+DOT</code></pre>
+<p>Next up is the code that process a document and returns a list of
+triples <code>(x y z)</code> where <code>z</code> is a sentence
+appearing in the text, <code>x</code> is the position of the sentence
+<code>z</code> in the text, and <code>y</code> is the measure telling
+how significant a sentence is in this document.</p>
+<pre><code>(defun proc (text)
+   (let* ((res (-&gt;&gt; (clean text)
+                    (ppcre:split &quot;[\.:;?!]\s+&quot;)
+                    (mapcar #&#39;bag-of-words)
+                    (remove-if #&#39;null)))
+          (n (length res))
+          (sents (make-array n :initial-contents (mapcar #&#39;cdr res)))
+          (bags  (make-array n :initial-contents (mapcar #&#39;car res)))
+          (matrix (grid:make-foreign-array
+                   &#39;double-float
+                   :dimensions (list n n)
+                   :initial-element 0.0d0)))
+
+   (dotimes (i n)
+      (dotimes (j (- n i))
+         (let ((val (dot (aref bags i) (aref bags (+ i j)))))
+            (setf (grid:aref matrix i (+ j i)) val)
+            (setf (grid:aref matrix (+ j i) i) val))))
+
+   (dotimes (i n)
+      (let* ((l1 (reduce #&#39;+ (grid:column matrix i))))
+         (dotimes (j n)
+            (setf (grid:aref matrix j i)
+                  (/ (abs (grid:aref matrix j i)) l1)))))
+
+   (multiple-value-bind (val vec)
+         (gsll:eigenvalues-eigenvectors-nonsymm matrix)
+      (let* ((probs (grid:column vec 0 (make-array n)))
+             (sum (reduce (lambda (x y) (+ (abs x) (abs y))) probs)))
+         (map &#39;list 
+              (lambda(x y) (cons (* (/ (abs x) sum) n) y)) 
+              probs 
+              sents)))))
+PROC</code></pre>
+<p>And finally the main function:</p>
+<pre><code>(let* ((filename (nth 1 *posix-argv*))
+       (document (slurp filename))
+       (threshold (read-from-string (nth 2 *posix-argv*)))
+       (i 0))
+   (dolist (x (proc document))
+      (if (&gt; (car x) threshold)
+         (format t &quot;~d, ~8,7f, ~a. ~%&quot; i (car x) (cdr x)))
+         (incf i)))</code></pre>
+<p>When you run this on the command-line, the first argument you provide
+must be the full path name of the file you’d like to summarize, and the
+second argument is a real number something of the order of
+<code>1.0 </code>which controls the size of the summary: the larger the
+value is, the shorter the summary gets. So, play with it until you are
+satisfied with the summary. I piped the result into</p>
+<pre><code> | awk -F, &#39;{ print $3; }&#39; | tr &#39;\n&#39; &#39; &#39; | par</code></pre>
+<p>to make the output more readable. Also, make sure that the text is
+cleaned: replace shorthands such as ‘U.S.’ with ‘US’ since we split the
+text into sentences using full-stops.</p>
+<h2 id="several-tests">Several tests</h2>
+<p>I used the summarizer on several types of documents. I got the best
+results on news articles. So, here is one example:</p>
+<blockquote>
+<p>with its decision which angered the fbi and other law enforcement
+agencies the administration essentially agreed with apple google
+microsoft and a group of the nations top cryptographers and computer
+scientists that millions of americans would be vulnerable to hacking if
+technology firms and smartphone manufacturers were required to provide
+the government with back doors or access to their source code and
+encryption keys. current technology puts the keys for access to the
+information in the hands of the individual user not the companies. the
+first indication of the retreat came on thursday when the fbi director
+james b comey told the senate homeland security and governmental affairs
+committee that the administration would not seek legislation to compel
+the companies to create such a portal. while the administration said it
+would continue to try to persuade companies like apple and google to
+assist in criminal and national security investigations it determined
+that the government should not force them to breach the security of
+their products. what frustrated him was that apple had designed the
+system to ensure that the company never held on to the keys putting them
+entirely in the hands of users through the codes or fingerprints they
+use to get into their phones.</p>
+</blockquote>
+<p>The <a
+href="http://www.nytimes.com/2015/10/11/us/politics/obama-wont-seek-access-to-encrypted-user-data.html">original</a>
+was a story published at <a href="http://www.nytimes.com">New York
+Times</a>. I ran the text with <code>1.5</code> after some
+pre-processing. It is very good, except for the last sentence that has
+“what frustrated him” for which we have no reference.</p>
+<p>Here is another example:</p>
+<blockquote>
+<p>at least 128 people were killed and more than 200 were wounded when
+two suspected suicide bombers targeted a peace rally organised by
+several leftist groups including labour unions and the prokurdish
+peoples democratic party hdp to call for an end to the escalating
+violence between the turkish government and the outlawed kurdistan
+workers party pkk. demonstrators witnesses victims families and
+opposition leaders widely condemned the government and in almost all
+interviews ascribed direct responsibility for the deaths at the feet of
+erdoğan saying the police had failed to provide any security measures to
+protect the rallys attendees and had even teargassed relatives of the
+victims as they arrived at the scene of the attack looking for their
+loved ones. ahmet who was at the funeral and survived the previous days
+blast said security forces were completely absent in the leadup to the
+rally. he said the police attacked those who arrived at the scene or
+tried to assist the victims with teargas firing bullets into the air and
+sowing panic among the attendees. in addition to pointing at the ones
+who did this looking over the past year the ones who are targeted are
+the opposition those who want peace defenders of human rights and the
+democratic struggle in turkey he said. as the families of the dead
+marched through the crowds some weeping in agony the condemnations grew
+more furious. i came to leave flowers and to share in the pain of the
+families. but far from the roiling fury and politics a lone man sat
+under the gathering clouds on the pavement in front of the hospital his
+face resting on his palm and his voice a barely audible whisper his eyes
+bearing a look of immense grief.</p>
+</blockquote>
+<p>The <a
+href="http://www.theguardian.com/world/2015/oct/11/thousands-gather-in-ankara-to-pay-respects-to-activists-killed-in-bombings">original</a>
+was a story on <a href="http://www.theguardian.com">the Guardian</a> on
+a recent bombing in Turkey which claimed 100 lives. I ran the script
+with the parameter <code>1.4</code>.</p>
+<p>Here is an example I used earlier: Kennedy’s Inaguration speech from
+1961. I ran the code with the parameter <code>1.7</code></p>
+<blockquote>
+<p>and yet the same revolutionary beliefs for which our forbearers
+fought are still at issue around the globe the belief that the rights of
+man come not from the generosity of the state but from the hand of god.
+let the word go forth from this time and place to friend and foe alike
+that the torch has been passed to a new generation of americans born in
+this century tempered by war disciplined by a hard and bitter peace
+proud of our ancient heritage and unwilling to witness or permit the
+slow undoing of those human rights to which this nation has always been
+committed and to which we are committed today at home and around the
+world. to that world assembly of sovereign states the united nations our
+last best hope in an age where the instruments of war have far outpaced
+the instruments of peace we renew our pledge of support to prevent it
+from becoming merely a forum for invective to strengthen its shield of
+the new and the weak and to enlarge the area in which its writ may run.
+and if a beachhead of cooperation may push back the jungle of suspicion
+let both sides join in creating a new endeavor not a new balance of
+power but a new world of law where the strong are just and the weak
+secure and the peace preserved.</p>
+</blockquote>
+<p>Finally an example that didn’t work well. <a
+href="http://www.supremecourt.gov/opinions/14pdf/14-46_bqmc.pdf">A
+recent US Supreme court decision on EPA</a>.</p>
+<blockquote>
+<p>congress directed the agency to perform a study of the hazards to
+public health reasonably anticipated to occur as a result of emissions
+by power plants of hazardous air pollutants after imposition of the
+requirements of this chapter 7412n1a. the government concedes that if
+the agency were to find that emissions from power plants do damage to
+human health but that the technologies needed to eliminate these
+emissions do even more damage to human health it would still deem
+regulation appropriate see tr of oral arg 70. this directive to epa to
+study cost is a further indication of the relevance of cost to the
+decision to regulate. american trucking thus establishes the modest
+principle that where the clean air act expressly directs epa to regulate
+on the basis of a factor that on its face does not include cost the act
+normally should not be read as implicitly allowing the agency to
+consider cost anyway. congress crafted narrow standards for epa to apply
+when deciding whether to regulate other sources in general these
+standards concern the volume of pollution emitted by the source 7412c1
+and the threat posed by the source to human health or the environment
+7412c3. for example the dissent claims that the floor standards which
+the act calibrates to reflect emissions limitations already achieved by
+the bestperforming sources in the industry reflect cost considerations
+because the bestperforming power plants must have considered costs in
+arriving at their emissions outputs post at 10.<br />
+</p>
+</blockquote>
+<h2 id="analysis">Analysis</h2>
+<p>The summarizer works well for texts of moderate length. It makes the
+algorithm suitable for things like news articles, opinion pieces and
+blog posts. Even though it is tempting, it would not yield usable
+results for texts which contain dense cross-references such as the US
+Supreme Court decision text I used above.</p>
+<div id="footer">
+<p><span id="timestamp">October 16th, 2015 4:49pm</span></p>
+</div>
+</body>
+</html>

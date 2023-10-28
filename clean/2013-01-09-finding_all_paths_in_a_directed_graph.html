@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-01-09-finding_all_paths_in_a_directed_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="finding-all-paths-in-a-directed-graph">Finding all paths in a
+directed graph</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Let <span class="math inline">\(G = (V,E)\)</span> be a directed
+graph. I will assume that <span class="math inline">\(G\)</span> has no
+loops, multiple edges or oriented cycles. Today, I will develop an
+algorithm and the accompanying lisp code which will list all paths
+between any two given vertices.</p>
+<h2 id="a-solution">A solution</h2>
+<h3 id="the-data-structure">The data structure</h3>
+<p>To be consistent with my previous posts and lisp code, I will
+represent an edge as an ordered pair of vertices. For example, the
+following lisp list</p>
+<pre><code>(defparameter G &#39;((0 1) (1 2) (1 3) (3 4) (4 5) (2 4) (3 5) (0 6) (2 6)))
+G</code></pre>
+<p>will represent a graph which can be sketched as follows</p>
+<p><img
+src="../media/2013-01-09-finding_all_paths_in_a_directed_graph_0.png" /></p>
+<p>Because of <a
+href="2012-11-25-strictly_increasing_labels_of_directed_graphs.html">topological
+sort</a> I can safely assume that the vertices of the graph I will
+consider are finite subsets of the set of natural numbers of the form
+<span class="math inline">\(\{0,1,\ldots,n\}\)</span> and that if <span
+class="math inline">\((i,j)\)</span> is an edge then <span
+class="math inline">\(i &lt; j\)</span>.</p>
+<p>A <em>path of length <span class="math inline">\(n\)</span></em> in
+this context is a sequence of vertices <span
+class="math inline">\((v_i)\)</span> for <span
+class="math inline">\(i=0,\ldots,n\)</span> in which any two consecutive
+vertices are connected by an edge. Note that since I assumed that the
+graph is devoid of oriented edges or loops, the length of the maximum
+path is less than the sizes of <span class="math inline">\(E\)</span>
+and <span class="math inline">\(V\)</span>.</p>
+<p>Here is the pseudo-code for the algorithm which will construct the
+list of all paths which start at a vertex <span
+class="math inline">\(x\)</span> in <span
+class="math inline">\(V\)</span>.</p>
+<pre><code>Function Beginning-At
+  Input: A vertex x and a graph G
+  Output: The set of all paths starting at x
+  Initialize: F &lt;- {(x)}
+Begin Function
+  For each edge (x,u) starting at x do
+      For each path alpha in Beginning-At(u)
+          Add the concatenation of (x,u) with alpha to F
+      End for
+  End for
+  Return F
+End Function</code></pre>
+<p>The corresponding lisp function is as follows</p>
+<pre><code>(defun beginning-at (x G)
+   (let* ((B (let (A) 
+                  (dolist (e G)
+                          (if (equal (car e) x)
+                              (push (cadr e) A)))
+                  A))
+          (C (loop for e in B append (beginning-at e G))))
+         (cons (list x)
+               (mapcar (lambda (e) (cons x e)) C))))
+BEGINNING-AT</code></pre>
+<p>I will test the resulting function</p>
+<pre><code>(beginning-at 1 G)
+((1) (1 3) (1 3 5) (1 3 4) (1 3 4 5) (1 2) (1 2 6) (1 2 4) (1 2 4 5))</code></pre>
+<p>Now, I will also need the counterpart <code>ending-at</code>
+function. The implementation is easy: look at the opposite graph of
+<span class="math inline">\(G\)</span> then find the paths beginning at
+the given vertex, and return the reverses of each path.</p>
+<pre><code>(defun ending-at (x G)
+   (mapcar &#39;reverse (beginning-at x (mapcar &#39;reverse G))))
+ENDING-AT</code></pre>
+<p>Let me test it</p>
+<pre><code>(ending-at 6 G)
+((6) (2 6) (1 2 6) (0 1 2 6) (0 6))</code></pre>
+<h2 id="paths-between-two-vertices">Paths between two vertices</h2>
+<p>Now, we are ready to implement the function which will list all paths
+between a pair of vertices. The idea is simple: the set of all paths
+from a vertex <span class="math inline">\(a\)</span> to another vertex
+<span class="math inline">\(b\)</span> is the intersection of all paths
+starting at <span class="math inline">\(a\)</span> and the set of all
+paths ending at <span class="math inline">\(b\)</span>.</p>
+<pre><code>(defun all-paths (a b G)
+   (intersection (beginning-at a G)
+                 (ending-at b G)
+                 :test &#39;equal))    
+ALL-PATHS</code></pre>
+<p>Let me test this on some examples</p>
+<pre><code>(all-paths 1 4 G)
+((1 3 4) (1 2 4))
+
+(all-paths 0 6 G)
+((0 6) (0 1 2 6))
+
+(all-paths 4 2 G)
+NIL</code></pre>
+<p>Now, let me create a very large example and test this function by
+finding a large set of all-paths between all sources and all sinks in
+the graph.</p>
+<pre><code>(setf G (remove-if (lambda (x) (&lt;= (cadr x) (car x))) 
+                   (remove-duplicates (map &#39;list 
+                                            (lambda (x) (list (random 34) (random 40))) 
+                                            (make-array 480))
+                                      :test &#39;equal)))
+
+((17 28) (2 18) (31 32) (2 29) (9 14) (21 35) (8 32) (15 22) (10 11) (3 10)
+ (21 26) (3 6) (20 32) (12 22) (6 29) (15 34) (7 37) (5 6) (4 31) (27 34)
+ (18 32) (19 33) (10 38) (12 15) (22 34) (0 29) (4 32) (4 39) (16 29)
+ (1 39) (7 21) (4 38) (22 28) (7 34) (29 38) (12 34) (4 17) (10 18) (23 30)
+ (6 17) (14 33) (6 35) (18 23) (29 36) (13 15) (8 17) (27 38) (24 31)
+ (20 34) (3 17) (2 30) (3 9) (2 16) (9 33) (11 28) (7 36) (13 39) (21 31)
+ (3 12) (4 30) (5 27) (3 7) (7 35) (23 37) (1 21) (5 36) (26 37) (5 23)
+ (0 8) (16 31) (20 36) (14 36) (3 19) (17 24) (19 21) (13 24) (16 33)
+ (24 29) (19 28) (6 9) (16 39) (3 5) (9 35) (6 33) (29 34) (2 32) (8 38)
+ (8 21) (10 35) (16 20) (6 21) (17 25) (9 37) (13 20) (21 27) (6 34) (1 18)
+ (11 22) (11 19) (10 26) (7 9) (12 32) (0 25) (11 31) (9 12) (12 23) (7 38)
+ (1 7) (12 21) (0 35) (15 27) (16 38) (2 26) (31 33) (4 15) (3 26) (4 21)
+ (16 17) (19 29) (14 23) (4 24) (30 35) (20 33) (14 30) (0 11) (7 28)
+ (19 30) (11 33) (2 37) (10 16) (5 14) (30 34) (22 32) (5 17) (15 17)
+ (8 20) (16 34) (9 21) (7 22) (17 20) (9 15) (29 33) (13 16) (16 27)
+ (14 16) (18 20) (2 28) (17 26) (20 23) (16 26) (4 14) (16 19) (1 20)
+ (12 30) (4 12) (24 25) (21 34) (0 10) (1 36) (4 11) (15 18) (24 26) (8 39)
+ (28 37) (2 3) (2 14) (6 26) (13 17) (11 30) (29 31) (6 11) (26 36) (31 39)
+ (24 35) (32 36) (1 9) (23 36) (7 18) (2 20) (32 39) (0 22) (2 35) (11 18)
+ (8 29) (17 23) (0 16) (10 39) (17 21) (3 15) (22 30) (23 31) (10 15)
+ (18 37) (4 29) (7 15) (23 38) (16 18) (30 38) (30 32) (2 23) (2 22)
+ (13 26) (33 36) (14 22) (8 36) (8 23) (32 37) (3 34) (20 37) (0 5) (28 33)
+ (12 37) (2 31) (21 22) (27 30) (4 22) (33 35) (29 39) (20 25) (13 32)
+ (27 28) (33 39))</code></pre>
+<p>I am not going to give you an image of the graph, it is large and
+unintelligible. Now, let me first find the set of sources and sinks: I
+will need the following functions.</p>
+<pre><code>(defun vertices (G)
+   (sort (remove-duplicates (loop for x in G append x))
+         &#39;&lt;))
+
+(defun sinks (G)
+   (let ((A (mapcar &#39;car G)))
+        (sort (remove-if (lambda (x) (member x A)) 
+                         (vertices G))
+              &#39;&lt;)))
+
+(defun sources (G)
+   (let ((A (mapcar &#39;cadr G)))
+        (sort (remove-if (lambda (x) (member x A)) 
+                         (vertices G))
+              &#39;&lt;)))
+SOURCES</code></pre>
+<p>and we get</p>
+<pre><code>(sources G)
+(0 1 2 4 13)
+
+(sinks G)
+(25 34 35 36 37 38 39)</code></pre>
+<p>The code below will find all paths between every pair of source and
+sink. I will not bother to print the final result, but suffices to say,
+the number is large.</p>
+<pre><code>real time : 19.055 secs
+run time  : 19.036 secs
+gc count  : 17 times
+consed    : 2128196664 bytes
+
+(time (defparameter result 
+                    (loop for x in (sources G) 
+                                   append (loop for y in (sinks G)
+                                                         append (all-paths x y G)))))
+(length result)
+13441</code></pre>
+<div id="footer">
+<p><span id="timestamp">January 9th, 2013 5:51am</span></p>
+</div>
+</body>
+</html>

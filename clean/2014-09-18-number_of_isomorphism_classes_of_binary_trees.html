@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-09-18-number_of_isomorphism_classes_of_binary_trees</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="number-of-isomorphism-classes-of-binary-trees">Number of
+isomorphism classes of binary trees</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Today, I would like to write a recursive integer function which
+returns the number of <a
+href="2013-10-23-tree_isomorphism.html">isomorphism classes</a> of
+binary trees on <span class="math inline">\(N\)</span> vertices.</p>
+<p>Usually, <a href="http://en.wikipedia.org/wiki/Binary_tree">binary
+trees</a> are ordered in the sense that left and the right legs and the
+parent node of a node are distinguished. However, from a graph
+theoretical point of view one cannot make such distinctions. For
+example, the following trees are isomorphic and should not be treated
+different:</p>
+<figure data-orig-height="174" data-orig-width="59" data-orig-src="../media/2014-09-18-number_of_isomorphism_classes_of_binary_trees_0.png">
+<img src="../media/2014-09-18-number_of_isomorphism_classes_of_binary_trees_0.png" data-orig-height="174"
+data-orig-width="59" data-orig-src="../media/2014-09-18-number_of_isomorphism_classes_of_binary_trees_0.png" />
+</figure>
+<figure data-orig-height="174" data-orig-width="59" data-orig-src="../media/2014-09-18-number_of_isomorphism_classes_of_binary_trees_1.png">
+<img src="../media/2014-09-18-number_of_isomorphism_classes_of_binary_trees_1.png" data-orig-height="174"
+data-orig-width="59" data-orig-src="../media/2014-09-18-number_of_isomorphism_classes_of_binary_trees_1.png" />
+</figure>
+<h2 id="asolution">A solution</h2>
+<p>One solution is to order the legs of a binary tree at a leaf using
+the number of nodes. Then the number of isomorphism classes of binary
+trees with <span class="math inline">\(n\)</span> nodes is <span
+class="math display">\[ \Upsilon(n) = \sum_{i=1}^{\lfloor
+n/2\rfloor} \Upsilon(i)\Upsilon(n-i) \]</span> This sequence is known as
+<a href="https://oeis.org/A000992">the half Catalan number
+sequence</a>.</p>
+<h2 id="thecode">The code</h2>
+<p>I will implement the function using memoization. One easy
+simplification: there are no binary trees on an odd number of vertices.
+So, the function should return 0 in those cases.</p>
+<pre><code>(let ((trees-table (make-hash-table)))
+  (defun count-trees (n)
+    (cond ((&lt; n 2) 0)
+          ((= n 2) 1)
+          ((oddp n) 0)
+          (t (or (gethash n trees-table)
+                 (setf (gethash n trees-table)
+                       (loop for i from 2 to (truncate (/ n 2)) by 2 sum 
+                                (* (count-trees i)
+                                   (count-trees (- n i))))))))))
+
+
+COUNT-TREES</code></pre>
+<p>Let us test some small cases:</p>
+<pre><code>(count-trees 4)
+1
+
+(count-trees 10)
+3</code></pre>
+<p>and something large</p>
+<pre><code>(time (count-trees 8000))
+
+  Evaluation took:
+  36.029 seconds of real time
+  35.990000 seconds of total run time (35.833000 user, 0.157000 system)
+  [ Run times consist of 0.096 seconds GC time, and 35.894 seconds non-GC time. ]
+  99.89% CPU
+  100,629,095,448 processor cycles
+  4,087,578,560 bytes consed
+
+  3232141093235745665344768253734720516
+  7342297504444684529062661316231995608
+  4038515824845546492953132261903137938
+  7966010529079271003447972790652241578
+  8206406816856071412065687354798901876
+  0649219370141965820051113589805464975
+  2397963481179106703504826446504878676
+  0392385535238326313673032176829783556
+  3602543190380074041880499185199619335
+  7945207827045652603373499406175098715
+  8184355208213350952487290628925607546
+  3707906599107858716044228169511202997
+  6858926637293235940612562487817298830
+  3079081302321473052588875555573601569
+  3529216065337436102878546847455040515
+  0610566567346071430324157979443528748
+  1776874003522289975254482716357855448
+  2749720193426413795851312059670041280
+  1210558028720726955444344153850844642
+  6840069864315651973661978689685755985
+  4086589472218362086348088066853264040
+  6090332927129152972240579076174395947
+  1590857474894224251682285788864313728
+  5252056876478568114443509291891942217
+  5435984810655453096826038929095339647
+  0148259035101364662214637068682039906
+  3250011473176322945990682797100164933
+  5757962253408591333972774878987447961
+  8953645896600813795240150881524942335
+  3435984852982717944789730584443462479
+  7778544697328463515558487074753445601
+  9380057954555865565491241402630290339
+  1902640767792958026936655677896050611
+  9605225459764871667242462221315141473
+  0903283661137011449891228190093894579
+  0178313713048384412092261220103786640
+  0090906811373279976542110078795323972
+  9803274495187972041661987750039103684
+  2528641806248555800573142650408382033
+  2767683734303099322684114018750141629
+  7072684919777039651181132245538061092
+  7208010182054524903979118242578421430
+  77064916800810685342775787</code></pre>
+<div id="footer">
+<p><span id="timestamp">September 18th, 2014 3:10am</span></p>
+</div>
+</body>
+</html>

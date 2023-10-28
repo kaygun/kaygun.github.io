@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-05-01-collatz_primes</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="collatz-primes">Collatz Primes</h1>
+<p>It’s has been a busy week in between getting myself out of jet lag,
+teaching, preparing <a
+href="http://web.bahcesehir.edu.tr/atabey_kaygun/Lectures">seminar
+lectures</a>, and learning about <a
+href="http://www.csounds.com/resources/documentation/">making</a> <a
+href="http://overtone.github.io">music</a> on <a
+href="http://opensoundcontrol.org/introduction-osc">computers</a> and <a
+href="https://ccrma.stanford.edu/software/snd/snd/clm.html">having
+fun</a>.</p>
+<p>As I was winding down and preparing to sleep, I started reading <a
+href="http://programmingpraxis.com/2015/05/01/collatz-primes">Programming
+Praxis</a>. Ah! the <a
+href="http://en.wikipedia.org/wiki/Collatz_conjecture">Collatz
+Sequence</a>. Can’t resist.</p>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Given <span class="math inline">\(n\)</span>, write a function which
+returns the smallest initial value of a Collatz sequence which contains
+at least <span class="math inline">\(n\)</span> primes. Recall that the
+Collatz sequence is defined recursively as</p>
+<p><span class="math display">\[ c_{n+1} = \begin{cases} 1 &amp; \text{
+if } c_n = 1 \\ c_n/2 &amp;
+\text{ if $c_n$ is even } \\ 3 c_n + 1 &amp; \text{ otherwise }
+\end{cases} \]</span></p>
+<h2 id="solution">Solution</h2>
+<p>First I need a general purpose filtering function:</p>
+<pre><code>(defun filter (pred xs &amp;optional carry)
+   (cond
+      ((null xs) (nreverse carry))
+      ((funcall pred (car xs)) (filter pred (cdr xs) (cons (car xs) carry)))
+      (t (filter pred (cdr xs) carry))))
+FILTER</code></pre>
+<p>Next, a predicate to check primeness. I will memoize this:</p>
+<pre><code>(let ((table-a (make-hash-table)))
+  (defun primep (n)
+    (multiple-value-bind
+          (val foundp) (gethash n table-a)
+      (if foundp
+          val
+          (setf (gethash n table-a)
+                (or (= 2 n)
+                    (and (oddp n)
+                         (let ((m (floor (sqrt n))))
+                           (do ((i 3 (+ 2 i)))
+                               ((or (zerop (mod n i)) (&gt; i m))
+                                (&gt; i m)))))))))))</code></pre>
+<p>And finally the Collatz Sequence generator. I will modify the
+sequence as it is clear that we don’t care about the even part of the
+sequence.</p>
+<pre><code>(defun collatz (n &amp;optional carry)
+   (cond
+      ((= n 1) carry)
+      ((evenp n) (collatz (/ n 2) carry))
+      (t (collatz (1+ (* 3 n)) (cons n carry)))))
+COLLATZ</code></pre>
+<p>Now, let us search the case for which we get 65 primes:</p>
+<pre><code>(let ((carry nil))
+   (do ((n 2 (1+ n)))
+       ((&gt;= (length carry) 65) (list n (length carry) carry))
+      (setf carry (filter #&#39;primep (collatz n)))))
+(1805312 66
+(5 53 23 61 433 577 1367 911 1619 719 479 283 251 167 593 263 233 103 137 107
+ 71 47 1777 1579 2213 983 2621 1747 6211 117773 93053 248141 348553 275399
+ 122399 580259 386839 2063141 2445203 2173513 2898017 1932011 381631 508841
+ 150767 100511 59561 70589 47059 1784753 352543 2228417 660271 880361 2473217
+ 1648811 1737017 1158011 14639539 52051693 46268171 30845447 9139391 6092927
+ 4061951 2707967))</code></pre>
+<h2 id="addendum">Addendum</h2>
+<p><a href="https://twitter.com/simendiferlerin">@simendiferlerin</a> on
+twitter pointed out that my <code>primep</code> returns <code>t</code>
+for even numbers, and it did. Not by intention, of course. But it worked
+in this case as I never send an even number to its path :) So, I changed
+the code above accordingly.</p>
+<p>While at it, one can change the last part of the code to make it more
+like a lisp code should be, recursive :)</p>
+<pre><code>(defun collatz-primes (n &amp;optional (m 2))
+  (let ((res (filter #&#39;primep (collatz m))))
+    (if (&gt;= (length res) n)
+        (list m (length res) res)
+        (collatz-primes n (1+ m)))))</code></pre>
+<p>And now you can call <code>collatz-primes</code> with the number of
+prime numbers you want and it returns the initial value for the
+sequence, the number of primes in the Collatz sequence, and the list of
+primes themselves.</p>
+<p>And finally: here is the same code (without the memoization)
+translated to clojure in case common lisp is non-fashionable for you
+:-p</p>
+<pre><code>(defn prime? [n]
+  (cond
+    (= n 2) true
+    (even? n) false
+    :else (let [m (Math/floor (Math/sqrt n))]
+            (loop [i 3]
+              (if (or (= 0 (mod n i))
+                      (&gt; i m))
+                (&gt; i m)
+                (recur (inc i)))))))
+
+(defn collatz [n]
+  (loop [m n
+         carry &#39;()]
+    (cond
+      (= m 1) carry
+      (even? m) (recur (/ m 2) carry)
+      :else (recur (+ 1 (* 3 m)) (conj carry m)))))
+
+(defn collatz-prime [n]
+  (loop [m 2]
+    (let [res (filter prime? (collatz m))]
+      (if (&gt;= (count res) n)
+        {:arg m :len (count res) :res res}
+        (recur (inc m))))))</code></pre>
+<div id="footer">
+<p><span id="timestamp">May 1st, 2015 8:35pm</span></p>
+</div>
+</body>
+</html>

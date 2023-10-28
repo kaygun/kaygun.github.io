@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2019-04-06-k-means_implemented_in_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="k-means-implemented-in-clojure">K-Means Implemented in
+Clojure</h1>
+<p>I am going back to basics. It’s been a while since I’ve written any
+code, and it is an itch I need to scratch: Today, I am going to
+(re)implement the <a
+href="http://stanford.edu/~cpiech/cs221/handouts/kmeans.html">k-means</a>
+algorithm in clojure. K-means is an unsupervised clustering algorithm
+that groups a cloud of vector data into k-clusters for a given number k.
+Idea is simple: start with k centeroids, group points according to which
+centroid they are close to, and then recalculate the centroids again.
+Repeat this until centroids sufficiently stabilize.</p>
+<h2 id="implementation">Implementation</h2>
+<p>We first need a function that calculates the centroid of a given
+group of data points:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> centroid </span>[xs]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">let</span> [n (<span class="kw">count</span> xs)]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">-&gt;&gt;</span> xs</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">reduce</span> #(<span class="kw">map</span> <span class="kw">+</span> <span class="va">%1</span> <span class="va">%2</span>))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">map</span> #(<span class="kw">/</span> <span class="va">%</span> n)))))</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/centroid</span></span></code></pre></div>
+<p>Now, we are going to need a new function that takes two arguments: a
+vector <code>x</code> and list of vectors <code>xs</code>. It will
+return the closest vector to <code>x</code> within the list
+<code>xs</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> dist </span>[xs ys]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">reduce</span> <span class="kw">+</span> (<span class="kw">map</span> (<span class="kw">fn</span> [x y] (<span class="kw">let</span> [u (<span class="kw">-</span> x y)] (<span class="kw">*</span> u u))) xs ys)))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> closest </span>[x xs]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">reduce</span> (<span class="kw">fn</span> [u v] (<span class="kw">if</span> (<span class="kw">&lt;</span> (dist x u) (dist x v)) u v)) xs))</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/dist</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/closest</span></span></code></pre></div>
+<p>The k-means algorithm groups points with respect to a list of
+centroids, and then recalculate positions of the centroids:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> k-means </span>[k data tolerance epochs]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">loop</span> [centers (<span class="kw">take</span> k data)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>          n <span class="dv">0</span>]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let</span> [new (<span class="kw">-&gt;&gt;</span> data</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">group-by</span> (<span class="kw">fn</span> [x] (closest x centers)))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                     <span class="kw">vals</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">map</span> centroid)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">into</span> []))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            err (<span class="kw">reduce</span> <span class="kw">+</span> (<span class="kw">map</span> dist centers new))]</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">if</span> (<span class="kw">or</span> (<span class="kw">&gt;</span> tolerance err)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">&gt;</span> n epochs))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            [(<span class="kw">into</span> [] new) err n]</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">recur</span> new (<span class="kw">inc</span> n))))))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/k-means</span></span></code></pre></div>
+<p>In order to test the code we are going to need a list of data
+points:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> random-vector </span>[xs sigma]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">map</span> #(<span class="kw">+</span> (<span class="kw">-</span> (<span class="kw">rand</span> (<span class="kw">*</span> <span class="dv">2</span> sigma)) sigma) <span class="va">%</span>) xs))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> data </span>(<span class="kw">concat</span> (<span class="kw">repeatedly</span> <span class="dv">6500</span> (<span class="kw">fn</span> [] (random-vector (<span class="kw">repeat</span> <span class="dv">10</span>  <span class="fl">0.0</span>) <span class="fl">0.2</span>)))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                  (<span class="kw">repeatedly</span> <span class="dv">7750</span> (<span class="kw">fn</span> [] (random-vector (<span class="kw">repeat</span> <span class="dv">10</span> -<span class="fl">1.0</span>) <span class="fl">0.75</span>)))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                  (<span class="kw">repeatedly</span> <span class="dv">8000</span> (<span class="kw">fn</span> [] (random-vector (<span class="kw">repeat</span> <span class="dv">10</span>  <span class="fl">2.0</span>) <span class="fl">0.5</span>)))))</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>(k-means <span class="dv">3</span> (<span class="kw">into</span> [] data) <span class="fl">1e-1</span> <span class="dv">3000</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/random-vector</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/data</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>[[(<span class="fl">4.919285050921601E-4</span> -<span class="fl">4.266121558193015E-4</span> -<span class="fl">0.0010858441460167305</span> <span class="fl">0.0013142832807452201</span> <span class="fl">1.9292508351109687E-4</span> -<span class="fl">0.0013877959463485913</span> <span class="fl">1.8175031110970964E-4</span> <span class="fl">0.0014874848400147044</span> -<span class="fl">0.002005580085078893</span> -<span class="fl">0.0016259257736556466</span>) (-<span class="fl">1.002152038406233</span> -<span class="fl">1.0026026033807856</span> -<span class="fl">0.9970592926719917</span> -<span class="fl">1.0019272862513706</span> -<span class="fl">0.9999133579141265</span> -<span class="fl">0.9988884814285772</span> -<span class="fl">0.9964083627021618</span> -<span class="fl">0.9972992209638767</span> -<span class="fl">1.000477954379125</span> -<span class="fl">1.0043421065924427</span>) (<span class="fl">2.0008453816213505</span> <span class="fl">1.9993503658791387</span> <span class="fl">2.002264972768322</span> <span class="fl">1.99713372344871</span> <span class="fl">1.9943595404870138</span> <span class="fl">1.996898772420761</span> <span class="fl">1.9977224459186604</span> <span class="fl">2.002879114924502</span> <span class="fl">2.0010176551762173</span> <span class="fl">2.0002044154827097</span>)] <span class="fl">3.3292170836126408E-6</span> <span class="dv">2</span>]</span></code></pre></div>
+<p>Not bad.</p>
+<div id="footer">
+<p><span id="timestamp">April 6th, 2019 5:07pm</span></p>
+</div>
+</body>
+</html>

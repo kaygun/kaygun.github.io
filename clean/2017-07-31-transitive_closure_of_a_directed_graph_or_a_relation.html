@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-07-31-transitive_closure_of_a_directed_graph_or_a_relation</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="transitive-closure-of-a-directed-graph-or-a-relation">Transitive
+Closure of a Directed Graph or a Relation</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have a set <span class="math inline">\(X\)</span> and a
+relation <span class="math inline">\(R:X\to X\)</span> on <span
+class="math inline">\(X\)</span>. One can think of <span
+class="math inline">\(R\)</span> as a directed graph on vertices
+labelled by elements of <span class="math inline">\(X\)</span>. I have
+written about <a
+href="2012-09-26-transitive_closure_of_a_directed_graph.html">transitive
+closure</a> before, but the code I wrote then was in python. Today, we
+are doing lisp(s).</p>
+<p>Let us recall: The transitive closure of <span
+class="math inline">\(R\)</span> is a new directed graph (or a new
+relation) such that if two vertices <span
+class="math inline">\(x\)</span> and <span
+class="math inline">\(y\)</span> are connected by an oriented path, then
+<span class="math inline">\(x\)</span> and <span
+class="math inline">\(y\)</span> are connected via an edge.</p>
+<h2 id="an-algorithm">An algorithm</h2>
+<p>Today’s implementation is based on the following algorithm:</p>
+<ol type="1">
+<li>For each vertex <span class="math inline">\(x\)</span> do steps 2
+and 3 below.</li>
+<li>Find the longest paths starting at <span
+class="math inline">\(x\)</span>.</li>
+<li>For each path in this collection and for each vertex <span
+class="math inline">\(y\)</span> in this path add <span
+class="math inline">\((x,y)\)</span> as a new edge.</li>
+</ol>
+<h2 id="an-implementation-in-common-lisp">An Implementation in Common
+Lisp</h2>
+<p>Here is my implementation of a function that returns all of longest
+paths in a graph. As usual, I represent graphs as list of pairs of
+vertices.</p>
+<pre><code>(defun longest-paths (edges)
+  (labels ((process (path)
+             (let* ((end (car path))
+                    (pool (remove-if-not (lambda (x) (equal (car x) end)) edges)))
+               (if (null pool)
+                   (list path)
+                   (mapcar (lambda (edge) (cons (cadr edge) path)) pool))))
+           (helper (paths)
+             (let ((temp (mapcan #&#39;process paths)))
+               (if (equal temp paths)
+                   (mapcar #&#39;reverse paths)
+                   (helper temp)))))
+     (mapcan (lambda (edge) (helper (list (reverse edge)))) edges)))
+
+LONGEST-PATHS</code></pre>
+<p>Let me test:</p>
+<pre><code>(defvar graph &#39;((0 1) (1 2) (1 3) (2 4) (5 6) (6 7)))
+(longest-paths graph)
+
+GRAPH
+((0 1 2 4) (0 1 3) (1 2 4) (1 3) (2 4) (5 6 7) (6 7))</code></pre>
+<figure data-orig-width="203" data-orig-height="347">
+<img src="../media/2017-07-31-transitive_closure_of_a_directed_graph_or_a_relation_0.png" data-orig-width="203"
+data-orig-height="347" alt="image" />
+</figure>
+<p>And here is the closure function:</p>
+<pre><code>(defun closure (edges)
+  (remove-duplicates 
+     (mapcan (lambda (path)
+                (if (equal 2 (length path))
+                    (list path)
+                    (let ((y (car path))
+                          (xs (cdr path)))
+                       (mapcar (lambda (x) (list y x)) xs))))
+             (longest-paths edges))
+     :test #&#39;equal))
+
+CLOSURE</code></pre>
+<p>And let us test again:</p>
+<pre><code>(closure graph)
+
+((0 2) (0 4) (0 1) (0 3) (1 2) (1 4) (1 3) (2 4) (5 6) (5 7) (6 7))</code></pre>
+<figure class="tmblr-full" data-orig-width="306" data-orig-height="347">
+<img src="../media/2017-07-31-transitive_closure_of_a_directed_graph_or_a_relation_1.png" data-orig-width="306"
+data-orig-height="347" alt="image" />
+</figure>
+<h2 id="an-implementation-in-clojure">An Implementation in Clojure</h2>
+<p>Here is another implementation done in clojure:</p>
+<pre><code>(defn closure [edges]
+  (letfn [(helper [xs]
+            (let [temp (filter (fn [[u v]] (= (last xs) u)) edges)]
+              (if (empty? temp)
+                #{xs}
+                (map (fn [[u v]] (concat xs [v])) temp))))
+          (finish [xs]
+            (if (= 2 (count xs))
+              #{xs}
+              (into #{} (map (fn [y] [(first xs) y]) (rest xs)))))]
+    (loop [prev edges]
+      (let [next (into #{} (mapcat helper prev))]
+        (if (= prev next)
+          (into #{} (mapcat finish prev))
+          (recur next))))))</code></pre>
+<div id="footer">
+<p><span id="timestamp">July 31st, 2017 12:16pm</span></p>
+</div>
+</body>
+</html>

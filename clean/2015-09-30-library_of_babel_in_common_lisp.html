@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-09-30-library_of_babel_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="library-of-babel-in-common-lisp">Library of Babel in Common
+Lisp</h1>
+<p>I was watching a <a href="http://www.thestrangeloop.com/">Strange
+Loop</a> <a href="https://youtu.be/Qg3XOfioapI">presentation</a> by <a
+href="https://twitter.com/ctford">Christopher Ford</a>. In it he
+mentions a short story by <a
+href="https://en.wikipedia.org/wiki/Jorge_Luis_Borges">Borges</a> that I
+really love called <a
+href="https://en.wikipedia.org/wiki/The_Library_of_Babel">The Library of
+Babel</a>. In this story Borges imagines a very very large library of
+books each 410 pages long that contains every possible character
+combinations that one can fit into 410 pages. These books contain every
+book ever published (in every possible variations and typos) and every
+book that will ever be published. Neat.</p>
+<p>Christopher also gives a short <a
+href="http://clojure.org/">clojure</a> code generating the Library of
+Babel, and more. So, here is my interpretation of his code (minus the
+lazy bits, the thread macros and so on…) in Common Lisp</p>
+<pre><code>(defvar alphabet (coerce &quot; abcdefghijklmnopqrstuvwxyz&quot; &#39;list))
+ALPHABET
+(defun kleene (prev)
+  (loop for x in prev append
+     (loop for y in alphabet collect
+       (concatenate &#39;string x (list y)))))
+KLEENE
+(defun borges (n &amp;optional (prev &#39;(nil)))
+  (if (zerop n)
+    prev
+    (borges (1- n) (kleene prev))))
+BORGES</code></pre>
+<p>A typical page contains about 2500 characters including spaces, and
+therefore, a 410 page book contains approximately 1 million characters.
+To generate the Library of Babel, I would need to call
+<code>(borges (expt 10 6))</code>. For this to return, I would need a
+Babel Lisp Implementation with a vastly, hugely, mind-bogglingly big
+stack roughly on the order of <span class="math inline">\(2^{8\cdot
+10^6}\)</span> bytes, give or take. And, of course, I would need to be
+really really really really patient too.</p>
+<p>I am not that patient. So, let me call it with 2:</p>
+<pre><code>(borges 2)
+(    a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w  x
+  y  z a  aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar as at au av
+ aw ax ay az b  ba bb bc bd be bf bg bh bi bj bk bl bm bn bo bp bq br bs bt
+ bu bv bw bx by bz c  ca cb cc cd ce cf cg ch ci cj ck cl cm cn co cp cq cr
+ cs ct cu cv cw cx cy cz d  da db dc dd de df dg dh di dj dk dl dm dn do dp
+ dq dr ds dt du dv dw dx dy dz e  ea eb ec ed ee ef eg eh ei ej ek el em en
+ eo ep eq er es et eu ev ew ex ey ez f  fa fb fc fd fe ff fg fh fi fj fk fl
+ fm fn fo fp fq fr fs ft fu fv fw fx fy fz g  ga gb gc gd ge gf gg gh gi gj
+ gk gl gm gn go gp gq gr gs gt gu gv gw gx gy gz h  ha hb hc hd he hf hg hh
+ hi hj hk hl hm hn ho hp hq hr hs ht hu hv hw hx hy hz i  ia ib ic id ie if
+ ig ih ii ij ik il im in io ip iq ir is it iu iv iw ix iy iz j  ja jb jc jd
+ je jf jg jh ji jj jk jl jm jn jo jp jq jr js jt ju jv jw jx jy jz k  ka kb
+ kc kd ke kf kg kh ki kj kk kl km kn ko kp kq kr ks kt ku kv kw kx ky kz l
+ la lb lc ld le lf lg lh li lj lk ll lm ln lo lp lq lr ls lt lu lv lw lx ly
+ lz m  ma mb mc md me mf mg mh mi mj mk ml mm mn mo mp mq mr ms mt mu mv mw
+ mx my mz n  na nb nc nd ne nf ng nh ni nj nk nl nm nn no np nq nr ns nt nu
+ nv nw nx ny nz o  oa ob oc od oe of og oh oi oj ok ol om on oo op oq or os
+ ot ou ov ow ox oy oz p  pa pb pc pd pe pf pg ph pi pj pk pl pm pn po pp pq
+ pr ps pt pu pv pw px py pz q  qa qb qc qd qe qf qg qh qi qj qk ql qm qn qo
+ qp qq qr qs qt qu qv qw qx qy qz r  ra rb rc rd re rf rg rh ri rj rk rl rm
+ rn ro rp rq rr rs rt ru rv rw rx ry rz s  sa sb sc sd se sf sg sh si sj sk
+ sl sm sn so sp sq sr ss st su sv sw sx sy sz t  ta tb tc td te tf tg th ti
+ tj tk tl tm tn to tp tq tr ts tt tu tv tw tx ty tz u  ua ub uc ud ue uf ug
+ uh ui uj uk ul um un uo up uq ur us ut uu uv uw ux uy uz v  va vb vc vd ve
+ vf vg vh vi vj vk vl vm vn vo vp vq vr vs vt vu vv vw vx vy vz w  wa wb wc
+ wd we wf wg wh wi wj wk wl wm wn wo wp wq wr ws wt wu wv ww wx wy wz x  xa
+ xb xc xd xe xf xg xh xi xj xk xl xm xn xo xp xq xr xs xt xu xv xw xx xy xz
+ y  ya yb yc yd ye yf yg yh yi yj yk yl ym yn yo yp yq yr ys yt yu yv yw yx
+ yy yz z  za zb zc zd ze zf zg zh zi zj zk zl zm zn zo zp zq zr zs zt zu zv
+ zw zx zy zz)</code></pre>
+<p>So, we have a program that will write every possible book published
+and will be published. I hereby declare that they are in public domain.
+You’re welcome ;-)</p>
+<h2 id="addendum">Addendum</h2>
+<p>There is actually a <a href="https://libraryofbabel.info/">Library of
+Babel</a> online designed by <a
+href="https://twitter.com/JonotrainEB">Jonathan Basile</a>. He also has
+a version of it for images. And the best part of it is this: he uses a
+complete ordering of all of these books and images. So, you can access
+all of these books and images if you know their place in this complete
+order. Touché.</p>
+<div id="footer">
+<p><span id="timestamp">September 30th, 2015 7:30am</span></p>
+</div>
+</body>
+</html>

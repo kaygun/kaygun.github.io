@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-03-08-maximum_number_of_characters_using_keystrokes_a_ctrla_ctrlc_and_ctrlv</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="maximum-number-of-characters-using-keystrokes-a-ctrla-ctrlc-and-ctrlv">Maximum
+number of characters using keystrokes A, Ctrl+A, Ctrl+C and Ctrl+V</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I saw the following problem on <a
+href="http://stackoverflow.com/questions/4606984/maximum-number-of-characters-using-keystrokes-a-ctrla-ctrlc-and-ctrlv">Stack
+Overflow</a>:</p>
+<blockquote>
+<p>Write a program to print the sequence of keystrokes such that it
+generates the maximum number of character ’A’s. You are allowed to use
+only 4 keys: A, Ctrl+A, Ctrl+C and Ctrl+V. Only N keystrokes are
+allowed. All Ctrl+ characters are considered as one keystroke.</p>
+</blockquote>
+<p>Instead of giving the sequence, I will count the maximum number of
+characters. This has a very good recursive solution I’d like to
+share.</p>
+<h2 id="a-recursive-solution">A recursive solution</h2>
+<p>Let us use <span class="math inline">\(f(n)\)</span> to denote the
+function that returns the number we are looking for. Convince yourself
+that <span class="math inline">\(f(n)=n\)</span> for <span
+class="math inline">\(n&lt;7\)</span>. For the rest: if we end the
+keystrokes with Ctrl-A, Ctrl+C and Ctrl+V then we get twice the number
+of <span class="math inline">\(f(n−3)\)</span>. If we were to end our
+keystrokes with Ctrl-A, Ctrl+C and twice Ctrl+V, we get 3 times <span
+class="math inline">\(f(n--4)\)</span>. Thus</p>
+<p><span class="math display">\[ f(n)= \max \{i⋅f(n−1−i)\|
+i=1,\ldots,n−2\} \]</span></p>
+<p>for every <span class="math inline">\(n≥8\)</span>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Recursive implementations are usually horrible in terms of time
+complexity unless one uses <a
+href="http://en.wikipedia.org/wiki/Memoization">memoization</a> or <a
+href="http://en.wikipedia.org/wiki/Dynamic_programming">dynamic
+programming</a>. Today, I will use memoization:</p>
+<pre><code>(let ((table (make-hash-table))) 
+   (defun fn (n)
+      (if (&lt; n 7)
+         n
+         (or (gethash n table)
+             (setf (gethash n table)
+                   (loop for i from 1 below (1- n) maximize
+                      (* (- n i 1) (fn i))))))))
+FN</code></pre>
+<p>and we test</p>
+<pre><code>Evaluation took:
+  0.227 seconds of real time
+  0.228015 seconds of total run time (0.212014 user, 0.016001 system)
+  100.44% CPU
+  795,069,661 processor cycles
+  89,447,632 bytes consed
+
+(time (fn 2000))
+8439205766613565565632312422631591899511334751681071265501513793013859629112940590519312629228060899221520668094813944939328014593494821429834872503731206777089183811572424675554833455607139625047596348546981480633077352984931146321629282304</code></pre>
+<div id="footer">
+<p><span id="timestamp">March 8th, 2015 1:11pm</span></p>
+</div>
+</body>
+</html>

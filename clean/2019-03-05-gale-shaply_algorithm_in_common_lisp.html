@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2019-03-05-gale-shaply_algorithm_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="gale-shaply-algorithm-in-common-lisp">Gale-Shaply Algorithm in
+Common Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have two disjoint finite sets. Let us call them L and R. We
+want to pair each element in L with a unique element in R. However, we
+also have some constraints: we also assume that each element in L
+declared a list of preferences of vertices they want to be matched, and
+vice versa. A one-to-one matching M between L and R is called
+<em>stable</em> if any subset of M is altered to obtain another matching
+M’ then there is at least one matching <span
+class="math inline">\((x,y)\)</span> in M’ where both <span
+class="math inline">\(x\)</span> and <span
+class="math inline">\(y\)</span> are matched with their lesser choices
+than their original match M.</p>
+<p>The problem of finding such stable matchings is called the <a
+href="https://en.wikipedia.org/wiki/Stable_marriage_problem">Stable
+Matching Problem</a>, and you can find a detailed description of the
+problem <a
+href="http://www.ams.org/publicoutreach/feature-column/fc-2015-03">here</a>.</p>
+<h2 id="gale-shaply-algorithm">Gale-Shaply Algorithm</h2>
+<p>Gale and Shaply came up with a <em>deferred acceptence</em> algorithm
+that produces a stable match, however, it is not symmetric in L and R.
+The algorithm favors the proposing party rather than the proposees. Here
+is the pseudo-code</p>
+<pre><code>Algorithm Gale-Shaply:
+Input: Two disjoint finite sets L and R
+       A list of permutations PR of L indexed by R
+       A list of permutations PL of R indexed by L
+Output: A one-to-one stable matching between L and R
+Begin
+  For each y in R set Prop(y) to the empty set
+  For each x in L
+      Let m be the top choice of x in PL(x)
+      Add (x,m) to Prop(m)
+  End
+  If Prop is a one-to-one matching
+     Return Prop
+  Else
+     For each y in R
+        Let n be the top choice of y in L
+            such that (n,y) is in Prop(y)
+        For each x in Prop(y) \ { (n,y) }
+            Remove (x,y) from PL(x)
+        End
+     End
+  End
+  Call Gale-Shaply with L, R, PR and the new PL
+End</code></pre>
+<p>Here is a more intuitive natural language description:</p>
+<p>Every element in L proposes to its top choice on the list of
+preferences. Every element in R conditionally accepts the proposal from
+its top choice among those who proposed, and rejects the other
+proposals. We continue the process: Every element in L send in a new
+proposal with its top choice out of those who have not yet rejected it.
+Every element in R conditionally accepts the proposal from its top
+choice among those who proposed, and rejects the other proposals. This
+process continues until we achieve a one-to-one match.</p>
+<h2 id="an-implementation-in-common-lisp">An implementation in Common
+Lisp</h2>
+<p>Before implementing the algorithm above, I am going to need a utility
+function called <code>assoc-merge</code>. I need this to merge
+association lists in a particular way.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> merge-assoc </span>(xs)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> (res)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">dolist</span> (x xs res)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let*</span> ((k (<span class="kw">car</span> x))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>             (r (<span class="kw">cdr</span> (<span class="kw">assoc</span> k res <span class="bu">:test</span> <span class="op">#&#39;</span>equal))))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">if</span> r</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">rplacd</span> (<span class="kw">assoc</span> k res <span class="bu">:test</span> <span class="op">#&#39;</span>equal) (<span class="kw">push</span> (<span class="kw">cadr</span> x) r))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">push</span> x res))))))</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>MERGE-ASSOC</span></code></pre></div>
+<p>Let me show you how this works:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(merge-assoc &#39;((:a <span class="dv">1</span>) (:b <span class="dv">2</span>) (:c <span class="dv">3</span>) (:a <span class="dv">10</span>) (:b <span class="dv">20</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>((C <span class="dv">3</span>) (B <span class="dv">20</span> <span class="dv">2</span>) (A <span class="dv">10</span> <span class="dv">1</span>))</span></code></pre></div>
+<p>And here is my implementation of Gale-Shaply:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> gale-shaply </span>(left right &amp;optional (n <span class="dv">0</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">labels</span> ((maximal (unordered ordered)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">car</span> (<span class="kw">remove-if-not</span> (<span class="kw">lambda</span> (x) (<span class="kw">member</span> x unordered)) ordered))))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">let*</span> (<span class="co">;; this round of proposals</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>           (pro (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">list</span> (<span class="kw">car</span> xs) (<span class="kw">cadr</span> xs))) left)) </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>           <span class="co">;; now count on the RHS how many offers each candidate received</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>           (img (<span class="kw">remove-duplicates</span> (<span class="kw">mapcar</span> <span class="op">#&#39;</span>cdr pro) <span class="bu">:test</span> <span class="op">#&#39;</span>equal))) </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">if</span> (<span class="op">=</span> (<span class="kw">length</span> left) (<span class="kw">length</span> img))</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>          <span class="co">;; if each candidate on the RHS received one proposal STOP</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">list</span> :numsteps n :solution pro)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">let*</span> (<span class="co">;; otherwise, first calculate what are the top choices of the candidates</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                 (acc (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x)   </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                                (<span class="kw">list</span> (maximal (<span class="kw">cdr</span> x) (<span class="kw">cdr</span> (<span class="kw">assoc</span> (<span class="kw">car</span> x) right <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                                      (<span class="kw">car</span> x)))</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                              (merge-assoc (<span class="kw">mapcar</span> <span class="op">#&#39;</span>reverse pro))))</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                 <span class="co">;; next reject the rest</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                 (rej (<span class="kw">remove-if</span> (<span class="kw">lambda</span> (x) (<span class="kw">member</span> x acc <span class="bu">:test</span> <span class="op">#&#39;</span>equal)) pro)))</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            <span class="co">;; do another round with the updated list of preferences</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            (gale-shaply (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x)</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                                    (<span class="kw">let</span> ((v (<span class="kw">cadr</span> (<span class="kw">assoc</span> (<span class="kw">car</span> x) rej <span class="bu">:test</span> <span class="op">#&#39;</span>equal))))</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                                      (<span class="kw">cons</span> (<span class="kw">car</span> x) (<span class="kw">remove</span> v (<span class="kw">cdr</span> x) <span class="bu">:test</span> <span class="op">#&#39;</span>equal))))</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                                  left)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                          right</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>                          (<span class="op">1+</span> n)))))))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>GALE-SHAPLY</span></code></pre></div>
+<p>In order to test this, I am going to need random permutations:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> random-permutation </span>(xs)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let*</span> ((n (<span class="kw">length</span> xs))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>         (ys (<span class="kw">mapcar</span> <span class="op">#&#39;</span>cons (<span class="kw">copy-list</span> xs) (<span class="kw">loop</span> for i from <span class="dv">1</span> to n collect (<span class="kw">random</span> n)))))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">mapcar</span> <span class="op">#&#39;</span>car (<span class="kw">sort</span> ys <span class="op">#&#39;</span>&lt; <span class="bu">:key</span> <span class="op">#&#39;</span>cdr))))</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>RANDOM-PERMUTATION</span></code></pre></div>
+<p>Let us test this:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(random-permutation &#39;(:a :b :c :d))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(C D A B)</span></code></pre></div>
+<p>And finally our test function for the algorithm:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a> (<span class="kw">let*</span> ((N <span class="dv">8</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    (A (<span class="kw">loop</span> for i from <span class="dv">0</span> below N collect (<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;y~d&quot;</span> i)))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    (B (<span class="kw">loop</span> for i from <span class="dv">0</span> below N collect (<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;x~d&quot;</span> i)))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    (left (<span class="kw">mapcar</span> <span class="op">#&#39;</span>cons A (<span class="kw">loop</span> repeat N collect (random-permutation B))))</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    (right (<span class="kw">mapcar</span> <span class="op">#&#39;</span>cons B (<span class="kw">loop</span> repeat N collect (random-permutation A)))))</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">append</span> (<span class="kw">list</span> :left left :right right) (gale-shaply left right)))</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(LEFT</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> ((y0 x4 x3 x6 x7 x5 x1 x0 x2) (y1 x0 x4 x1 x3 x2 x5 x7 x6)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  (y2 x1 x4 x7 x5 x3 x0 x6 x2) (y3 x2 x6 x5 x0 x3 x7 x1 x4)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  (y4 x3 x5 x7 x0 x2 x6 x1 x4) (y5 x4 x5 x3 x1 x0 x2 x6 x7)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  (y6 x6 x0 x4 x7 x2 x3 x1 x5) (y7 x4 x5 x3 x1 x7 x0 x2 x6))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a> RIGHT</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a> ((x0 y7 y5 y0 y1 y4 y6 y2 y3) (x1 y2 y4 y7 y6 y1 y0 y3 y5)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  (x2 y2 y6 y4 y5 y7 y1 y3 y0) (x3 y1 y2 y6 y0 y4 y3 y5 y7)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  (x4 y5 y2 y6 y1 y3 y0 y4 y7) (x5 y0 y4 y5 y6 y1 y3 y7 y2)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  (x6 y2 y3 y1 y5 y7 y0 y4 y6) (x7 y1 y0 y3 y7 y2 y4 y5 y6))</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a> NUMSTEPS <span class="dv">5</span> SOLUTION</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a> ((y0 x3) (y1 x0) (y2 x1) (y3 x2) (y4 x5) (y5 x4) (y6 x6) (y7 x7)))</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">March 5th, 2019 2:38pm</span></p>
+</div>
+</body>
+</html>

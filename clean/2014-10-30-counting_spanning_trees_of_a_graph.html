@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-10-30-counting_spanning_trees_of_a_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="counting-spanning-trees-of-a-graph">Counting Spanning Trees of a
+Graph</h1>
+<h2 id="descriptionoftheproblem">Description of the Problem</h2>
+<p>Given a undirected graph <span class="math inline">\(G =
+(V,E)\)</span>, a spanning tree <span class="math inline">\(T\)</span>
+of <span class="math inline">\(G\)</span> is a connected subgraph of
+<span class="math inline">\(G\)</span> which uses the full set of
+vertices but uses a minimal set of edges such that <span
+class="math inline">\(T\)</span> has no cycles while still being
+connected. Today, we are going to count all spanning trees in a given
+graph.</p>
+<h2 id="laplacianmatrix">Laplacian Matrix</h2>
+<p>In almost all of the graph algorithms I considered so far, I assumed
+my graphs were sparse: the number of edges were comparible to the number
+of vertices. Therefore, I almost invariably used a list of edges to
+represent a graph such as</p>
+<pre><code>(defvar G &#39;((0 1) (1 2) (1 3) (2 4) (3 4)))
+
+G</code></pre>
+<p>which represents the following graph</p>
+<figure data-orig-height="347" data-orig-width="131" data-orig-src="../media/2014-10-30-counting_spanning_trees_of_a_graph_0.png">
+<img src="../media/2014-10-30-counting_spanning_trees_of_a_graph_0.png" data-orig-height="347"
+data-orig-width="131" data-orig-src="../media/2014-10-30-counting_spanning_trees_of_a_graph_0.png" />
+</figure>
+<p>Of course there are other representations. One of them is the <a
+href="#">adjacency matrix</a> which is a <span
+class="math inline">\(n\times n\)</span> matrix which consists of 0’s
+and 1’s and defined as <span class="math display">\[ a_{ij} =
+\begin{cases} 1 &amp; \text{ if there is
+an edge between $i$ and $j$ }\\ 0 &amp; \text{ otherwise }
+\end{cases} \]</span> and yet another one is the <a
+href="#">Laplacian</a> of a graph which is also an <span
+class="math inline">\(n\times n\)</span> matrix given by <span
+class="math display">\[ a_{ij} =
+\begin{cases} \deg(i) &amp; \text{ if } i=j\\ -1 &amp; \text{ if there
+is
+an edge between $i\neq j$ }\\ 0 &amp; \text{ otherwise } \end{cases}
+\]</span></p>
+<p><a href="#">Kirchoff’s Theorem</a> states that the determinant of any
+minor of the Laplacian will give us <span
+class="math inline">\(n\)</span> times the number of spanning trees of
+<span class="math inline">\(G\)</span>.</p>
+<h2 id="code">Code</h2>
+<p>The following function returns the Laplacian matrix of a given graph
+represented as a list of edges. We assume edges are represented by lists
+of vertices of size 2, and that the vertices are numbered starting from
+0.</p>
+<pre><code>(defun laplacian (G)
+   (let* ((n (1+ (apply #&#39;max (loop for x in G append x))))
+          (m (make-array 
+               (list n n) 
+               :initial-element 0)))
+     (loop for edge in G do
+        (destructuring-bind 
+             (a b) edge
+          (incf (aref m a a))
+          (incf (aref m b b))
+          (decf (aref m a b))
+          (decf (aref m b a))))
+     m))
+
+LAPLACIAN</code></pre>
+<p>Let us test:</p>
+<pre><code>(laplacian G)
+
+#2A((1 -1 0 0 0) (-1 3 -1 -1 0) (0 -1 2 0 -1) (0 -1 0 2 -1) (0 0 -1 -1 2))</code></pre>
+<p>For the number of spanning trees, we will need to compute the
+determinant of any minor. In the following, I will delete the first row
+and the column.</p>
+<pre><code>(defun number-of-spanning-trees (G)
+   (let* ((m (laplacian G))
+          (n (array-dimension m 0))
+          (x (grid:subgrid m (list (1- n) (1- n)) &#39;(0 0))))
+      (round (lla:det x))))
+
+NUMBER-OF-SPANNING-TREES
+
+(number-of-spanning-trees G)
+
+4</code></pre>
+<p>Now, let us test something larger</p>
+<pre><code>(defvar H
+   (remove-duplicates 
+      (loop repeat 100 collect 
+          (let* ((a (random 12))
+                 (b (+ 1 a (random 9))))
+             (list a b)))
+      :test #&#39;equal))
+H</code></pre>
+<figure class="tmblr-full" data-orig-height="383" data-orig-width="500" data-orig-src>
+<img src="../media/2014-10-30-counting_spanning_trees_of_a_graph_1.png" data-orig-height="383"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>and the number of spanning trees for this graph is</p>
+<pre><code>(number-of-spanning-trees H)
+
+51292592574547</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 30th, 2014 3:43pm</span></p>
+</div>
+</body>
+</html>

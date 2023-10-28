@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2019-04-13-k-nearest_neighbors_algorithm_in_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="k-nearest-neighbors-algorithm-in-clojure">K-Nearest Neighbors
+Algorithm in Clojure</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>This is the second post of my <em>going back to basics</em> phase.
+For today’s post I am going to implement <a
+href="https://towardsdatascience.com/machine-learning-basics-with-the-k-nearest-neighbors-algorithm-6a6e71d01761">k-nearest
+neighbors algorithm</a> in clojure.</p>
+<p>The set up is as follows: we have a cloud of data points embedded in
+an affine space. This just means that the points have numerical
+coordinates. Along with their coordinates, we also assign labels to each
+of these points. Labels could be anything: numbers, strings, letters
+etc. Our aim to come up with a classification scheme in which we produce
+a label when we are presented with a point whose label is not known. The
+<em>k-nearest neighbors</em> algorithm does the simplest thing: given a
+point <span class="math inline">\(x\)</span>, we find k-nearest points
+to <span class="math inline">\(x\)</span> whose labels are known. Then
+we take a vote among these points. Largest vote wins and we assign the
+point <span class="math inline">\(x\)</span> with that label.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>First we need to define a distance function. Since I am going to use
+the distance function for comparisons, I do not need the actual value. I
+am going to use the Euclidean distance function but without the square
+root.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> distance </span>[xs ys]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">reduce</span> <span class="kw">+</span> (<span class="kw">map</span> #(<span class="kw">let</span> [u (<span class="kw">-</span> <span class="va">%1</span> <span class="va">%2</span>)] (<span class="kw">*</span> u u)) xs ys)))</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/distance</span></span></code></pre></div>
+<p>Next, the implementation:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> k-nn </span>[x k data]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">let</span> [cmp (<span class="kw">fn</span> [u v] (<span class="kw">&lt;</span> (distance x u) (distance x v)))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>         rdr (<span class="kw">fn</span> [ys y] (<span class="kw">take</span> k (<span class="kw">sort</span> cmp (<span class="kw">cons</span> y ys))))]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">-&gt;&gt;</span> (<span class="kw">keys</span> data)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">reduce</span> rdr [])</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">map</span> data)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>           <span class="kw">frequencies</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">apply</span> <span class="kw">max-key</span> <span class="kw">val</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>           <span class="kw">first</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/k-nn</span></span></code></pre></div>
+<p>The value <code>k</code> is the number of neighbors of the point
+<code>x</code> we are going to use. Since we need to take a vote among
+these <code>k</code> points, <code>k</code> must be an odd number. I am
+going to assume <code>data</code> is a map where the keys are the
+coordinates of the points and values are the labels. Here is a small
+example:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> data </span>{[<span class="dv">0</span> <span class="dv">0</span>] <span class="at">:a</span> [<span class="dv">1</span> <span class="dv">0</span>] <span class="at">:a</span> [<span class="dv">0</span> <span class="dv">1</span>] <span class="at">:a</span> [<span class="dv">1</span> <span class="dv">1</span>] <span class="at">:a</span> [<span class="dv">1</span> <span class="dv">2</span>] <span class="at">:a</span> [-<span class="dv">1</span> <span class="dv">0</span>] <span class="at">:a</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>           [<span class="dv">4</span> <span class="dv">5</span>] <span class="at">:b</span> [<span class="dv">5</span> <span class="dv">4</span>] <span class="at">:b</span> [<span class="dv">5</span> <span class="dv">5</span>] <span class="at">:b</span> [<span class="dv">5</span> <span class="dv">6</span>] <span class="at">:b</span> [<span class="dv">4</span> <span class="dv">4</span>] <span class="at">:b</span>})</span></code></pre></div>
+<p>The local function <code>cmp</code> compares distances to a given
+point <code>x</code>, and <code>rdr</code> is a reducer function that
+computes k-nearest points to <code>x</code>.</p>
+<p>Now, let us test:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(k-nn [-<span class="dv">1</span> <span class="dv">2</span>] <span class="dv">3</span> data)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">:a</span></span></code></pre></div>
+<h2 id="a-larger-example">A larger example</h2>
+<p>I am going to recycle the code I wrote for the <a
+href="2019-04-06-k-means_implemented_in_clojure.html">k-means</a> code I
+wrote few days ago.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> random-vector </span>[xs sigma]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">map</span> #(<span class="kw">+</span> (<span class="kw">-</span> (<span class="kw">rand</span> (<span class="kw">*</span> <span class="dv">2</span> sigma)) sigma) <span class="va">%</span>) xs))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> data </span>(<span class="kw">concat</span> (<span class="kw">repeatedly</span> <span class="dv">6500</span> (<span class="kw">fn</span> [] {(random-vector (<span class="kw">repeat</span> <span class="dv">10</span>  <span class="fl">0.0</span>) <span class="fl">0.2</span>) <span class="at">:a</span>}))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                  (<span class="kw">repeatedly</span> <span class="dv">7750</span> (<span class="kw">fn</span> [] {(random-vector (<span class="kw">repeat</span> <span class="dv">10</span> -<span class="fl">1.0</span>) <span class="fl">0.75</span>) <span class="at">:b</span>}))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                  (<span class="kw">repeatedly</span> <span class="dv">8000</span> (<span class="kw">fn</span> [] {(random-vector (<span class="kw">repeat</span> <span class="dv">10</span>  <span class="fl">2.0</span>) <span class="fl">0.5</span>) <span class="at">:c</span>}))))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>(k-nn (random-vector (<span class="kw">repeat</span> <span class="dv">10</span> <span class="fl">1.5</span>) <span class="fl">1.0</span>) <span class="dv">7</span> (<span class="kw">into</span> {} data))</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/random-vector</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="va">#&#39;user/data</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">:c</span></span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">April 13th, 2019 10:49am</span></p>
+</div>
+</body>
+</html>

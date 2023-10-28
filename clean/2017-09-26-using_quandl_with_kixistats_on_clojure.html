@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-09-26-using_quandl_with_kixistats_on_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="using-quandl-with-kixi.stats-on-clojure">Using Quandl with
+kixi.stats on Clojure</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a href="https://github.com/incanter/incanter">Incanter</a> was such
+a let down for various reasons, and I’ve been on the market for a
+sensible data analysis solution on clojure.  Then I saw <a
+href="https://github.com/MastodonC/kixi.stats">kixi.stats</a> package at
+<a href="http://www.mastodonc.com/about/">Elise Huard</a>’s <a
+href="https://youtu.be/C1pYnpCgQL8">talk</a> at <a
+href="http://2017.euroclojure.org/">Euro Clojure</a>. This specific
+package does only descriptive statistics, but it has a nice sensible
+API, it is fast and relies on standard data structures as opposed to
+cooking their own.  This was one of my big problems with incanter.</p>
+<p>So, today I am going to write some clojure code to fetch data from <a
+href="http://quandl.com">quandl</a> and process them with <a
+href="https://github.com/MastodonC/kixi.stats">kixi.stats</a>.  </p>
+<h2 id="implementation">Implementation</h2>
+<p>I am writing this on <a
+href="http://gorilla-repl.org/index.html">gorilla-repl</a>.  So, in my
+<code>project.prj</code> file I listed my dependencies as</p>
+<pre><code>(defproject quandl-clojure &quot;0.1.0-SNAPSHOT&quot;
+  :description &quot;Process data from quandl&quot;
+  :dependencies [[org.clojure/data.json &quot;0.2.6&quot;]
+                 [kixi/stats &quot;0.3.9&quot;]
+                 [clj-http &quot;3.7.0&quot;]]
+  :main ^:skip-aot gorilla-test.core
+  :target-path &quot;target/%s&quot;
+  :plugins [[lein-gorilla &quot;0.4.0&quot;]]
+  :profiles {:uberjar {:aot :all}})</code></pre>
+<p>One other option is to use <a href="http://boot-clj.com/">boot</a>
+and define your dependencies dynamically.  But not today.</p>
+<p>Let me start with my namespace.</p>
+<pre><code>(ns quandl-clj
+   (:require [clojure.data.json :as json])
+   (:require [kixi.stats.core :as ks])
+   (:require [clj-http.client :as client]))
+
+nil</code></pre>
+<p>Below is the function that talks with the quandl API to download the
+data and convert it into a convenient map.</p>
+<pre><code>(defn quandl-get [api-key data-set start end]
+  (-&gt; (apply str 
+             &quot;https://www.quandl.com/api/v3/datasets/&quot;
+             data-set 
+             &quot;.json&quot;
+             &quot;?api_key=&quot; api-key 
+             &quot;&amp;start_date=&quot; start 
+             &quot;&amp;end_date=&quot; end)
+      client/get
+      (get :body)
+      json/read-str
+      (get &quot;dataset&quot;)))
+
+#&#39;quandl-clj/quandl-get</code></pre>
+<p>Now that we can fetch data from quandl, let us do something with it.
+First, let me download some data from quandl.  In order to run the code
+below, you will need to get your own api-key from quandl.  I am going to
+assume you already have one:</p>
+<pre><code> (def raw-data (map #(quandl-get *YOUR-API-KEY* % &quot;2017-01-01&quot; &quot;2017-12-31&quot;) 
+              &#39;(&quot;ECB/EURCAD&quot; &quot;ECB/EURUSD&quot; &quot;ML/AAATRI&quot; &quot;ML/AAAEY&quot; &quot;NASDAQOMX/NQGI&quot;)))
+
+#&#39;quandl-clj/raw-data</code></pre>
+<p>I need to convert quandl data to a sequence of maps.  Quandl’s JSON
+lists column names, but I set the function so that you can also provide
+your own column names.</p>
+<pre><code>(defn process 
+  ([data](let [col-names (map keyword (get data &quot;column_names&quot;))]
+             (map (fn [xs] (zipmap col-names xs)) (get data &quot;data&quot;))))
+  ([data col-names] (map (fn [xs] (zipmap col-names xs)) (get data &quot;data&quot;))))
+
+#&#39;quandl-clj/process</code></pre>
+<p>OK. Now, let me calculate the mean and the variance of EUR/CAD
+exchange rates.</p>
+<pre><code>(let [CAD (process (nth raw-data 0) &#39;(:Date :Value))]
+   {:mean     (transduce (map :Value) ks/mean CAD)
+    :variance (transduce (map :Value) ks/variance CAD)})
+
+{:mean 1.4544239361702123, :variance 0.0015927670710546838}</code></pre>
+<p>And, let me calculate the correlation between EUR/CAD and EUR/USD
+exchange rates.</p>
+<pre><code>(transduce identity  
+           (ks/correlation :CAD :USD) 
+           (map conj (process (nth raw-data 0) &#39;(:Date :CAD)) 
+                     (process (nth raw-data 1) &#39;(:Date :USD))))
+
+0.6493154811299391</code></pre>
+<h2 id="an-analysis">An analysis</h2>
+<p><a href="https://www.r-project.org/">R-language</a> does all of these
+statistical analyses and much much more, readily and easily. If you’d
+like to do exploratory data analysis then I would strongly suggest that
+you learn R and use it. One can do what I have done above with <a
+href="https://www.python.org/">python</a> with <a
+href="https://docs.scipy.org/doc/scipy/reference/index.html">scipy</a>,
+<a href="http://pandas.pydata.org/">pandas</a> and <a
+href="https://matplotlib.org/">matplotlib</a>, but personally I find
+python a little awkward to use. I mainly use it as a teaching tool.</p>
+<p>I wrote the same code in common lisp <a
+href="2017-09-22-using_quandl_with_common_lisp.html">few days ago</a>. I
+like lisp: any vanilla lisp code is rock solid, and the code I wrote is
+going to run as is any years from now.  But I used some external
+libraries, and in order to run these in the future as is, I would need
+the libraries I used to be around by then. Not likely.</p>
+<p>I chose <a href="https://clojure.org/">clojure</a> because it is fun
+to write clojure code even though the code (because of its external
+dependencies) most likely won’t run as is a year or two from now. <a
+href="https://www.scala-lang.org/">Scala</a> is fun too, but I really
+didn’t want to go through the painful process of explicitly writing the
+column types of each dataset I am going to fetch from quandl.<br />
+</p>
+<div id="footer">
+<p><span id="timestamp">September 26th, 2017 6:43am</span></p>
+</div>
+</body>
+</html>

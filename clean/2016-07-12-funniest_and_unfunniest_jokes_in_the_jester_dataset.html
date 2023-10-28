@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-07-12-funniest_and_unfunniest_jokes_in_the_jester_dataset</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="funniest-and-unfunniest-jokes-in-the-jester-dataset">Funniest
+and Unfunniest Jokes in the Jester Dataset</h1>
+<h2 id="description-of-the-problem">Description of the Problem</h2>
+<p>The <a href="http://eigentaste.berkeley.edu/dataset/">Jester Dataset
+1</a> consists of ratings of 100 specific jokes collected from 70,000
+anonymized users between 1999 and 2003. Today, I am going to use <a
+href="https://en.wikipedia.org/wiki/Singular_value_decomposition">SVD</a>
+to decide which jokes are deemed to be the funniest and which deemed as
+unfunniest by these users.</p>
+<h2 id="algorithm">Algorithm</h2>
+<p>I will form a large matrix whose rows are labelled by individual
+users and columns by the jokes. The matrix would be initialized to 0 at
+the beginning. The entry corresponding to a specific row and the column
+will be the rating of that specific user gave to that specific joke. I
+am not going to apply a <a
+href="https://en.wikipedia.org/wiki/Tf%E2%80%93idf">tf-idf</a>
+correction because I will assume that the fact that a specific joke has
+a higher number of ratings indicates an emotional response. Next, we
+seperate funny and unfunny categories: since users rank jokes from -10
+(being very unfunny) to 10 (being very funny) for the “funny” category
+we filter out the negative ratings and for the “unfunny” category we
+filter out the positive ratings. Next, we apply SVD and the singular
+values will tell us the funniest and unfunniest jokes.</p>
+<h2 id="implementation">Implementation</h2>
+<p>It’s been a while since I used <a
+href="http://clojure.org/">clojure</a>. I will give today’s
+implementation in clojure.</p>
+<p>If you follow this blog, and my earlier clojure posts, you know that
+I am big fan of <a href="http://boot-clj.com/">boot</a>. It does what I
+ask, but most people I know use <a
+href="http://leiningen.org/">leiningen</a> for their needs.</p>
+<p>I will write the code as a boot script. Here is what I need:</p>
+<pre><code>#!/usr/bin/env boot
+
+(set-env! :dependencies &#39;[[clatrix &quot;0.5.0&quot;]])
+
+(require
+   &#39;[clatrix.core :as cl]
+   &#39;[clojure.java.io :as io]
+   &#39;[clojure.string :as st])</code></pre>
+<p>For the singular value decomposition part of the code, I am going to
+use <a href="https://github.com/tel/clatrix">clatrix</a>, hence the
+dependencies addition.</p>
+<pre><code>(defn fn-neg [x]
+   (if (&lt; x 0) (- x) 0))
+
+(defn fn-pos [x]
+   (if (and (&gt;= x 0) (&lt; x 11)) x 0))</code></pre>
+<p>I am going to need these two functions to separate the negative
+(unfunny) and the positive (funny) ratings. The rating value 99 is
+reserved for unrated jokes. I will replace these with 0.</p>
+<p>The entries of the vectors coming from SVD need to be normalized in
+some way. I am going to use the following function to do that:</p>
+<pre><code>(defn normalize [xs]
+  (let [l1-norm (reduce + xs)
+        length (count xs)]
+     (map #(* % length (/ l1-norm)) xs)))</code></pre>
+<p>Now, here is the ranking function:</p>
+<pre><code>(defn rank [xs]
+   (let [res (-&gt;&gt; xs cl/matrix cl/svd)]
+      (-&gt;&gt; :right res cl/cols first normalize)))</code></pre>
+<p>At the end, we would like to display the text of the funniest and
+unfunniest jokes. You can download these from the <a
+href="http://eigentaste.berkeley.edu/dataset/">jester project page</a>.
+I unzipped those under the directory “data/jokes” residing in the data
+directory. The following function fetches the joke.</p>
+<pre><code>(defn get-joke [n]
+   (-&gt; (slurp (str &quot;jokes/init&quot; (+ n 1) &quot;.html&quot;))
+       (st/split #&quot;&lt;!--begin of joke --&gt;\n|&lt;!--end of joke --&gt;\n&quot;) 
+       second))</code></pre>
+<p>Now, the main function:</p>
+<pre><code>(defn -main []
+   (let* [data (-&gt;&gt; &quot;data/jester-data-1.csv&quot; io/reader line-seq
+                    (map (fn [x] (rest (map read-string (st/split x #&quot;,&quot;))))))
+          funny (rank (map #(map fn-pos %) data))
+          results (sort (fn [x y] (&gt; (first x) (first y)))
+                        (map (fn [x y] (vector x y)) funny (range (count funny))))]
+      (doseq [x (take 3 results)]
+         (println &quot;----- &quot; (first x) &quot; ------------------------------\n&quot;)
+         (println (get-joke (second x)) &quot;\n\n\n&quot;))))</code></pre>
+<p>This will display the top 3 funnies jokes. If we replace
+<code>fn-pos</code> with <code>fn-neg</code> we will get the top 3
+unfunniest jokes. And here is the output:</p>
+<pre><code>-----  1.938512254843581  ------------------------------
+
+A guy goes into confession and says to the priest, &quot;Father, I&#39;m 80 years
+old, widower, with 11 grandchildren. Last night I met two beautiful flight
+attendants. They took me home and I made love to both of them. Twice.&quot;
+&lt;P&gt;
+The priest said: &quot;Well, my son, when was the last time you were in
+confession?&quot;
+&lt;p&gt; &quot;Never Father, I&#39;m Jewish.&quot;
+&lt;p&gt; &quot;So then, why are you telling me?&quot;
+&lt;p&gt; &quot;I&#39;m telling everybody.&quot;
+
+
+
+
+-----  1.8564830954244231  ------------------------------
+
+Clinton returns from a vacation in Arkansas and walks down  the
+steps of Air Force One with two pigs under his arms.  At the bottom
+of the steps, he says  to the honor guardsman, &quot;These are genuine
+Arkansas Razor-Back Hogs.  I got this one for Chelsea and this one for
+Hillary.&quot;  &lt;P&gt;
+
+The guardsman replies, &quot;Nice trade, Sir.&quot;
+
+
+
+
+-----  1.8334775686052165  ------------------------------
+
+A guy walks into a bar, orders a beer and says to the bartender,
+&quot;Hey, I got this great Polish Joke...&quot;
+&lt;P&gt;
+The barkeep glares at him and says in a warning tone of voice:
+&quot;Before you go telling that joke you better know that I&#39;m Polish, both
+bouncers are Polish and so are most of my customers&quot;
+&lt;P&gt;
+&quot;Okay&quot; says the customer,&quot;I&#39;ll tell it very slowly.&quot;</code></pre>
+<p>Instead of filtering out unfunny ratings, if we were to measure them
+and remove funny rating, the code will be</p>
+<pre><code>(defn -main []
+   (let* [data (-&gt;&gt; &quot;data/jester-data-1.csv&quot; io/reader line-seq
+                    (map (fn [x] (rest (map read-string (st/split x #&quot;,&quot;))))))
+          unfunny (rank (map #(map fn-neg %) data))
+          results (sort (fn [x y] (&gt; (first x) (first y)))
+                        (map (fn [x y] (vector x y)) unfunny (range (count unfunny))))]
+      (doseq [x (take 3 results)]
+         (println &quot;----- &quot; (first x) &quot; ------------------------------\n&quot;)
+         (println (get-joke (second x)) &quot;\n\n\n&quot;))))</code></pre>
+<p>The output from this version is:</p>
+<pre><code>-----  2.310577261546736  ------------------------------
+
+Q. What is orange and sounds like a parrot?  &lt;BR&gt;&lt;BR&gt;
+
+A. A carrot.
+
+
+
+-----  2.074095832155103  ------------------------------
+
+How many teddybears does it take to change a lightbulb?
+&lt;p&gt;
+It takes only one teddybear, but it takes a whole lot of lightbulbs.
+
+
+
+-----  1.8763955400682024  ------------------------------
+
+They asked the Japanese visitor if they have elections in his
+country.  &lt;BR&gt;&lt;BR&gt;
+&quot;Every Morning&quot; he answers.</code></pre>
+<p>One can also go for funniest of the unfunny jokes and unfunniest of
+funny jokes by playing with the sorting function and filtering out
+positive and negative ratings.</p>
+<div id="footer">
+<p><span id="timestamp">July 12th, 2016 1:02pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-12-01-distinguishing_hash_functions</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="distinguishing-hash-functions">Distinguishing hash
+functions</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Would it be possible to distinguish hashing functions by looking only
+at their outputs assuming that these hashes produce outputs of the same
+length?</p>
+<p>I will approach the problem as follows: Assuming I have two bags of
+hashes, is it possible to decide if these hashes come from two different
+hash functions?</p>
+<p>For each bag, I will calculate Hamming distances of random pairs
+divided by the length of the hash. This number is the percentage of
+different bits between two hashes. Then I will have two new bags of
+numbers between 0 and 1. Problem reduces to check if these bags differ
+statistically.</p>
+<h2 id="implementation">Implementation</h2>
+<p>I will re-use two of my earlier posts: The first <a
+href="2016-01-25-kolmogorov-smirnov_test.html">post</a> I am going to
+re-use was on implementing <a
+href="https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test">Kolmogorov-Smirnov
+test</a> to test if two bags of real numbers differ in their
+distribution. The <a
+href="2015-04-05-hamming_distance_and_hashing_functions.html">second</a>
+post I am going to re-use was about calculating Hamming derivatives of
+two hash functions.</p>
+<p>Let us start with our package description, and libraries I am going
+to need:</p>
+<pre><code>(mapc #&#39;require &#39;(:cffi :ironclad))
+(CFFI IRONCLAD)</code></pre>
+<p>Next are the hash functions:</p>
+<pre><code>(let ((hasher (ironclad:make-digest :md5)))
+   (defun md5-digest (x)
+      (coerce (ironclad:digest-sequence hasher x) &#39;list)))
+MD5-DIGEST
+
+(let ((hasher (ironclad:make-digest :sha1)))
+   (defun sha1-digest (x)
+      (coerce (ironclad:digest-sequence hasher x) &#39;list)))
+SHA1-DIGEST
+
+(let ((hasher (ironclad:make-digest :adler32)))
+   (defun adler32-digest (x)
+      (coerce (ironclad:digest-sequence hasher x) &#39;list)))
+ADLER32-DIGEST</code></pre>
+<p>I am using <a href="https://en.wikipedia.org/wiki/SHA-1">MD5</a>, <a
+href="https://en.wikipedia.org/wiki/MD5">SHA-1</a> and <a
+href="https://en.wikipedia.org/wiki/Adler-32">ADLER-32</a>.</p>
+<p>I am going to need an implementation of the <a
+href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance
+function</a></p>
+<pre><code>(defun hamming-distance (x y)
+   (labels ((calc (x y &amp;optional (acc 0))
+               (cond
+                 ((&lt; x y) (calc y x 0))
+                 ((zerop x) acc)
+                 (t (calc (ash x -1)
+                          (ash y -1)
+                          (if (equal (oddp x) (oddp y)) 
+                              acc
+                              (1+ acc)))))))
+     (reduce #&#39;+ (map &#39;list (lambda (i j) (calc i j)) x y))))
+HAMMING-DISTANCE</code></pre>
+<p>Next, I am going to need an implementation for the KS-test. I will
+lift the code from <a href="2016-01-25-kolmogorov-smirnov_test.html">my
+earlier post on KS-test</a> as is:</p>
+<pre><code>(cffi:load-foreign-library 
+   &quot;/home/kaygun/src/lisp/kolmogorov-smirnov/ks.so&quot;)
+#&lt;FOREIGN-LIBRARY KS.SO-705 &quot;ks.so&quot;&gt;
+
+(cffi:defcfun (&quot;KScdf&quot; ks) :double (n :int) (x :double))
+KS
+
+(defun cdf (xs)
+  (let ((n (1- (length xs))))
+    (lambda (x)
+      (labels ((fn (a b)
+                 (let ((m (truncate (/ (+ b a) 2))))
+                   (cond
+                     ((or (&lt;= x (elt xs a))
+                          (&lt;= (- b a) 1))
+                      (/ a n 1.0d0))
+                     ((&gt;= x (elt xs b))
+                      (/ b n 1.0d0))
+                     ((&gt; (elt xs m) x) (fn a m))
+                     (t (fn m b))))))
+        (fn 0 n)))))
+CDF
+
+(defun ks-test (xs ys)
+  (multiple-value-bind (as bs)
+      (if (&gt;= (length xs) (length ys))
+          (values xs ys)
+          (values ys xs))
+    (let* ((n (1- (length bs)))
+           (fn (cdf (sort as #&#39;&lt;)))
+           (cs (sort bs #&#39;&lt;))
+           (d (loop for i from 0 below (length cs) maximize
+                   (abs (- (funcall fn (elt cs i))
+                           (/ i n 1d0))))))
+      (cons d (- 1.0d0 (ks n d))))))
+KS-TEST</code></pre>
+<p>The first part requires us to generate a random collection of hash
+digests:</p>
+<pre><code>(defun random-bag (num hash-fn hash-size)
+   (let ((size (truncate (/ hash-size 8))))
+      (labels ((random-vector ()
+                  (coerce (loop repeat size collect (random 256))
+                          &#39;(vector (unsigned-byte 8)))))
+         (loop repeat num collect
+               (funcall hash-fn (random-vector))))))
+RANDOM-BAG</code></pre>
+<p>The main part of our code is as follows:</p>
+<pre><code>(defun experiment (xs num size)
+   (let ((n (length xs)))
+      (loop repeat num collect
+         (/ (hamming-distance (elt xs (random n)) (elt xs (random n)))
+      size 1.0))))
+EXPERIMENT</code></pre>
+<p>From a given bag <code>xs</code> we pick two random vector, calculate
+their hamming distance and then convert the distance to the percentage
+of different bits by dividing the distance to <code>size</code>. We
+repeat this for a given number <code>num</code> times.</p>
+<p>OK. We are ready:</p>
+<pre><code>(let ((md5-bag (random-bag 40000 #&#39;md5-digest 128))
+      (sha1-bag (random-bag 40000 #&#39;sha1-digest 160))
+      (adler32-bag (random-bag 40000 #&#39;adler32-digest 32)))
+   (list (ks-test (experiment md5-bag 1000 128)
+                  (experiment sha1-bag 1000 160))
+         (ks-test (experiment md5-bag 1000 128)
+                  (experiment adler32-bag 1000 32))
+         (ks-test (experiment sha1-bag 1000 160)
+                  (experiment adler32-bag 1000 32))))
+((0.08708708708708712d0 . 4.842864418375115d-7)
+ (0.23023023023023026d0 . 0.0d0) (0.25225225225225223d0 . 0.0d0))</code></pre>
+<h2 id="analysis">Analysis</h2>
+<p>There seems to be statistically significant differences between hash
+function outputs. The KS-distance between MD5 and SHA1 is very small.
+However, the KS-distances between ADLER-32 outputs from the other two
+are significantly larger. So, the answer to my original question is: we
+may distinguish hash functions by looking at their outputs only. I’ll
+come back to this soon.<br />
+</p>
+<div id="footer">
+<p><span id="timestamp">December 1st, 2016 5:34am</span></p>
+</div>
+</body>
+</html>

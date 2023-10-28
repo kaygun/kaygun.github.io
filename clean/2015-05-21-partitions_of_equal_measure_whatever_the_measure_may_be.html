@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-05-21-partitions_of_equal_measure_whatever_the_measure_may_be</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="partitions-of-equal-measure-whatever-the-measure-may-be">Partitions
+of Equal Measure Whatever the Measure May Be</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Assume we have a finite list of real numbers <span
+class="math inline">\(a_1,\ldots,a_n\)</span> that we want to split into
+<span class="math inline">\(k\)</span> piles. But we would like to split
+them in such a way that the sum of the numbers in each pile is
+approximately the same.</p>
+<p>I don’t know if there is a nice solution for the general case, but I
+have a solution if there is an <span class="math inline">\(m\)</span>
+such that <span class="math inline">\(k = \lceil \frac{n}{2^m}
+\rceil\)</span>.</p>
+<h2 id="thealgorithm">The algorithm</h2>
+<p>Assume I already have <span class="math inline">\(p\)</span> piles
+each approximately equal size. Sort the piles according to the sum of
+the numbers in each pile. Now, pick the head and the tail and merge
+these piles. Continue until all piles are merged. Now, we have <span
+class="math inline">\(\lceil \frac{p}{2} \rceil\)</span> piles. Continue
+until the desired number of piles is achieved.</p>
+<h2 id="whydoesitwork">Why does it work?</h2>
+<p>The short answer: it doesn’t.</p>
+<p>The long answer: It works depending on the distribution of the
+original list of numbers. If the distribution has fat points
+(i.e. accumulation points) then you’ll see the effect in the answer. If
+the orginal list comes from a uniformly distributed random variable the
+resulting piles would be roughly of equal size.</p>
+<h2 id="implementation">Implementation</h2>
+<p>First, I will need a function that compares two piles of numbers
+according to the sum of the numbers within each pile.</p>
+<pre><code>(defun bag-compare (u v)
+    (apply #&#39;&lt;= (mapcar (lambda (w)
+                            (reduce #&#39;+ w))
+                        (list u v))))
+BAG-COMPARE</code></pre>
+<p>Here is a recursive implementation of a solution in Common Lisp.</p>
+<pre><code>(defun equal-partition (bag k)
+   (labels
+      ((aux (x m)
+           (if (&lt;= m k)
+              (sort x #&#39;bag-compare)
+              (let* ((a (sort x #&#39;bag-compare))
+                     (n (length a))
+                     (res nil))
+                 (dotimes (i (floor n 2) res)
+                     (push (append (elt a i) (elt a (- n i 1))) res))
+                 (aux res (floor m 2))))))
+    (aux (mapcar #&#39;list bag) (length bag))))
+EQUAL-PARTITION</code></pre>
+<p>And a test</p>
+<pre><code>(defvar res1 (equal-partition (loop repeat 80 collect (random 1.0)) 5))
+RES1
+(mapcar (lambda (x) (reduce #&#39;+ x)) res1)
+(8.534256501248814 8.538443573882267 8.54105577538768 8.541423618833738
+ 8.542957284773246)
+
+(defvar res2 (equal-partition (loop repeat 48 collect (random 10)) 3))
+RES2
+(mapcar (lambda (x) (reduce #&#39;+ x)) res2)
+(64 64 64)</code></pre>
+<h2 id="measure">Measure?</h2>
+<p>Now, notice that instead of the <code>bag-compare</code> function, I
+could have used another function by changing the measure: instead of
+adding the numbers, we could do other things such as a weighted sum, the
+counting measure, a Dirac measure, or whatever…</p>
+<div id="footer">
+<p><span id="timestamp">May 21st, 2015 6:15am</span></p>
+</div>
+</body>
+</html>

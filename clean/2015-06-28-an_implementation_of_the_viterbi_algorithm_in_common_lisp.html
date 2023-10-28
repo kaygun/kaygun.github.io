@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-06-28-an_implementation_of_the_viterbi_algorithm_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="an-implementation-of-the-viterbi-algorithm-in-common-lisp">An
+implementation of the Viterbi algorithm in Common Lisp</h1>
+<h2 id="the-setup">The setup</h2>
+<p>Assume we a discrete sequence of observations <span
+class="math inline">\(x_1,\ldots,x_n\)</span> where each observation can
+be assigned a label from a finite set <span
+class="math inline">\(y_1,\ldots,y_m\)</span>. Assume also that we know
+the probability distribution for the labels <span
+class="math inline">\(p(y)\)</span>, and the probability of seeing an
+observation <span class="math inline">\(x\)</span> under the label <span
+class="math inline">\(y\)</span> as <span
+class="math inline">\(p(x\|y)\)</span>. Finally, assume that we also
+have transition probabilities: seeing label <span
+class="math inline">\(y&#39;\)</span> right after seeing a label <span
+class="math inline">\(y\)</span> as <span
+class="math inline">\(p(y&#39;\|y)\)</span>.</p>
+<h2 id="the-problem">The problem</h2>
+<p>Find an assignment of labels <span class="math inline">\(\ell\colon
+\{1,\ldots,n\}\to \{1,\ldots,m\}\)</span> such that the sequence <span
+class="math display">\[
+y_{\ell(1)},\ldots,y_{\ell(n)} \]</span> is the most likely among all
+such sequences.</p>
+<h2 id="the-theoretical-solution">The theoretical solution</h2>
+<p>From <a href="https://en.wikipedia.org/wiki/Bayes%27_theorem">Bayes’
+Theorem</a> we see that <span class="math display">\[ p(y\|x) =
+\frac{p(x\|y)p(y)}{p(x)} \]</span> This means, given a labeling scheme
+<span class="math inline">\(\ell\colon \{1,\ldots,n\}\to
+\{1,\ldots,m\}\)</span>, the probability of the sequence of labels is
+<span class="math display">\[
+\pi(\ell) = \prod_{i=1}^n p(y_{\ell(i)}\|x_i)
+p(y_{\ell(i+i)}\|y_{\ell(i)}) \]</span> After using Bayes’ Theorem we
+get <span class="math display">\[ \pi(\ell) = \prod_{i=1}^n
+\frac{p(x_i\|y_{\ell(i)})p(y_{\ell(i)})}{p(x_i)}
+\prod_{i=1}^{n-1} p(y_{\ell(i+1)}\|y_{\ell(i)}) \]</span> Since <span
+class="math inline">\(p(x_i)\)</span> does not depend on <span
+class="math inline">\(\ell\)</span> we can remove it and we get <span
+class="math display">\[
+\pi(\ell) \sim \prod_{i=1}^n p(x_i\|y_{\ell(i)})
+p(y_{\ell(i)}) p(y_{\ell(i)}\|y_{\ell(i-1)}) \]</span> Here, we use the
+convention that <span class="math inline">\(p(y_{\ell(1)}\|y_{\ell(0)})
+= 1\)</span>. Now, we need to maximize this quantity by choosing a
+suitable <span class="math inline">\(\ell\)</span>.</p>
+<h2 id="recursion-with-no-memory">Recursion with no memory</h2>
+<p>If we consider the problem one step at a time (which does not give
+the correct answer) the problem recursively reduces to:</p>
+<blockquote>
+<p>Given <span class="math inline">\(\ell(i-1)\)</span>, find <span
+class="math inline">\(\ell(i)\in \{1,\ldots,m\}\)</span> such that the
+quantity <span class="math display">\[ p(x_i\|y_{\ell(i)})
+p(y_{\ell(i)})
+p(y_{\ell(i)}\|y_{\ell(i-1)}) \]</span> is maximal.</p>
+</blockquote>
+<p>For now, let us run with this. The recursive reduction tells us that
+if we define a function <span class="math inline">\(a(k,j,i)\)</span>
+where <span class="math display">\[ a(k,j,i) = p(x_j\|y_k)
+p(y_k) p(y_k\|y_i) \]</span> then <span class="math display">\[ \ell(i)
+= \text{argmax}_k
+a(k,i,\ell(i-1)) \]</span></p>
+<h2 id="an-implementation">An implementation</h2>
+<p>I will assume that the probabilities are defined as arrays, with one
+or two indices depending on whether we have ordinary probability
+distribution or a conditional one. And we define</p>
+<pre><code>(defun viterbi (obs init-state p-init p-tran p-emit)
+   (let* ((m (array-dimension p-emit 0)))
+       (labels
+          ((next (j i)
+              (car (sort
+                      (loop for k from 0 below m collect
+                         (cons k (* (aref p-init k)
+                                    (aref p-emit k j)
+                                    (if (&gt; i -1)
+                                       (aref p-tran i k)
+                                       1.0))))
+                      (lambda (x y) (&gt; (cdr x) (cdr y))))))
+           (iter (obs res sco)
+              (if (null obs)
+                  (cons (cdr (reverse res)) sco)
+                  (let ((x (next (car obs) (car res))))
+                     (iter (cdr obs)
+                           (cons (car x) res)
+                           (+ sco (- (log (cdr x)))))))))
+         (iter obs &#39;(-1) 0))))
+VITERBI</code></pre>
+<p>In the implementation I took the negative logarithms of the
+probabilities to prevent underflow.</p>
+<h2 id="examples">Examples</h2>
+<p>Consider the following example taken from <a
+href="https://en.wikipedia.org/wiki/Viterbi_algorithm">Viterbi Algorithm
+page on Wikipedia</a>.</p>
+<pre><code>(let ((p-init  #(0.6 0.4))
+      (p-tran #2A((0.7 0.3) (0.4 0.6)))
+      (p-emit #2A((0.1 0.4 0.5)
+                  (0.6 0.3 0.1))))
+  (viterbi &#39;(2 1 0) -1 p-init p-tran p-emit))
+((0 0 1) . 5.618853263870896)</code></pre>
+<p>The following example is a modified version of the example from <a
+href="http://www.nature.com/nbt/journal/v22/n10/fig_tab/nbt1004-1315_F1.html">a
+Nature paper.</a></p>
+<pre><code>(let ((p-init  #(0.3 0.3 0.3))
+      (p-tran #2A((0.75 0.25 0.00)
+                  (0.00 0.00 1.00)
+                  (0.00 0.00 1.00)))
+      (p-emit #2A((0.25 0.25 0.25 0.25)
+                  (0.15 0.00 0.85 0.00)
+                  (0.40 0.10 0.10 0.40)))
+      (seq (mapcar (lambda (x) (position x &#39;(:a :c :g :t)))
+                  &#39;(:c :t :t :c
+                    :a :t :g :t
+                    :g :a :a :a
+                    :g :c :a :g
+                    :a :c :g :t
+                    :a :a :g :t
+                    :c :a :g :t))))
+  (viterbi seq -1 p-init p-tran p-emit))
+((0 0 0 0 0 0 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) . 76.73498296015836)</code></pre>
+<h2 id="what-is-next">What is next?</h2>
+<p>The recursive reduction looks only at the previous step, which is not
+the right way to find the solution. That is why the result I obtained
+above for the genomic sequence differs from the original given in the <a
+href="http://www.nature.com/nbt/journal/v22/n10/fig_tab/nbt1004-1315_F1.html">paper
+I mentioned above.</a> Also, the matrix for the transition probabilities
+for the labels needs to be generated for the problem at hand carefully.
+One can use <a
+href="https://en.wikipedia.org/wiki/Baum%E2%80%93Welch_algorithm">Baum-Welch
+Algorithm</a> to do just that.</p>
+<div id="footer">
+<p><span id="timestamp">June 28th, 2015 5:09pm</span></p>
+</div>
+</body>
+</html>

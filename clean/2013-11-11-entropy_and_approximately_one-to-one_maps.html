@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-11-11-entropy_and_approximately_one-to-one_maps</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="entropy-and-approximately-one-to-one-maps">Entropy and
+approximately one-to-one maps</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I thought of this problem as I enter student grades to a spreadsheet.
+Here it goes:</p>
+<h3 id="the-naive-description">The naive description</h3>
+<p>I have a list of students and I want to search for each student using
+the search function as I enter their grades. I want to be able to find
+the student for whom I am going to enter the grade with fewest possible
+keystrokes. What should I do?</p>
+<h3 id="the-formal-description">The formal description</h3>
+<p>I have a dataset <span class="math inline">\({\mathbf
+x}^{(1)},\ldots,{\mathbf x}^{(N)}\)</span> each of which is a word <span
+class="math inline">\({\mathbf x}^{(i)} = (x^{(i)}_1\cdots
+x^{(i)}_m)\)</span> of length <span class="math inline">\(m\)</span>
+where <span class="math inline">\(m\)</span> is the same for every data
+point, and each letter <span class="math inline">\(x^{(i)}_j\)</span>
+comes from a fixed alphabet <span
+class="math inline">\(\mathcal{A}\)</span>. How do I find an
+<em>interval</em> <span
+class="math inline">\(j,j+1,\ldots,j+\ell\)</span> in <span
+class="math inline">\(\{1,\ldots,m\}\)</span> such that <span
+class="math display">\[ f({\mathbf x}^{(i)}) =
+(x^{(i)}_jx^{(i)}_{j+1}\cdots x^{(i)}_{j+\ell}) \]</span> is one-to-one,
+or close to being one-to-one.</p>
+<p>Here I choose to ask for an interval as the search function will
+require that I enter letter/digits in sequence. The more general
+question may require that I ask for a subsequence of indices <span
+class="math inline">\(j_1,\ldots,j_\ell\)</span> from <span
+class="math inline">\(\{1,\ldots,m\}\)</span> such that <span
+class="math display">\[ f({\mathbf x}^{(i)}) =
+(x^{(i)}_{j_1} x^{(i)}_{j_2} \cdots x^{(i)}_{j_\ell}) \]</span> is
+one-to-one, or close to being one-to-one.</p>
+<h2 id="the-entropy">The entropy</h2>
+<p>Entering the first few digits of the student id number is usually a
+bad idea as the beginning of these numbers designate their admission
+years and departments. This means you will have to enter so many digits
+for the admission year, and so many years for the department etc. which
+is not very random. I need the sequence I enter to separate the
+students. We need a part of their numbers with the highest randomness,
+a.k.a. <em><a
+href="http://en.wikipedia.org/wiki/Entropy_(information_theory)">entropy</a></em>.</p>
+<p>Imagine the hypothetical case of 100 students from two departments
+taking my class: 20 from Computer Science and 80 from Electrical
+Engineering. Assuming the digits I enter are the department codes, I
+will get two groups: CS and EE. The entropy (the measure of randomness)
+is <span class="math display">\[ - 0.2 \log_2(0.2) - 0.8 \log_2(0.8)
+\approx .722 \]</span> Here I have two groups: CS students (in the group
+their total measure is 20%) and EE students (they comprise of 80% of the
+group). On the other hand if I found the right interval of digits to
+enter I would have gotten each individual student (all 100 of them) in
+its own separate group. In that case the randomness measure would have
+been <span class="math display">\[
+\sum_{i=1}^{100} -0.01 \log_2(0.01) = -\log_2(0.01) = \log_2(100)
+\approx 6.644 \]</span></p>
+<p>This means, I will have to find the interval <span
+class="math inline">\(j,j+1,\ldots,j+\ell\)</span> such that the entropy
+of the probability distribution on the projected set <span
+class="math display">\[ \pi({\mathbf x}^{(i)}) = (x^{(i)}_{j}\cdots
+x^{(i)}_{j+\ell}) \]</span> is close to <span class="math display">\[
+-N\cdot
+\frac{1}{N}\log_2(1/N) = \log_2(N) \]</span></p>
+<p><em>What is the entropy of the probability distribution on the
+projected set?</em> you might ask. Imagine you have a finite set <span
+class="math inline">\(X\)</span> and a labeling function <span
+class="math inline">\(f\colon X\to \mathcal{A} =
+\{a_1,\ldots,a_t\}\)</span>. Let <span
+class="math inline">\(n_i\)</span> be the number of elements in <span
+class="math inline">\(X\)</span> labeled by <span
+class="math inline">\(a_i\in\{a_1,\ldots,a_t\}\)</span> via <span
+class="math inline">\(f\)</span>. In other words, <span
+class="math display">\[ n_i =
+\|\{x\in X\|\ f(x) = a_i\}\| \]</span> Then the probability of seeing
+the label <span class="math inline">\(a_i\)</span> on the dataset is
+<span class="math inline">\(n_i/N\)</span> where <span
+class="math inline">\(N\)</span> is the number of elements in <span
+class="math inline">\(X\)</span>. Hence, the entropy is <span
+class="math display">\[ \sum_{i=1}^t
+-\frac{n_i}{N}\log_2(n_i/N) = \log_2(N) - \frac{1}{N}\sum_{i=1}^t
+n_i \log_2(n_i) \]</span> In case <span
+class="math inline">\(\mathcal{A}\)</span> is our alphabet and <span
+class="math inline">\(f\)</span> is projection on <span
+class="math inline">\(i\)</span>-th letter then we would like this value
+to be as close to <span class="math inline">\(\log_2(N)\)</span> as
+possible. This means we could instead minimize the sum <span
+class="math display">\[ \sum_{i=1}^t n_i\log_2(n_i) \]</span></p>
+<h2 id="implementation-and-test">Implementation and test</h2>
+<p>I will assume that the dataset is given as a lisp list of strings of
+length 7 consisting of decimal digits only. My dataset consists of 266
+data points. I will load it from a file:</p>
+<pre><code>(defparameter *data* 
+   (with-open-file (infil &quot;hash-test.txt&quot; :direction :input)
+      (let (res)
+         (do ((line (read-line infil nil) (read-line infil nil)))
+             ((null line) res)
+           (push line res)))))
+
+*DATA*</code></pre>
+<p>The <code>objective</code> function will take the dataset as a
+parameter together with a function <code>fun</code>. It will construct a
+hash table whose keys are the data points evaluated under
+<code>fun</code> and will count how many times a specific value appears
+in the image.</p>
+<pre><code>(defun objective (data fun)
+   (let ((local (make-hash-table :test &#39;equal)))
+      (dolist (x data)
+         (if (gethash (funcall fun x) local)
+           (incf (gethash (funcall fun x) local))
+           (setf (gethash (funcall fun x) local) 1)))
+      (let ((res 0d0)) 
+         (maphash (lambda (x y) (incf res (* y (log y 2.0d0)))) local)
+         res)))
+
+OBJECTIVE</code></pre>
+<p>Let me test this on our data on various projections:</p>
+<pre><code>(loop for i from 0 to 6 
+      collect (format nil &quot;~5,1f&quot; (objective *data* (lambda (x) (char x i)))))
+
+(2055.4 1634.7 1418.1 1268.9 1264.9 1261.7 1363.3)</code></pre>
+<p>The results indicate that I should use 4th, 5th and 6th digits to get
+the best results. Let me see if the result is better if I calculate the
+entropy of the projection function which uses these three digits
+together.</p>
+<pre><code>(loop for i from 0 to 4 collect
+    (format nil &quot;~5,1f&quot; (objective *data* (lambda (x) (subseq x i (+ i 3))))))
+
+(1141.6 460.7 129.6  55.5  87.5)</code></pre>
+<p>This confirms our guess: If I were to use the subsequence
+<code>(subseq x 3 6)</code> I will get the best result. Let us calculate
+the actual entropy, and see if it is close to the maximal entropy 8.1
+for the data set we have:</p>
+<pre><code>(let* ((N (length *data*))
+       (result (- (log n 2.0d0) 
+                  (* (/ 1.0d0 n) 
+                     (objective *data* (lambda (x) (subseq x 3 6)))))))
+   (format nil &quot;~2,1f&quot; result))
+
+7.8</code></pre>
+<h2 id="analysis">Analysis</h2>
+<p>The result above indicates, I should type the 4th, 5th and 6th digits
+of the students’ id numbers. However, there is a danger of these numbers
+colliding with subsequences starting at other positions. For example, I
+can type “456” to match “1234567” and yet match also “4567890”. In order
+to prevent such collisions, I better create a primary key for each
+student using the 4th through 6th digits of the student numbers together
+with, say the first letter of their last names. This is a key I can
+easily type into the search box of my spreadsheet software as I glance
+at each student’s exam paper.</p>
+<div id="footer">
+<p><span id="timestamp">November 11th, 2013 6:48pm</span></p>
+</div>
+</body>
+</html>

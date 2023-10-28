@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-09-27-expected_value_of_the_diameter_of_a_tree</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="expected-value-of-the-diameter-of-a-tree">Expected Value of the
+Diameter of a Tree</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a href="https://gilkalai.wordpress.com/">Gil Kalai</a> <a
+href="https://gilkalai.wordpress.com/2017/09/05/test-your-intuition-29-diameter-of-various-random-trees/">asks</a>
+the following problem: given a random tree on <span
+class="math inline">\(n\)</span> vertices, what is the expected value of
+its diameter?</p>
+<p>According to Kalai, the expected value of the diameter of a random
+tree on <span class="math inline">\(n\)</span> vertices asymptotically
+behaves like <span class="math inline">\(\sqrt{n}\)</span>.<br />
+</p>
+<p>We can certainly devise an experiment to see that this is the
+case.</p>
+<h2 id="random-trees-and-diameter">Random trees and diameter</h2>
+<p>I have talked about <a
+href="file:///post/2014-08-07-generating_uniformly_random_trees/generating-uniformly-random-trees">uniformly
+generating random trees</a> and measuring diameters of graphs before: <a
+href="2012-12-13-eccentricity_radius_and_diameter_in_an_undirected_graph.html">here</a>,
+<a
+href="2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited.html">here</a>
+and <a
+href="2017-06-21-calculating_the_diameter_and_the_radius_of_a_graph_using_tropic_linear_algebra.html">here</a>.
+So, let us put them to use for this problem. As before, I will use a
+list of two vertices to denote an edge, and a list of such edges to
+denote a graph.</p>
+<p>First, I need a function to generate uniformly random trees</p>
+<pre><code>(defun random-tree (n)
+   (loop for i from 1 below n 
+         collect (list (random i) i)))
+
+RANDOM-TREE</code></pre>
+<p>and three other functions to measure the diameter</p>
+<pre><code>(defun vertices (G)
+  (remove-duplicates (reduce #&#39;union G)))
+
+(defun eccentricity (x G)
+  (let* ((A (vertices G))
+     (size (length A))
+     (nbhd (let ((H (remove-duplicates
+             (union G (mapcar #&#39;reverse G))
+             :test #&#39;equal))
+             (res nil))
+         (dolist (edge H res)
+           (if (assoc (car edge) res)
+               (push (cadr edge) (cdr (assoc (car edge) res)))
+               (push (copy-list edge) res))))))
+    (labels ((vicinity (u) (assoc u nbhd)))
+      (do ((n 0 (1+ n))
+           (V A (set-difference V W))
+           (W (vicinity x)
+              (intersection V (reduce #&#39;append (mapcar #&#39;vicinity W)))))
+          ((or (null V) (&gt; n size)) n)))))
+
+(defun diameter-radius (G)
+  (let ((bag (loop for v in (vertices G) collect (eccentricity v G))))
+     (cons (reduce #&#39;max bag) (reduce #&#39;min bag))))
+
+VERTICES
+ECCENTRICITY
+DIAMETER-RADIUS</code></pre>
+<p>Here is a function to measure the expected value of diameter of a
+random tree on <span class="math inline">\(n\)</span> vertices by
+generating <span class="math inline">\(n^{3/2}\)</span> such graphs and
+measuring the average diameter.</p>
+<pre><code>(defun test (n)
+  (let* ((m (floor (expt n 1.5)))
+     (bag (loop repeat m collect (diameter-radius (random-tree n)))))
+    (cons (/ (reduce #&#39;+ (mapcar #&#39;car bag)) m)
+          (/ (reduce #&#39;+ (mapcar #&#39;cdr bag)) m))))
+
+TEST</code></pre>
+<p>Here is a graph of the results for <span
+class="math inline">\(n=2\)</span> to <span
+class="math inline">\(n=60\)</span>.</p>
+<figure class="tmblr-full" data-orig-width="640" data-orig-height="480">
+<img src="../media/2017-09-27-expected_value_of_the_diameter_of_a_tree_0.png" data-orig-width="640"
+data-orig-height="480" alt="image" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">September 27th, 2017 11:28am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-12-02-distinguishing_hash_functions_part_ii</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="distinguishing-hash-functions-part-ii">Distinguishing hash
+functions (part II)</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Yesterday, I asked if it was possible to distinguish hashing
+functions by looking at their outputs? The theoretical answer is, of
+course, it should not be possible. But yet, I saw statistically
+significant differences between the outputs of SHA1 and ADLER32 hash
+functions. How is that possible?</p>
+<h2 id="an-explanation">An explanation</h2>
+<p>The short answer is: the difference I saw yesterday was an artifact
+of the experiment.</p>
+<p>The long answer is this: Assume we take a uniformly random sequence
+of integers between 0 and N, and then divide them by <span
+class="math inline">\(N\)</span> to get a sequence <span
+class="math inline">\(x_1,\ldots,x_a\)</span>. Now, repeat the same
+experiment with pulling random integers between 0 and M, and then divide
+them by <span class="math inline">\(M\)</span> to get another sequence
+<span class="math inline">\(y_1,\ldots,y_b\)</span>. Now, we got two
+uniformly random sequences of rational numbers between 0 and 1. So,
+these sequences should be similar, right? Wrong!</p>
+<pre><code>(defun test (n m)
+   (mapcar (lambda (x) (/ x n)) (loop repeat m collect (random n))))
+TEST
+
+(let ((xs (test 200 1000))
+      (ys (test   5 1000)))
+   (ks-test xs ys))
+(0.20520520520520522d0 . 0.0d0)</code></pre>
+<h2 id="the-experiment-redesigned">The experiment redesigned</h2>
+<p>I will use almost all of the code from yesterday, except</p>
+<pre><code>(defun random-bag (num hash-fn hash-size cut-size)
+   (let ((hsize (truncate hash-size 8))
+         (csize (truncate cut-size 8)))
+      (labels ((random-vector ()
+                  (coerce (loop repeat hsize collect (random 256))
+                          &#39;(vector (unsigned-byte 8)))))
+         (loop repeat num collect
+               (subseq (funcall hash-fn (random-vector)) 0 csize)))))
+RANDOM-BAG</code></pre>
+<p>and the main experiment code.</p>
+<pre><code>(defun experiment (xs num)
+   (let ((n (length xs)))
+      (loop repeat num collect
+         (hamming-distance (elt xs (random n)) (elt xs (random n))))))
+EXPERIMENT</code></pre>
+<p>This time around, to make sure that we get the same length outputs I
+am truncating hash-digests to 32 bits since ADLER32 produces the
+shortest digests of 32 bits.</p>
+<p>From a given bag <code>xs</code> we pick two random vectors,
+calculate their Hamming distance. We repeat this for a given number
+<code>num</code> times. This time around I am not going to normalize the
+distances to 1. KS-test still works.</p>
+<pre><code>(let ((md5-bag (random-bag 25000 #&#39;md5-digest 128 32))
+      (sha1-bag (random-bag 32000 #&#39;sha1-digest 160 32))
+      (adler32-bag (random-bag 40000 #&#39;adler32-digest 32 32)))
+   (list (ks-test (experiment sha1-bag 800)
+                  (experiment sha1-bag 600))
+         (ks-test (experiment md5-bag 700)
+                  (experiment sha1-bag 600))
+         (ks-test (experiment md5-bag 900)
+                  (experiment adler32-bag 500))
+         (ks-test (experiment sha1-bag 800)
+                  (experiment adler32-bag 500))))
+((0.08524637432851168d0 . 3.0952126842698213d-4)
+ (0.09077599528064184d0 . 9.573944195506723d-5)
+ (0.09263019921935078d0 . 3.545942388081258d-4)
+ (0.1045846386138986d0 . 3.314053202163603d-5))</code></pre>
+<p>The reference number we should look at is the first one where I
+compare SHA1 hash outputs with themselves.  Now, differences disappeared
+as they should.</p>
+<div id="footer">
+<p><span id="timestamp">December 2nd, 2016 4:25am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-08-21-eigenvalues_and_eigenvectors_in_gsll</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="eigenvalues-and-eigenvectors-in-gsll">Eigenvalues and
+Eigenvectors in GSLL</h1>
+<p>I was trying to learn how to use <a
+href="http://common-lisp.net/project/gsll">gsll</a> (the lisp bindings
+of <a href="http://www.gnu.org/software/gsl/">GNU Scientific
+Library)</a>, specifically calculating eigenvalues and eigenvectors in
+gsll. I wrote the following code to calculate the eigenvalues and
+eigenvectors of a 400x400 randomly generated real matrix.</p>
+<pre><code>(let* ((N 400)
+       (rng (gsll:make-random-number-generator gsll::+mt19937+))
+       (aa (grid:make-foreign-array 
+               &#39;double-float 
+               :initial-contents (loop repeat N collect 
+                                    (loop repeat N collect 
+                                       (gsll:sample rng :uniform))))))
+   (gsll:eigenvalues-eigenvectors-nonsymm aa))</code></pre>
+<p>I ran this code 10 times and the average came out to be 1.98 seconds
+on SBCL on my debian box (Intel Core2 2.8GHz with 2Gb RAM) at work.</p>
+<p>Then I thought, the code and how fast it runs does not mean anything.
+To put this in a context, I needed to write the code for the same
+problem in C and see how fast it runs. So, I wrote the following code in
+C:</p>
+<pre><code>#include &lt;malloc.h&gt;
+#include &lt;gsl/gsl_math.h&gt;
+#include &lt;gsl/gsl_eigen.h&gt;
+#include &lt;gsl/gsl_rng.h&gt;
+
+void main(void)
+{
+  double *data; 
+  int i, j, n=400;
+
+  const gsl_rng_type *T;
+  gsl_rng *r;
+
+  gsl_vector_complex *eval;
+  gsl_matrix_complex *evec;
+  gsl_eigen_nonsymmv_workspace *w;
+  gsl_matrix_view m;
+
+  gsl_rng_env_setup();
+
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+
+  data = (double *)malloc(n*n*sizeof(double));
+
+  for (i = 0; i &lt; n; i++)
+    for (j = 0; j &lt; n; j++) 
+      data[n*i+j] = gsl_rng_uniform (r);
+
+  gsl_rng_free(r);
+
+  m = gsl_matrix_view_array(data, n, n);
+  eval = gsl_vector_complex_alloc(n);
+  evec = gsl_matrix_complex_alloc(n,n);
+  w = gsl_eigen_nonsymmv_alloc(n);
+
+  gsl_eigen_nonsymmv(&amp;m.matrix, eval, evec, w);
+  gsl_eigen_nonsymmv_free(w);
+
+  gsl_vector_complex_free(eval);
+  gsl_matrix_complex_free(evec);
+
+  free(data);
+}</code></pre>
+<p>I ran this 10 times. Guess what: the average was 1.88 seconds. I
+wasn’t expecting a close result. Then I did an experiment with different
+values of N.</p>
+<div id="chart_div" style="width: 490px; height: 310px;">
+
+</div>
+<p>The results are averages of 3 runs per each N. The C code is modified
+so that I provided N on the command line. Lisp A results come from
+running the code within the SBCL repl, and Lisp B results are obtained
+by running SBCL on the command line with the specific N provided.</p>
+<p>I was surprised by the fact that virtually there is no difference
+between the C results and the lisp results obtained within the repl.
+Notice also the notch in Lisp A between N=50 to N=100. My guess is that
+the code is internally compiled once for the Lisp A runs. So, Lisp A and
+Lisp B results are identical for N=50, and there is a divergence for
+later N because SBCL compiles the code internally each time it runs from
+the command line.</p>
+<div id="footer">
+<p><span id="timestamp">August 21st, 2013 5:31am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-04-06-hamming_distance_and_double_hashing</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="hamming-distance-and-double-hashing">Hamming Distance and Double
+Hashing</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I will consider the space of bitstrings of a fixed length as a
+metricspace <span class="math inline">\((X,d)\)</span> where the metric
+is given by the <a
+href="http://en.wikipedia.org/wiki/Hamming_distance">Hammingdistance</a>
+<span class="math inline">\(d(x,y)\)</span> which calculates the number
+of sites on which two bitstrings <span class="math inline">\(x\)</span>
+and <span class="math inline">\(y\)</span> differ.</p>
+<p>Now, I will consider a <a
+href="http://en.wikipedia.org/wiki/Hash_function">hash function</a> as a
+self map <span class="math inline">\(f\colon X\to X\)</span>.</p>
+<p>The main objects of interest for today’s post is the distributions of
+the numbers <span class="math display">\[d(f(f(x)),f(x))\]</span> for
+every <span class="math inline">\(x\)</span>. I would like compare the
+distributions of numbers with <span class="math display">\[
+{d(f(x),x)}\]</span>.</p>
+<h2 id="hamming-distances">Hamming distances</h2>
+<p>I am going to use some code from last two posts, which are not shown
+here.</p>
+<p>Let us see the results for MD5:</p>
+<pre><code>    Two-sample Kolmogorov-Smirnov test
+
+data:  as.matrix(X[, 1]) and as.matrix(X[, 2])
+D = 0.0167, p-value = 0.07134
+alternative hypothesis: two-sided</code></pre>
+<p>There is no discernible statistical difference.</p>
+<p>Now, the results for SHA1:</p>
+<pre><code>    Two-sample Kolmogorov-Smirnov test
+
+data:  as.matrix(X[, 1]) and as.matrix(X[, 2])
+D = 0.0128, p-value = 0.2764
+alternative hypothesis: two-sided</code></pre>
+<p><img src="/home/kaygun/src/lisp/math/hamming-double-data2-1.png" />
+<img src="/home/kaygun/src/lisp/math/hamming-double-data2-2.png" /></p>
+<p>Again, there is no discernible statistical difference.</p>
+<div id="footer">
+<p><span id="timestamp">April 6th, 2015 9:36am</span></p>
+</div>
+</body>
+</html>

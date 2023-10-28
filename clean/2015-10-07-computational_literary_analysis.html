@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-10-07-computational_literary_analysis</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="computational-literary-analysis">Computational Literary
+Analysis</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>One of the brilliant ideas that <a
+href="https://en.wikipedia.org/wiki/Kurt_Vonnegut">Kurt Vonnegut</a>
+came up with was that one can <a
+href="https://youtu.be/oP3c1h8v2ZQ">track the plot</a> of a literary
+work using graphical methods. He did that intuitively. Today’s question
+is “Can we track the plot changes in a text using computational or
+algorithmic methods?”</p>
+<h2 id="overlaps-between-units-of-texts">Overlaps between units of
+texts</h2>
+<p>The basic idea is to split a text into fundamental units (whether
+this is a sentence, or a paragraph depends on the document) and then
+convert each unit into a <a
+href="https://en.wikipedia.org/wiki/Hash_table">hash table</a> where the
+keys are <a href="https://en.wikipedia.org/wiki/Stemming">stemmed</a>
+words within the unit, and the values are the number of times these
+(stemmed) words appear in each unit.</p>
+<p>My hypothesis is (and I will test that in this experiment below) that
+the amount of overlap (the number of common words) between two
+consecutive units tells us how the plot is advancing.</p>
+<p>I will take the fundamental unit as a sentence below.</p>
+<h2 id="a-digression">A digression</h2>
+<p>For those who are not aware, there is <a
+href="https://en.wikipedia.org/wiki/Sentence_spacing">a very lively
+debate</a> on the number of spaces one should put after a full stop. Let
+me weigh in: in order to algorithmically process a text cheaply, I would
+need at least two spaces after a full stop, or any other symbol
+indicating the end of a sentence. Otherwise, one really needs appeal to
+computation intensive statistical or state-of-the-art NLP tools to parse
+the text to find out individual sentences. Why you ask? Try to split the
+following paragraph into sentences</p>
+<blockquote>
+<p>Mr. Smith is from the U.S. but kept a house in the U.K. where he
+earned his Ph.D. in the 90’s while Mrs. Smith had successfully founded a
+company called “M.K. Robotics” which she later sold to IBM.</p>
+</blockquote>
+<h2 id="implementation">Implementation</h2>
+<p>First, some utility functions I am going to need later.</p>
+<pre><code>(defmacro -&gt;&gt; (x &amp;rest forms)
+  (dolist (f forms x)
+    (if (listp f)
+        (setf x (append f (list x)))
+        (setf x (list f x)))))
+-&gt;&gt;</code></pre>
+<p>I wrote about this in <a
+href="2015-05-03-threading_macros_in_common_lisp.html">an earlier
+post</a>. This is my CL implementation of <a
+href="https://clojuredocs.org/clojure.core/-%3E%3E">the “thread last”
+macro</a> in <a href="http://clojure.org">clojure</a>. It is not a
+necessary feature, but IMHO it actually makes the code easier to
+read.</p>
+<p>Here is another feature I am going to need from <a
+href="http://clojure.org">clojure</a>.</p>
+<pre><code>(defun merge-with (fn &amp;rest xs)
+  (let (res)
+    (dolist (x (reduce #&#39;append xs) res)
+      (let ((val (cdr (assoc (car x) res :test #&#39;equal))))
+        (if (null val)
+            (push x res)
+            (rplacd (assoc (car x) res :test #&#39;equal)
+                    (funcall fn val (cdr x) )))))))
+MERGE-WITH</code></pre>
+<p>I also wrote about it <a
+href="2015-09-28-merging_association_lists_in_common_lisp.html">earlier</a>.
+This function takes several <a
+href="https://en.wikipedia.org/wiki/Association_list">association
+lists</a> and combines them carefully: it uses the function passed to it
+to combine values associated with the keys that appear more than
+once.</p>
+<p>Next up: a function that loads the text in its entirety as a single
+string. Not very efficient, but it will do.</p>
+<pre><code>(defun slurp (filename)
+  (with-open-file (in filename :direction :input)
+    (do* ((line (read-line in nil) (read-line in nil))
+          (res line (concatenate &#39;string res &quot; &quot; line)))
+         ((null line) res))))
+SLURP</code></pre>
+<p>Next up: a function that cleans up a word:</p>
+<pre><code>(defun clean (str)
+  (-&gt;&gt; str
+       string-downcase
+       (remove-if
+        (lambda (x)
+          (member x (coerce &quot;0123456789`#!@$%^&amp;*[]_+-=(){};&#39;\:.\&quot;|,/&lt;&gt;?&quot; &#39;list))))   
+       stem:stem))
+CLEAN</code></pre>
+<p>The function takes a string, converts the characters appearing into
+lower case characters, removes all extraneous characters and stems the
+result. I am using the common lisp implementation of the <a
+href="http://tartarus.org/martin/PorterStemmer/">Porter Stemmer</a>. If
+you are using <a href="https://github.com/quicklisp">quicklisp</a> the
+library is called stem.</p>
+<pre><code>(require :stem) 
+NIL</code></pre>
+<p>Next up: a function that converts a unit of text into a hash
+table.</p>
+<pre><code>(defun bag-of-words (unit)
+   (-&gt;&gt; unit
+        (split &quot;\s+&quot;)
+        (mapcar (lambda (x) (cons (clean x) 1)))
+        (merge-with #&#39;+))) 
+BAG-OF-WORDS</code></pre>
+<p>Now, here is my measure of overlap:</p>
+<pre><code>(defun dot (a b)
+   (labels ((loc (x) (or (cdr x) 0.0d0))
+            (len (x) (reduce #&#39;+ x :key #&#39;cdr :initial-value 0)))
+     (let ((keys (mapcar #&#39;car (append a b)))
+           (res  0.0d0))
+       (dolist (x keys (/ res (min (len a) (len b))))
+         (incf res (* (loc (assoc x a :test #&#39;equal))
+                      (loc (assoc x b :test #&#39;equal)))))))) 
+DOT</code></pre>
+<p>This function is a variation on the dot product of two vectors.</p>
+<p>Finally, our main function.</p>
+<pre><code>(let* ((res (-&gt;&gt; (nth 1 *posix-argv*)
+                 (split &quot;\.\s+&quot;)
+                 (mapcar #&#39;bag-of-words)
+                 (remove-if #&#39;null)))
+       (calculated (mapcar (lambda (x y) (cons x (dot x y)))
+                       res (cdr res))
+       (i 1))
+   (dolist (u calculated)
+     (format t &quot;~d ~4,3f~%&quot; i (cdr u))
+     (incf i)))</code></pre>
+<p>I ran this providing the name of the text file to be processed as an
+argument. The term <code>(nth 1 *posix-argv*)</code> is exactly for
+that. Be warned: this works for <a href="http://www.sbcl.org/">SBCL</a>.
+You should check the manual for your own local lisp implementation on
+how to process the command line arguments.</p>
+<h2 id="experiments">Experiments</h2>
+<p>I ran my code with various texts. After I ran the code, I used R to
+plot the graph. I also did some smoothing using a running average with a
+window of size 5.</p>
+<pre><code>X &lt;- read.csv(&quot;my-output&quot;,header=FALSE,sep=&quot; &quot;)
+plot(filter(X[,2],rep(1,5)/5,sides=1))</code></pre>
+<p>I chose two texts that I liked which are relatively short:</p>
+<ol type="1">
+<li>Kennedy’s first inauguration speech from 1961, and</li>
+<li>Martin Luther King’s “I have a dream” speech from 1963.</li>
+</ol>
+<h2 id="kennedys-inaugural-address-1961">Kennedy’s Inaugural Address
+(1961)</h2>
+<figure class="tmblr-full" data-orig-width="480" data-orig-height="480">
+<img src="../media/2015-10-07-computational_literary_analysis_0.png" data-orig-width="480"
+data-orig-height="480" alt="image" />
+</figure>
+<p>There are two peaks: the first at 12th sentence where Kennedy pledges
+“we shall pay any price, bear any burden, meet any hardship” to defend
+liberty, and around 38th where he iterates that the US will come to the
+aid of the “oppressed”. Apparently, he had to pause there because of the
+applause. I would say “expected” because he ramped up his rhetoric and
+his delivery right around that point.</p>
+<h2 id="martin-luther-kings-i-have-a-dream-speech-1963">Martin Luther
+King’s “I have a dream” speech (1963)</h2>
+<figure class="tmblr-full" data-orig-width="480" data-orig-height="480">
+<img src="../media/2015-10-07-computational_literary_analysis_1.png" data-orig-width="480"
+data-orig-height="480" alt="image" />
+</figure>
+<p>Let us look at places measure spikes:</p>
+<ol type="1">
+<li>18th to 22nd sentences: The rhetoric of MLK drives on the injustice
+on African Americans, and explains that “they came to cash a
+check.”</li>
+<li>50th to 58th sentences: These are the “I have a dream”
+sentences.</li>
+<li>68th sentence and onward: “Let the freedom ring” sequence.</li>
+</ol>
+<div id="footer">
+<p><span id="timestamp">October 7th, 2015 4:35pm</span></p>
+</div>
+</body>
+</html>

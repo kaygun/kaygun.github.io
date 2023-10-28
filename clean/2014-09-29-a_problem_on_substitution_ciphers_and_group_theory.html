@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-09-29-a_problem_on_substitution_ciphers_and_group_theory</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-problem-on-substitution-ciphers-and-group-theory">A Problem on
+Substitution Ciphers and Group Theory</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>A <a
+href="http://en.wikipedia.org/wiki/Substitution_cipher">substitution
+cipher</a> is a simple historical encryption technique in which every
+letter of the alphabet is replaced with a unique letter in the same
+alphabet.</p>
+<p>Writing a message on a dvorak keyboard as if it was qwerty would be
+an example of a substitution cipher.</p>
+<pre><code>(defvar qwerty  &quot; -=qwertyuiop[]\asdfghjkl;&#39;zxcvbnm,./&quot;)
+
+QWERTY
+
+(defvar dvorak  &quot; []&#39;,.pyfgcrl/=\aoeuidhtns-;qjkxbmwvz&quot;)
+
+DVORAK
+
+(defun substitution-cipher (x a b) 
+    (aref b (position x a)))
+
+SUBSTITUTION-CIPHER</code></pre>
+<p>Above, I defined a function which will return the value of the cipher
+character to a given plain character. If we wanted to apply this to a
+text we would need:</p>
+<pre><code>(defun encode-decode (text a b)
+   (map &#39;string (lambda (i) (substitution-cipher i a b))
+                (string-downcase text)))
+
+ENCODE-DECODE
+
+(encode-decode &quot;the first message&quot; qwerty dvorak)
+
+yd. ucpoy m.ooai.
+
+(encode-decode (encode-decode &quot;the first message&quot; qwerty dvorak) dvorak qwerty)
+
+the first message</code></pre>
+<p>A substitution cipher such as qwerty to dvorak would correspond to an
+element in <span class="math inline">\(\Sigma_{36}\)</span> the <a
+href="http://en.wikipedia.org/wiki/Symmetric_group">symmetric group</a>
+on 36 letters which contains exactly 36! =
+371993326789901217467999448150835200000000 elements. This means there
+are exactly 371993326789901217467999448150835200000000 different
+substitution ciphers. However, even though the large number of such
+ciphers makes the scheme resistant to brute-force attacks, one can
+easily break it using <a
+href="http://en.wikipedia.org/wiki/Substitution_cipher#Security_for_simple_substitution_ciphers">statistical
+approaches</a>.</p>
+<p>In any case, today’s problem is inspired by <a
+href="http://adereth.github.io/blog/2014/08/14/typing-qwerty-on-a-dvorak-keyboard/">a
+post</a> by <a href="http://adereth.github.io/about/">Matt Adereth</a>
+which in turn inspired by a <a
+href="https://twitter.com/thattommyhall/status/494916131598393344">question</a>
+that <a href="https://twitter.com/thattommyhall">Tommy Hall</a>
+posed:</p>
+<blockquote>
+<p>What is the smallest <span
+class="math inline">\(m\in\mathbb{N}\)</span> such that for every
+permutation <span class="math inline">\(\sigma\in \Sigma_{36}\)</span>
+the permutation <span class="math inline">\(\sigma^ m\)</span> is the
+unit permutation?</p>
+</blockquote>
+<h2 id="somegrouptheory">Some group theory</h2>
+<p>Now, because of <a
+href="http://en.wikipedia.org/wiki/Lagrange%27s_theorem_%28group_theory%29">Legendre
+Theorem</a>, any such <span class="math inline">\(m\)</span> must divide
+36! the order of <span class="math inline">\(\Sigma_{36}\)</span> which,
+as you can guess, not very helpful. Well, at least we know that (1) such
+a number exists, and (2) it must divide 36!.</p>
+<p>Before I go any further, I need to define what a cycle is: a cycle is
+the trace (a.k.a. the orbit) of an element under successive applications
+of the cipher.</p>
+<pre><code>(defun cycle (x a b)
+   (do* ((z (list x) (append z (list y)))
+         (y (substitution-cipher x a b) (substitution-cipher y a b)))
+        ((equal x y) z)))
+
+CYCLE</code></pre>
+<p>Let me repeat what Matt got:</p>
+<pre><code>(cycle #\ qwerty dvorak)
+
+($
+
+(cycle #\a qwerty dvorak)
+
+(a)
+
+
+(cycle #\m qwerty dvorak)
+
+(m)
+
+(cycle #$$ qwerty dvorak)
+
+(] =)
+
+(cycle #\, qwerty dvorak)
+
+(, w)
+
+(cycle #\. qwerty dvorak)
+
+(. v k t y f u g i c j h d e)
+
+(cycle #$$ qwerty dvorak)
+
+([ / z ; s o r p l n b x q &#39; -)</code></pre>
+<p>I have 4 cycles of length 1, 2 cycles of length 2, 1 cycle of length
+14 and 1 cycle of length 15. As Matt observes, the smallest <span
+class="math inline">\(m\)</span> in this case is the least common
+multiple of 2, 14 and 15 which is</p>
+<pre><code>(lcm 2 14 15)
+
+210</code></pre>
+<h2 id="apartialsolution">A partial solution</h2>
+<p>For an arbitrary cipher that number would be:</p>
+<pre><code>(defun mystery-number (a b)
+   (apply #&#39;lcm 
+          (remove-duplicates 
+             (sort (map &#39;list (lambda (x) (length (cycle x a b))) a) 
+                   #&#39;&lt;))))
+
+MYSTERY-NUMBER</code></pre>
+<p>So, let us calculate this number for various cases</p>
+<pre><code>(defvar colemak       &quot; -=qwfpgjluy;[]\arstdhneio&#39;zxcvbkm,./&quot;)
+
+COLEMAK
+
+(defvar random-layout &quot; /.,mnbvcxzasdfghjkl;&#39;$$[poiuytrewq=-&quot;)
+
+RANDOM-LAYOUT
+
+(mystery-number qwerty dvorak)
+
+210
+
+(mystery-number qwerty colemak)
+
+42
+
+(mystery-number dvorak colemak)
+
+24
+
+(mystery-number colemak random-layout)
+
+90</code></pre>
+<p>Still, this doesn’t solve the original question I posed. What would
+be the largest such mystery number for all possible permutations in
+<span class="math inline">\(\Sigma_{36}\)</span>? Since I can’t go over
+all 371993326789901217467999448150835200000000 elements, I should find a
+better way.</p>
+<h2 id="anoptimizationproblem">An optimization problem</h2>
+<p>Recall that the number we are looking for is a least common multiple
+of a collection of numbers <span class="math inline">\(x_1\)</span>
+through <span class="math inline">\(x_\ell\)</span> such that the sum
+<span class="math inline">\(x_1 + \cdots + x_\ell = 36\)</span> where we
+want that <span class="math inline">\(1\leq x_1\leq \cdots \leq
+x_\ell\leq 36\)</span>.</p>
+<p>Today, I will use the brute-force method because I need to teach soon
+and I don’t have much time, and 36 is relatively small.</p>
+<p>The following function returns the list of all possible k-partitions
+of a number n.</p>
+<pre><code>(let ((parlist-table (make-hash-table :test #&#39;equal)))
+   (defun parlist(n k)
+     (let ((u (1- k))
+           (m (truncate (/ n k))))   
+        (cond
+          ((&lt; n 0) nil)
+          ((&lt; k 1) nil)
+          ((= k 1) (list (list n)))
+          ((= k 2) (loop for i from 1 to m collect (list i (- n i))))
+          (t (or (gethash (list n k) parlist-table)
+                 (setf (gethash (list n k) parlist-table)
+                       (do ((i 1 (1+ i))
+                            (temp nil (nconc temp
+                                             (mapcar 
+                                                (lambda (x) (cons i (mapcar (lambda (y) (+ y (1- i))) x))) 
+                                                (parlist (- n i (* u (1- i))) u)))))
+                           ((&gt; i m) temp)))))))))
+
+PARLIST</code></pre>
+<p>Let me test it:</p>
+<pre><code>(parlist 13 4)
+
+((1 1 1 10) (1 1 2 9) (1 1 3 8) (1 1 4 7) (1 1 5 6) (1 2 2 8) (1 2 3 7)
+ (1 2 4 6) (1 2 5 5) (1 3 3 6) (1 3 4 5) (1 4 4 4) (2 2 2 7) (2 2 3 6)
+ (2 2 4 5) (2 3 3 5) (2 3 4 4) (3 3 3 4))</code></pre>
+<p>I need to go over all possible partitions with varying k and
+calculate the least common multiples of the resulting numbers. Then pick
+the maximum.</p>
+<pre><code>(defun helper (n)
+   (loop for k from 1 to n collect
+      (cons k (car (sort (mapcar 
+                            (lambda (x) (apply #&#39;lcm x)) 
+                            (parlist n k)) 
+                    #&#39;&gt;)))))
+
+HELPER</code></pre>
+<p>And, the result is</p>
+<pre><code>(sort (helper 36) (lambda (x y) (&gt; (cdr x) (cdr y))))
+
+((5 . 13860) (6 . 9240) (7 . 9240) (8 . 5460) (9 . 5460) (4 . 5005)
+ (10 . 4620) (11 . 4620) (12 . 2310) (13 . 2310) (3 . 1716) (14 . 1260)
+ (15 . 1260) (16 . 840) (17 . 840) (18 . 420) (19 . 420) (20 . 420)
+ (21 . 420) (2 . 323) (22 . 210) (23 . 210) (24 . 105) (25 . 84) (26 . 60)
+ (27 . 60) (1 . 36) (28 . 30) (29 . 30) (30 . 15) (31 . 12) (32 . 6)
+ (33 . 6) (34 . 3) (35 . 2) (36 . 1))</code></pre>
+<p>So, there is a permutation <span class="math inline">\(\sigma\in
+\Sigma_{36}\)</span> which consists of 5 cycles and when composed with
+itself 13860 times will return unit, and no smaller number would
+work.</p>
+<p>My hunch is that the number of cycles is related to the square root,
+but I will have to come back to this later.</p>
+<pre><code>(car (sort (helper 4) (lambda (x y) (&gt; (cdr x) (cdr y)))))
+
+(1 . 4)
+
+(car (sort (helper 16) (lambda (x y) (&gt; (cdr x) (cdr y)))))
+
+(3 . 140)
+
+(car (sort (helper 25) (lambda (x y) (&gt; (cdr x) (cdr y)))))
+
+(4 . 1260)</code></pre>
+<div id="footer">
+<p><span id="timestamp">September 29th, 2014 4:04am</span></p>
+</div>
+</body>
+</html>

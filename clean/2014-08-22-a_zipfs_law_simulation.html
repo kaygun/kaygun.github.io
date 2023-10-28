@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-08-22-a_zipfs_law_simulation</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-zipfs-law-simulation">A Zipf's Law Simulation</h1>
+<h2 id="problem-description">Problem description</h2>
+<p>Recently, I saw a nice algorithm by <a
+href="http://www.datasciencecentral.com/profiles/blogs/why-zipf-s-law-explains-so-many-big-data-and-physics-phenomenons">Vincent
+Granville</a> that simulates samples obeying <a
+href="http://en.wikipedia.org/wiki/Zipf%27s_law">Zipf’s Law</a> using a
+nice physical process. But I had to play with the parameters of the
+simulation a bit.</p>
+<h2 id="the-algorithm">The algorithm</h2>
+<p>I will copy the description of the algorithm (with small changes)
+from Vincent:</p>
+<ol type="1">
+<li><p>Each particle is assigned a unique bin ID between 1 and <span
+class="math inline">\(N\)</span>. Each particle represents a cluster
+with one element (the particle),and the bin ID is its cluster
+ID.</p></li>
+<li><p>Iteration: repeat <span class="math inline">\(r\)</span>
+times:</p></li>
+<li><ol type="a">
+<li>Randomly select two integers i and j between 1 and current number of
+clusters.</li>
+<li>If size of cluster i and cluster j are similar, merge these clusters
+with probability <span class="math inline">\(0&lt;u&lt;1\)</span>,
+Otherwise, merge these clusters with probability <span
+class="math inline">\(0&lt;v&lt;1\)</span></li>
+<li>Update cluster list</li>
+</ol></li>
+</ol>
+<h2 id="an-implementation-in-lisp">An implementation in lisp</h2>
+<p>The implementation was pretty straightforward.</p>
+<p>Start with a comparison function that compares the sizes of two
+clusters. The following function is what I thought to be appropriate,
+but of course, you may change it to suit your needs.</p>
+<pre><code>(defun comp (a b &amp;optional (eps 1d-1))
+   (&lt; (abs (- 5d-1 (/ a (+ a b)))) eps))</code></pre>
+<p>Now, the main function. The function takes the following
+parameters:</p>
+<ol type="1">
+<li><code>num</code>: The size of the population.</li>
+<li><code>rep</code>: The number of times the simulation runs.</li>
+<li><code>u</code>: The probability that two similar clusters will
+merge.</li>
+<li><code>v</code>: The probability that two non-similar clusters will
+merge.</li>
+</ol>
+<!-- -->
+<pre><code> (defun zipf-simulate (num rep u v)
+    (let ((bag (loop for i from 0 below num collect (list i))))
+      (loop while (and (cdr bag) (&gt; rep 0)) do
+         (let* ((m (length bag))
+                (i (random m))
+                (j (do ((k (random m) (random m))) ((not (= i k)) k)))
+                (a (nth i bag))
+                (b (nth j bag))
+                (thrsh (if (comp (length a) (length b))
+                          u
+                          v)))
+            (if (&lt; (random 1.0d0) thrsh)
+              (progn
+                (nconc (nth i bag) b)
+                (setf bag (delete b bag :test #‘equal))))
+            (decf rep)))
+      (sort (mapcar #&#39;length bag) #’&gt;)))</code></pre>
+<p>I ran the simulation with the parameters <code>num=2000</code>,
+<code>rep=8000</code>, <code>u=0.8</code> and <code>v=0.001</code> and
+the results were:</p>
+<pre><code>1048
+513
+256
+128
+32
+16
+4
+2
+1</code></pre>
+<p>The numbers decrease exponentially which is expected with such a
+small <span class="math inline">\(v\)</span> parameter. Think of the
+extreme case of<span class="math inline">\(u=1.0\)</span> (probability
+that two similar clusters will merge) and <span
+class="math inline">\(v=0.0\)</span> (probability that two non-similar
+clusters will merge.) Then from an initial cluster of size <span
+class="math inline">\(N\)</span> one gets sizes distributed exactly as
+the binary expansion of <span class="math inline">\(N\)</span> which is
+quite interesting.</p>
+<p>When I ran the simulation with the parameters (<code>num=4095</code>,
+<code>rep=7600</code>, <code>u=0.8</code> and <code>v=0.3</code>) chosen
+along the lines <a
+href="http://www.datasciencecentral.com/profiles/blogs/why-zipf-s-law-explains-so-many-big-data-and-physics-phenomenons">Vincent
+suggested,</a> I got something which is closer to what he expected.</p>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img
+src="../media/2014-08-22-a_zipfs_law_simulation_0.png"
+data-orig-height="375" data-orig-width="500" data-orig-src="" />
+</figure>
+<p>And here are another implementation in (non-idiomatic) clojure in
+case common lisp is too archaic for you:</p>
+<pre><code>(defn zipf [n rep u v]
+   (let [rnd (java.util.Random.)
+         mycom (fn [a b] 
+                  (if (&lt; (Math/abs (- (double 0.5) (double (/ a (+ a b))))) 0.01)
+                    (double u)
+                    (double v)))]
+     (loop [bag (map list (range n))
+            cou rep]
+       (if (or (zero? cou) (&lt; (count bag) 2))
+          (sort (map count bag))
+          (let* [m (count bag)
+                 i (.nextInt rnd m)
+                 j (loop [j (.nextInt rnd m)] (if (not (= i j)) j (recur (.nextInt rnd m))))
+                 a (nth bag i)
+                 b (nth bag j)]
+            (if (&lt; (.nextFloat rnd) (mycom (count a) (count b)))
+              (recur (cons (concat a b) (remove #{a b} bag)) (dec cou))
+              (recur bag (dec cou))))))))</code></pre>
+<div id="footer">
+<p><span id="timestamp">August 22nd, 2014 9:35pm</span></p>
+</div>
+</body>
+</html>

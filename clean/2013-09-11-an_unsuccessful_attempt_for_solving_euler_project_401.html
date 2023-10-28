@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-09-11-an_unsuccessful_attempt_for_solving_euler_project_401</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="an-unsuccessful-attempt-for-solving-euler-project-401">An
+Unsuccessful Attempt for Solving Euler Project #401</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p><a href="http://projecteuler.net/problem=401">Euler Project, Problem
+401</a> is a number theory question. It asks the reader to calculate the
+sum <span class="math display">\[
+\sum_{m=1}^n\sum_{q\|m} q^2 \]</span> modulo <span
+class="math inline">\(10^9\)</span> for <span
+class="math inline">\(n=10^{15}\)</span>.</p>
+<h2 id="mathematicalreduction">Mathematical Reduction</h2>
+<p>The function we would like to compute is <span
+class="math display">\[ \Upsilon(n,s) =
+\sum_{m=1}^n \sum_{q\|m} q^s \]</span> for <span
+class="math inline">\(s=2\)</span>. I will define the following
+auxiliary function <span class="math display">\[ \nu(q,n) =
+\begin{cases} 1 &amp; \text{
+if } q\|n\\ 0 &amp; \text{ otherwise} \end{cases} \]</span> Then I can
+rewrite <span class="math inline">\(\Upsilon(n,s)\)</span> as follows:
+<span class="math display">\[ \Upsilon(n,s) =
+\sum_{m=1}^n\sum_{q=1}^m \nu(q,m) q^s \]</span> Now we can switch the
+summations <span class="math display">\[ \Upsilon(n,s) = \sum_{q=1}^n
+\sum_{m=a}^n
+\nu(q,m) q^s = \sum_{q=1}^n q^s \left(\sum_{m=a}^n
+\nu(q,m)\right) \]</span> Notice that, the inner sum terms are <span
+class="math inline">\(m=q,q+1,\ldots,n\)</span> but the function we sum
+is non-zero only if <span class="math inline">\(m\)</span> is a multiple
+of <span class="math inline">\(q\)</span>. This means the sum <span
+class="math inline">\(\sum_{m=q}^n \nu(q,m) =
+\left\lfloor\frac{n}{a}\right\rfloor\)</span>. Therefore, <span
+class="math display">\[
+\Upsilon(n,s) = \sum_{q=1}^n q^s
+\left\lfloor\frac{n}{q}\right\rfloor = \sum_{q=1}^n q^{s-1} n -
+\sum_{q=1}^n q^{s-1} (n \text{ mod } q) \]</span> For <span
+class="math inline">\(s=2\)</span> this can be written as <span
+class="math display">\[ \Upsilon(n,2) = \frac{n^2(n+1)}{2} -
+\sum_{q=1}^n q (n \text{ mod } q) \]</span></p>
+<h2 id="implementationwithoutthereduction">Implementation without the
+reduction</h2>
+<p>First, I need a function which returns the list of divisors of a
+number</p>
+<pre><code>(defun divisors (n)
+   (let* ((a (remove-if &#39;null 
+                        (loop for i from 1 to (floor (sqrt n))
+                              collect (if (zerop (mod n i)) i))))
+          (b (mapcar (lambda (x) (/ n x)) a)))
+      (sort (union a b) &#39;&lt;)))
+
+DIVISORS</code></pre>
+<p>Then I need the small-case sigma (which I called alpha as lisp is not
+case sensitive) sigma function:</p>
+<pre><code>(defun alpha (n s) (reduce &#39;+ (mapcar (lambda (x) (expt x s)) (divisors n))))
+
+ALPHA</code></pre>
+<p>Now, the summotary function of the function I defined above:</p>
+<pre><code>(defun beta (n s) 
+   (do ((i 1 (1+ i))
+        (res 0 (incf res (alpha i s))))
+       ((&gt; i n) res)))
+
+BETA</code></pre>
+<p>Let me test:</p>
+<pre><code>(loop for i from 1 to 6 collect (beta i 2))
+
+(1 6 16 37 63 113)</code></pre>
+<h2 id="implementationwiththereduction">Implementation with the
+reduction</h2>
+<p>Implementation of the function is very straight-forward:</p>
+<pre><code>(defun upsilon (n)
+   (let ((res 0))
+      (do ((q 1 (1+ q)))
+          ((&gt; q n) (- (* n n (1+ n) (/ 1 2)) res))
+        (incf res (* q (mod n q))))))
+
+UPSILON</code></pre>
+<p>Let me test</p>
+<pre><code>(loop for i from 1 to 6 collect (upsilon i))
+
+(1 6 16 37 63 113)</code></pre>
+<p>and finally I will evaluate the function for <span
+class="math inline">\(n=10^9\)</span></p>
+<pre><code>(time (upsilon (expt 10 9)))
+
+400685635084923815073475174
+
+Evaluation took:
+  177.784 seconds of real time
+  177.403000 seconds of total run time (176.967000 user, 0.436000 system)
+  [ Run times consist of 7.116 seconds GC time, and 170.287 seconds non-GC time. ]
+  99.79% CPU
+  496,545,276,339 processor cycles
+  71,378,930,608 bytes consed</code></pre>
+<p>It took about three minutes to calculate the result. By the way, the
+same calculation implemented in <a
+href="http://julialang.org/">Julia</a> took about 6 seconds :)</p>
+<pre><code> function euler401(n)
+   res:: Uint128 = n^2*(n+1)/2
+   for(q in 1:n)
+      res = res - q*(n%q)
+   end
+   return(res)
+ end
+
+ tic(); euler401(10^9); toc()
+
+ elapsed time: 5.98228752 seconds</code></pre>
+<h2 id="discussionandrestrictions">Discussion and restrictions</h2>
+<p>The original <a href="http://projecteuler.net/problem=401">Euler
+Project Question 401</a> is for <span
+class="math inline">\(n=10^{15}\)</span> and for <span
+class="math inline">\(s=2\)</span>, but they require the result
+calculated modulo <span class="math inline">\(10^9\)</span>. The reduced
+calculation for <span class="math inline">\(n=10^9\)</span> took about
+180 seconds for lisp and about 6 seconds for julia. Assuming the
+complexity is linear (though I guess it is with a large multiplier
+coefficient), the real problem is out of reach for this implementation.
+I will have to come back to this problem later.</p>
+<div id="footer">
+<p><span id="timestamp">September 11th, 2013 11:21am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-05-28-greatest_common_divisor_of_two_rational_numbers</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="greatest-common-divisor-of-two-rational-numbers">Greatest Common
+Divisor of Two Rational Numbers</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Today’s problem is rather theoretical, but there will be some
+computation and code. Read on:</p>
+<p>There is a rather nice extension of <strong>greatest common
+divisor</strong> of two integers to the set of rational numbers. Today,
+I will give this extension.</p>
+<h2 id="thedefinition">The definition</h2>
+<p>In order to simplify the notation, I will use <span
+class="math inline">\(\frac{a}{b}\wedge\frac{c}{d}\)</span> instead of
+<span class="math inline">\(\gcd(\frac{a}{b},\frac{c}{d})\)</span>.</p>
+<p>Given two rational numbers <span
+class="math inline">\(\frac{a}{b}\)</span> and <span
+class="math inline">\(\frac{c}{d}\)</span> define <span
+class="math display">\[ \frac{a}{b}\wedge\frac{c}{d} = \frac{ad\wedge
+bc}{bd} \]</span></p>
+<p>This definition enjoys a rather nice property: multiplication is
+distributive over the greatest common divisor <span
+class="math display">\[
+\frac{a}{b}\left(\frac{c}{d}\wedge\frac{e}{f}\right) =
+\frac{\gcd(acf,ade)}{bdf} = \frac{ac}{bd}\wedge\frac{ae}{bf} \]</span>
+This means the set of positive rationals <span
+class="math inline">\(\mathbb{Q}_+\)</span> form a semi-ring with
+respect to greatest common divisor and multiplication operators.</p>
+<h2 id="computations">Computations</h2>
+<p>In common lisp’s <a
+href="http://en.wikipedia.org/wiki/Numerical_tower">numerical tower</a>
+there is a specific type for fractional numbers. I will exploit
+that:</p>
+<pre><code>(defmethod rational-gcd ((x integer) (y integer))
+   (gcd x y))
+#&lt;STANDARD-METHOD RATIONAL-GCD (INTEGER INTEGER) {F84B181}&gt;
+
+(defmethod rational-gcd ((x integer) (y ratio))
+   (/ (gcd (* x (denominator y))
+           (numerator y))
+      (denominator y)))
+#&lt;STANDARD-METHOD RATIONAL-GCD (INTEGER RATIO) {F945EA1}&gt;
+
+(defmethod rational-gcd ((x ratio) (y integer))
+   (/ (gcd (* y (denominator x))
+           (numerator x))
+      (denominator x)))
+#&lt;STANDARD-METHOD RATIONAL-GCD (RATIO INTEGER) {F986881}&gt;
+
+(defmethod rational-gcd ((x ratio) (y ratio))
+   (/ (gcd (* (numerator x) (denominator y))
+           (* (denominator x) (numerator y)))
+      (* (denominator x) (denominator y))))
+#&lt;STANDARD-METHOD RATIONAL-GCD (RATIO RATIO) {F9D1DF9}&gt;</code></pre>
+<p>And, let us test:</p>
+<pre><code>(let ((x (1+ (random 1229)))
+      (y (1+ (random 19123))))
+   (list x y (rational-gcd x y)))
+(6 12258 6)
+
+(let ((x (/ (1+ (random 1229)) (1+ (random 1230))))
+      (y (1+ (random 19123))))
+   (list x y (rational-gcd x y) (rational-gcd y x)))
+(191/60 9766 1/60 1/60)
+
+(let ((x (/ (1+ (random 8912)) (1+ (random 280))))
+      (y (/ (1+ (random 422)) (1+ (random 8810)))))
+   (list x y (rational-gcd x y)))
+(3355/17 232/5861 1/99637)</code></pre>
+<div id="footer">
+<p><span id="timestamp">May 28th, 2015 5:48am</span></p>
+</div>
+</body>
+</html>

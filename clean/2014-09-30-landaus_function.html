@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-09-30-landaus_function</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="landaus-function">Landau's Function</h1>
+<p>The problem I was working on <a
+href="2014-09-29-a_problem_on_substitution_ciphers_and_group_theory.html">yesterday</a>
+is an old problem that was first studied by <a
+href="http://en.wikipedia.org/wiki/Landau%27s_function">Landau</a>. I
+recommend an <a
+href="http://www.ams.org/mathscinet/search/publdoc.html?arg3=&amp;co4=AND&amp;co5=AND&amp;co6=AND&amp;co7=AND&amp;dr=all&amp;pg4=AUCN&amp;pg5=TI&amp;pg6=PC&amp;pg7=ALLF&amp;pg8=ET&amp;r=1&amp;review_format=html&amp;s4=Miller&amp;s5=The%20maximum%20order%20of%20an%20element%20of%20a%20finite%20symmetric%20group&amp;s6=&amp;s7=&amp;s8=All&amp;vfpref=html&amp;yearRangeFirst=&amp;yearRangeSecond=&amp;yrop=eq">excellent
+article</a> on the subject written by W. Miller.</p>
+<p>If we use <span class="math inline">\(g(n)\)</span> the denote the
+maximum order of an element in <span
+class="math inline">\(\Sigma_n\)</span> the symmetric group on <span
+class="math inline">\(n\)</span>-letters, <a
+href="https://oeis.org/A000793">the sequence</a> is already recorded at
+the <a href="https://oeis.org/">On-Line Encyclopedia of Integer
+Sequences</a>.</p>
+<p>There are different implementations calculating <span
+class="math inline">\(g(n)\)</span>. I recommend J.-L. Nicolas’ <a
+href="http://arxiv.org/abs/1312.2569">recent paper</a> at <a
+href="http://arxiv.org/">arXiv</a> for a more recent overview and
+references.</p>
+<p>There are really fast and efficient implementations out there. There
+is one <a href="http://codepad.org/GJmTg2yD">implementation</a> that I
+really liked. Today, I will re-write it in lisp by changing it a bit
+along the way.</p>
+<h2 id="animplementation">An implementation</h2>
+<p>For my implementation, I will need a function that returns the first
+prime number appearing after a specific integer. This is not very
+efficient but it will do.</p>
+<pre class="prettyprint lang-cl"><code>(defun next-prime (n)
+  (cond 
+    ((&lt; n 2) 2)
+    ((= n 2) 3)
+    ((evenp n) (next-prime (1- n)))
+    (t (let* ((m (+ 2 n))
+              (z (floor (sqrt m))))
+          (do* ((a 3 (+ a 2)))
+               ((or (&gt; a z) (zerop (mod m a)))
+                (if (&gt; a z) 
+                   m 
+                   (next-prime m))))))))
+
+NEXT-PRIME</code></pre>
+<p>Next, I took the core of the <a
+href="http://codepad.org/GJmTg2yD">implementation</a> I mentioned and
+translated as follows:</p>
+<pre class="prettyprint lang-cl"><code>(defun landau (n)
+  (let* ((limit (floor (* 1.328 (sqrt (* n (log n))))))
+         (acc (make-array n :initial-element 1)))
+      (do ((p 2 (next-prime p)))
+          ((&gt; p limit) (aref acc (1- n)))
+         (loop for m from (1- n) downto 0 do
+            (setf (aref acc m)
+                  (do* ((res (aref acc m)
+                             (max res (* q (aref acc (- m q)))))
+                        (q p (* p q)))
+                  ((&gt; q m) res)))))))
+
+LANDAU</code></pre>
+<p>And let me test it:</p>
+<pre><code> (loop for i from 1 to 200 collect (landau i))
+
+(1 1 2 3 4 6 6 12 15 20 30 30 60 60 84 105 140 210 210 420 420 420 420 840
+ 840 1260 1260 1540 2310 2520 4620 4620 5460 5460 9240 9240 13860 13860
+ 16380 16380 27720 30030 32760 60060 60060 60060 60060 120120 120120 180180
+ 180180 180180 180180 360360 360360 360360 360360 471240 510510 556920
+ 1021020 1021020 1141140 1141140 2042040 2042040 3063060 3063060 3423420
+ 3423420 6126120 6126120 6846840 6846840 6846840 6846840 8953560 9699690
+ 12252240 19399380 19399380 19399380 19399380 38798760 38798760 58198140
+ 58198140 58198140 58198140 116396280 116396280 116396280 116396280
+ 140900760 140900760 157477320 157477320 232792560 232792560 232792560
+ 232792560 281801520 446185740 446185740 446185740 446185740 892371480
+ 892371480 1338557220 1338557220 1338557220 1338557220 2677114440
+ 2677114440 2677114440 2677114440 2677114440 2677114440 3375492120
+ 3375492120 5354228880 5354228880 5354228880 5354228880 5354228880
+ 5354228880 6750984240 6750984240 7216569360 7216569360 8172244080
+ 12939386460 13385572200 13831757940 13831757940 25878772920 25878772920
+ 38818159380 38818159380 41495273820 41495273820 77636318760 77636318760
+ 82990547640 82990547640 82990547640 82990547640 82990547640 82990547640
+ 155272637520 155272637520 165981095280 165981095280 165981095280
+ 165981095280 165981095280 165981095280 209280511440 209280511440
+ 232908956280 232908956280 388181593800 401120980260 414952738200
+ 414952738200 414952738200 802241960520 802241960520 1203362940780
+ 1203362940780 1203362940780 1203362940780 2406725881560 2406725881560
+ 2406725881560 2406725881560 2406725881560 2406725881560 2872543794120
+ 2872543794120 4813451763120 4813451763120 4813451763120 4813451763120
+ 4813451763120 4813451763120 5745087588240 5745087588240 6141300525360
+ 6141300525360 7220177644680 7220177644680 12033629407800 12033629407800
+ 12033629407800 12033629407800 12033629407800 12033629407800 14440355289360
+ 14841476269620)</code></pre>
+<div id="footer">
+<p><span id="timestamp">September 30th, 2014 8:59am</span></p>
+</div>
+</body>
+</html>

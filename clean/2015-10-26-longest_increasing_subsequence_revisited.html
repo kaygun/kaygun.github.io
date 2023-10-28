@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-10-26-longest_increasing_subsequence_revisited</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="longest-increasing-subsequence-revisited">Longest Increasing
+Subsequence Revisited</h1>
+<p>This is another problem I have <a
+href="2014-10-26-longest_increasing_subsequence.html">looked at
+before</a>, but I have a different angle :)</p>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Assume we have a finite sequence of real numbers <span
+class="math inline">\((x_1,\ldots,x_n)\)</span>. Our aim today is to
+find a subsequence <span
+class="math inline">\((x_{i_1},\ldots,x_{i_k})\)</span> such that</p>
+<ol type="1">
+<li>The subsequence must be strictly increasing,</li>
+<li>The subsequence is the longest such subsequence in the original
+sequence.</li>
+</ol>
+<h2 id="obvioussolution">Obvious solution</h2>
+<p>There is an obvious recursive solution: let <code>f</code> be the
+function that calculates the subsequence we are looking for. Then
+<code>(f xs)</code> is the longer of <code>(f (cdr xs))</code> and
+<code>(cons (car xs) (f (filter xs)))</code> where
+<code>(filter xs)</code> returns the list of elements in <code>xs</code>
+which are greater than <code>(car xs)</code>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>I am going to need a function that returns the longer of two
+lists:</p>
+<pre><code>(defun longer (x y)
+   (if (&gt; (length x) (length y))
+       x
+       y))
+LONGER</code></pre>
+<p>And for the recursive function</p>
+<pre><code>(defun f (xs)
+   (if (cdr xs)
+       (longer (f (cdr xs))
+               (let ((u (car xs)))
+                  (cons u (f (remove-if-not (lambda (x) (&gt; x u)) (cdr xs))))))
+       xs))
+F</code></pre>
+<p>Let us test:</p>
+<pre><code>(let ((xs (loop repeat 60 collect (random 10))))
+   (equal (longest-inc-seq xs)
+          (f xs)))
+T</code></pre>
+<p>It works just fine for short lists. I took the function
+<code>longest-inc-seq</code> from my <a
+href="2014-10-26-longest_increasing_subsequence.html">previous
+post</a>.</p>
+<h2 id="thebottleneck">The bottleneck</h2>
+<p>The implementation I gave is recursive and it is terribly inefficient
+for large lists:</p>
+<pre><code>(let ((xs (loop repeat 100 collect (random 20))))
+   (time (longest-inc-seq xs))
+   (time (f xs))
+   nil)
+NIL
+
+
+Evaluation took:
+  0.000 seconds of real time
+  0.000000 seconds of total run time (0.000000 user, 0.000000 system)
+  100.00% CPU
+  43,009 processor cycles
+  4,096 bytes consed
+
+Evaluation took:
+  0.091 seconds of real time
+  0.348000 seconds of total run time (0.124000 user, 0.224000 system)
+  382.42% CPU
+  320,140,485 processor cycles
+  44,111,512 bytes consed</code></pre>
+<h2 id="memoization">Memoization</h2>
+<p>One can cut down the time and space complexity using <a
+href="https://en.wikipedia.org/wiki/Memoization">memoization</a>.</p>
+<pre><code>(let ((table (make-hash-table :test #&#39;equal)))
+   (defun g (xs)
+      (or (gethash xs table)
+          (setf (gethash xs table)
+                (if (cdr xs)
+                    (longer (g (cdr xs))
+                            (let ((u (car xs)))
+                                 (cons u (g (remove-if-not (lambda (x) (&gt; x u))
+                                                           (cdr xs))))))
+                    xs)))))
+G
+(let ((xs (loop repeat 150 collect (random 20))))
+   (time (longest-inc-seq xs))
+   (time (f xs))
+   (time (g xs))
+   nil)
+NIL
+
+
+Evaluation took:
+  0.000 seconds of real time
+  0.000000 seconds of total run time (0.000000 user, 0.000000 system)
+  100.00% CPU
+  46,075 processor cycles
+  4,096 bytes consed
+
+Evaluation took:
+  2.965 seconds of real time
+  2.960000 seconds of total run time (2.932000 user, 0.028000 system)
+  [ Run times consist of 0.028 seconds GC time, and 2.932 seconds non-GC time. ]
+  99.83% CPU
+  10,352,715,660 processor cycles
+  1,789,128,888 bytes consed
+
+Evaluation took:
+  0.001 seconds of real time
+  0.004000 seconds of total run time (0.004000 user, 0.000000 system)
+  400.00% CPU
+  4,342,791 processor cycles
+  318,640 bytes consed</code></pre>
+<h2 id="analysis">Analysis</h2>
+<p>The <a href="2014-10-26-longest_increasing_subsequence.html">original
+implementation</a> which is based on <a
+href="https://en.wikipedia.org/wiki/Patience_sorting">patience sort</a>
+is blazingly fast, but its implementation is difficult. The recursive
+implementation is rather easy to implement but has really bad complexity
+(exponential). Memoized solution is a good compromise between easy
+implementaion and speed.</p>
+<div id="footer">
+<p><span id="timestamp">October 26th, 2015 6:50pm</span></p>
+</div>
+</body>
+</html>

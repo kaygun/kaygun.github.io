@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-06-19-generating_random_regular_graphs</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="generating-random-regular-graphs">Generating random regular
+graphs</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>An undirected graph <span class="math inline">\(G=(V,E)\)</span> is
+called regular if all of the vertices <span class="math inline">\(v\in
+V\)</span> has the same degree. For the purposes of today’s post, I will
+allow loops on vertices, and multiple edges between any pair of
+vertices.</p>
+<h2 id="a-solution-implementation-in-common-lisp">A solution
+implementation in Common Lisp</h2>
+<p>First, I am going to need a helper function that will generate <span
+class="math inline">\(k\)</span>-copies of each vertex numbered from
+<span class="math inline">\(1\)</span> to <span
+class="math inline">\(n\)</span>:</p>
+<pre><code>(defun pool (n k)
+   (loop for i from 1 to n append
+       (loop repeat k collect i)))
+
+POOL</code></pre>
+<p>This is going to needed to generate a random <span
+class="math inline">\(k\)</span>-regular graph on <span
+class="math inline">\(n\)</span>-vertices.</p>
+<p>I am also going to need an helper function that takes the difference
+of two lists like <a
+href="http://www.lispworks.com/documentation/HyperSpec/Body/f_set_di.htm"><code>set-difference</code></a>
+but one that works for lists:</p>
+<pre><code>(defun list-difference (xs ys)
+  (cond ((null ys) xs)
+        ((member (car ys) xs) (list-difference (remove (car ys) xs :count 1) 
+                                               (cdr ys)))
+        (t (list-difference xs (cdr ys)))))
+
+LIST-DIFFERENCE</code></pre>
+<p>Here is the function that generates that random graph</p>
+<pre><code>(defun graph (xs &amp;optional es)
+  (labels ((random-elt (ys) (elt ys (random (length ys))))
+           (random-edge (xs)  
+             (let* ((x (random-elt xs))
+                    (y (random-elt (remove x xs :count 1))))
+               (if (&gt; x y)
+                   (list y x)
+                   (list x y)))))
+    (if xs
+        (let ((e (random-edge xs)))
+          (graph (list-difference xs e) (push e es)))
+        es)))
+
+GRAPH</code></pre>
+<p>Let us test it. Here is a random 5-regular graph on 20-vertices:</p>
+<pre><code>(defvar G (graph (pool 20 5)))
+
+G</code></pre>
+<figure class="tmblr-full" data-orig-height="1056" data-orig-width="1062">
+<img src="../media/2017-06-19-generating_random_regular_graphs_0.png" data-orig-height="1056"
+data-orig-width="1062" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">June 19th, 2017 7:02pm</span></p>
+</div>
+</body>
+</html>

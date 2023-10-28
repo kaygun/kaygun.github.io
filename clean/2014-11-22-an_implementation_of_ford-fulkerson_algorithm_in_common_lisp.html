@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="an-implementation-of-ford-fulkerson-algorithm-in-common-lisp">An
+Implementation of Ford-Fulkerson Algorithm in Common Lisp</h1>
+<h2 id="decriptionoftheproblem">Description of the problem</h2>
+<p>Given a network where edges have predetermined capacities, our task
+is to determine the maximum possible flow between any two vertices in
+the network.</p>
+<p>One possible solution is to use <a
+href="http://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm">Ford-Fulkerson
+Algorithm</a>. Today, I am going to implement Ford-Fulkerson in
+lisp.</p>
+<h2 id="flownetworks">Flow networks</h2>
+<p>I am going to represent the graphs as pairs of vertices and a number
+representing the capacity in that particular direction. For example</p>
+<pre><code>(defvar G &#39;(((0 1) . 3) ((1 2) . 1) ((1 3) . 1) ((2 4) . 2) 
+            ((3 4) . 1) ((4 5) . 0) ((3 5) . 3) ((2 5) . 2) 
+            ((5 6) . 1))) 
+
+G</code></pre>
+<p>represents</p>
+<figure data-orig-height="539" data-orig-width="151" data-orig-src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_0.png">
+<img src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_0.png" data-orig-height="539"
+data-orig-width="151" data-orig-src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_0.png" />
+</figure>
+<h2 id="findingapath">Finding a path</h2>
+<p>In order to implement the algorithm we are going to need find paths
+from the source to the sink. The function below will find such a path
+using a depth-first search.</p>
+<pre><code>(defun find-a-route (x y G &amp;optional (past (list x)))
+   (let* ((res nil)
+          (neigh (dolist (i G (reverse res))
+                    (if (and (&gt; (cdr i) 0) (= x (caar i)))
+                        (push (cadar i) res))))
+          (next (set-difference neigh past)))
+      (cond ((null next) nil)
+            ((member y next) (reverse (push y past)))
+            (t (some (lambda (i) (find-a-route i y G (cons i past))) next)))))
+
+FIND-A-ROUTE</code></pre>
+<h2 id="augmentedflow">Augmented flow</h2>
+<p>Next, we need to find the maximum flow which is the minimum capacity
+on the path</p>
+<pre><code>(defun max-flow (path capacity)
+   (let ((res (mapcar (lambda (x y) (cdr (assoc (list x y) capacity :test #&#39;equal)))
+                      path 
+                      (cdr path))))
+      (and res (apply #&#39;min res))))
+
+MAX-FLOW</code></pre>
+<h2 id="theford-fulkersonalgorithmimplemented">The Ford-Fulkerson
+algorithm implemented</h2>
+<p>And finally here is an implementation of the Ford-Fulkerson maximum
+flow algorithm. Along each augmented path, we increase the flow and
+decrease the capacity. If there was a flow in the reverse direction, we
+also decrease that too, and on top of that, on the capacity network we
+add a reverse flow on such edges.</p>
+<pre><code>(defun ford-fulkerson (a b network)
+   (let ((capacity (copy-list network))
+         (flow (mapcar (lambda (x) (cons (car x) 0)) network)))
+      (labels ((modify (edge net val)
+                  (incf (cdr (assoc edge net :test #&#39;equal)) val))
+               (augment (path)
+                  (let ((m (max-flow path capacity)))
+                     (dolist (edge (mapcar #&#39;list path (cdr path)))
+                        (if (assoc edge flow :test #&#39;equal)
+                           (progn (modify edge flow m)
+                                  (modify edge capacity (- m)))
+                           (progn (modify (reverse edge) flow (- m))
+                                  (if (assoc edge capacity)
+                                      (modify edge capacity m)
+                                      (push (cons edge m) capacity))))))))
+         (do ((path (find-a-route a b capacity) (find-a-route a b capacity)))
+             ((null path) flow)
+           (augment path)))))
+
+FORD-FULKERSON</code></pre>
+<h2 id="sometests">Some tests</h2>
+<p>To test the algorithm I am going to need a random flow network. The
+following function will give us such a random flow network.</p>
+<pre><code>(defun random-graph (n m k)
+  (remove-duplicates
+     (loop for i from 0 to n append
+         (loop repeat m collect
+             (if (zerop (random 8))
+                 (cons (list (+ i 1 (random m)) i) (1+ (random k)))
+                 (cons (list i (+ i 1 (random m))) (1+ (random k))))))
+  :test (lambda (x y) (or (equal (car x) (car y))
+                          (equal (reverse (car x)) (car y))))))
+
+RANDOM-GRAPH</code></pre>
+<p>So, here is a random flow network:</p>
+<pre><code>(defvar a-random-flow (random-graph 12 6 30))
+
+A-RANDOM-FLOW</code></pre>
+<figure class="tmblr-full" data-orig-height="750" data-orig-width="385" data-orig-src>
+<img src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_1.png" data-orig-height="750"
+data-orig-width="385" data-orig-src="" />
+</figure>
+<p>Let us find some random paths between points:</p>
+<pre><code>(find-a-route 0 13 a-random-flow)
+
+(0 2 5 8 12 13)</code></pre>
+<p>Let us see if we get the right maximum flow:</p>
+<pre><code>(max-flow (find-a-route 0 13 a-random-flow) a-random-flow)
+
+8</code></pre>
+<p>Let us test on our small network we defined at the very
+beginning:</p>
+<figure data-orig-height="539" data-orig-width="59" data-orig-src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_2.png">
+<img src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_2.png" data-orig-height="539"
+data-orig-width="59" data-orig-src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_2.png" />
+</figure>
+<p>And, now on the large random network I defined above:</p>
+<pre><code>(defvar flow (ford-fulkerson 0 13 a-random-flow))
+
+FLOW</code></pre>
+<figure data-orig-height="750" data-orig-width="228" data-orig-src>
+<img src="../media/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp_3.png" data-orig-height="750"
+data-orig-width="228" data-orig-src="" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">November 22nd, 2014 6:42pm</span></p>
+</div>
+</body>
+</html>

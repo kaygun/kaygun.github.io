@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-04-05-hamming_distance_and_hashing_functions</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="hamming-distance-and-hashing-functions">Hamming Distance and
+Hashing Functions</h1>
+<h2 id="description-of-the-problem">Description of the Problem</h2>
+<p>As yesterday, assume <span class="math inline">\((X,d)\)</span> is a
+metric space of bitstrings of a fixed length together with the Hamming
+distance. Today, I am going to look at the distributions of numbers
+<span class="math inline">\(d(f(x),x)\)</span> for <span
+class="math inline">\(x\in X\)</span>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>As yesterday, I am going to use <a
+href="http://method-combination.net/lisp/ironclad/">ironclad:</a></p>
+<pre><code>(require :ironclad)
+NIL</code></pre>
+<p>and the same MD5 and SHA1 hashing functions:</p>
+<pre><code>(let ((hasher (ironclad:make-digest :md5)))
+  (defun md5-digest (x)
+    (coerce (ironclad:digest-sequence hasher x) &#39;list)))
+MD5-DIGEST
+(let ((hasher (ironclad:make-digest :sha1)))
+    (defun sha1-digest (x)
+       (coerce (ironclad:digest-sequence hasher x) &#39;list)))
+SHA1-DIGEST</code></pre>
+<p>Since the space of bit strings of length 128 is large, I will use a
+Monte-Carlo method:</p>
+<pre><code>(defun random-vector (m)
+   (coerce
+      (loop repeat m collect (random 256))
+      &#39;(vector (unsigned-byte 8))))
+RANDOM-VECTOR</code></pre>
+<p>And finally, the function that calculates the quantity I am
+interested in is</p>
+<pre><code>(defun hamming-distance (x y)
+   (labels ((calc (x y &amp;optional (acc 0))
+               (cond
+               ((&lt; x y) (calc y x 0))
+                 ((zerop x) acc)
+                 (t (calc (ash x -1)
+                          (ash y -1)
+                          (if (equal (oddp x) (oddp y)) 
+                             acc
+                             (1+ acc)))))))
+        (reduce #&#39;+ (map &#39;list (lambda (i j) (calc i j)) x y))))
+HAMMING-DISTANCE</code></pre>
+<p>Now, let me test this on a sample of size 40,000 on MD5:</p>
+<pre><code>(with-open-file (out &quot;hamming2-data1.csv&quot; :direction :output
+                                          :if-exists :supersede
+                                          :if-does-not-exist :create)
+   (loop repeat 40000 do
+       (let ((x (random-vector 16)))
+          (format out &quot;~4,9f~%&quot; (/ (hamming-distance  (md5-digest x) x) 1.0)))))
+NIL</code></pre>
+<p>Here is a histogram of the data:</p>
+<figure class="tmblr-full" data-orig-height="480" data-orig-width="480">
+<img src="../media/2015-04-05-hamming_distance_and_hashing_functions_0.png" data-orig-height="480"
+data-orig-width="480" />
+</figure>
+<p>For the majority of the vectors, it is most likely that about 50% of
+the bits of the output will be different than the input.</p>
+<p>Now, let me test this again on SHA1. Recall that since SHA1 digest
+produces 20 bytes, I am going to need random vectors of length 20:</p>
+<pre><code>(with-open-file (out &quot;hamming2-data2.csv&quot; :direction :output
+                                          :if-exists :supersede
+                                          :if-does-not-exist :create)
+   (loop repeat 40000 do
+       (let ((x (random-vector 20)))
+          (format out &quot;~4,9f~%&quot; (/ (hamming-distance  (sha1-digest x) x) 1.0)))))
+NIL</code></pre>
+<p>Here is a histogram of the data:</p>
+<figure class="tmblr-full" data-orig-height="480" data-orig-width="480">
+<img src="../media/2015-04-05-hamming_distance_and_hashing_functions_1.png" data-orig-height="480"
+data-orig-width="480" />
+</figure>
+<p>Again, about 50% of the bits are different between the input and
+output vectors.</p>
+<h3 id="an-analysis">An Analysis</h3>
+<p>I took the data from these experiments and normalized the values to
+the interval [0,1]. When I compared the distributions with the
+Kolmogorov-Smirnov test I see that</p>
+<pre><code>Two-sample Kolmogorov-Smirnov test
+
+data:  normalize(as.matrix(X)) and normalize(as.matrix(Y))
+D = 0.2524, p-value &lt; 2.2e-16
+alternative hypothesis: two-sided</code></pre>
+<p>which means that the distributions are different. Very
+interesting!</p>
+<div id="footer">
+<p><span id="timestamp">April 5th, 2015 1:36pm</span></p>
+</div>
+</body>
+</html>

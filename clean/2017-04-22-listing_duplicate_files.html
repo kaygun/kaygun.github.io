@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-04-22-listing_duplicate_files</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="listing-duplicate-files">Listing duplicate files</h1>
+<p>If you are in the habbit of saving a local copy of (scientific)
+articles you read like me, you will run into the problem of managing a
+large number of files with many many duplicates. I have been thinking of
+writing a program giving me a list of duplicates so that I can do
+<em>spring cleaning</em> every once in a while. Working with MD5 hash
+signatures for a <a href="https://github.com/kaygun/dvc">different
+project</a> I got an idea, and this small hack is born.</p>
+<p>Here is a short shell script when run give a list of clustered file
+names where each cluster indicates identical files.</p>
+<pre><code>#!/bin/sh
+
+find $@ -type f -exec md5sum {} \; | \
+awk &#39;{ count[$1]+=1; u=$1; $1=&quot;&quot;; \ 
+       res[u] = $0&quot;\n&quot;res[u]; \
+     } \
+     END \ 
+     { for(i in res) { \
+          if(count[i]&gt;1) { \
+            print res[i]&quot;\n&quot;; \
+          }\
+       }\
+     }&#39; </code></pre>
+<p>“`</p>
+<div id="footer">
+<p><span id="timestamp">April 22nd, 2017 5:50am</span></p>
+</div>
+</body>
+</html>

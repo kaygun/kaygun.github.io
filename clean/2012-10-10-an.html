@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-10-10-an</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="animplementationofk-meansclusteringalgorithminlisp">An
+implementation of the <span class="math inline">\(k\)</span>-means
+clustering algorithm in lisp</h1>
+<h2 id="descriptionoftheproblemandthealgorithm">Description of the
+problem and the algorithm</h2>
+<p>The <span class="math inline">\(k\)</span>-means clustering algorithm
+is probably one of the simplest clustering algorithms available. The
+set-up is simple: we have a metric space <span
+class="math inline">\((X,d)\)</span> and a collection of points <span
+class="math inline">\(D = \{x_1,\ldots, x_n\}\)</span> in <span
+class="math inline">\(X\)</span> that we would like to write as a
+disjoint union of <span class="math inline">\(k\)</span> subsets <span
+class="math display">\[ D = D_1 \sqcup \cdots \sqcup D_k \]</span> In
+most applications, the data is numerical and therefore we can assume
+that <span class="math inline">\(X\)</span> is a subset of a finite
+dimensional vector space over <span class="math inline">\({\mathbb
+R}\)</span>. But if the data is categorical and can not be easily
+ranked, or ordered, then we really must work with an abstract metric
+space. Our algorithm works as follows:</p>
+<ol type="1">
+<li><p>Select an initial set of centers <span
+class="math inline">\(y^1_1,\ldots, y^1_k\)</span> for our clusters
+<span class="math inline">\(D_1,\ldots, D_k\)</span>. The selection can
+be made randomly, or can be given by hand.</p></li>
+<li><p>Assuming we have these centers <span
+class="math inline">\(y^m_1,\ldots,y^m_k\)</span> at step <span
+class="math inline">\(m\)</span>, go over every point in our data set
+<span class="math inline">\(D\)</span>. Postulate that <span
+class="math inline">\(x\in D^m_i\)</span> if the distance of <span
+class="math inline">\(x\)</span> to <span
+class="math inline">\(y^m_i\)</span> is minimal among all such centers.
+In other words <span class="math inline">\(x\in D^m_i\)</span> if and
+only if <span class="math display">\[ d(x,y^m_i) = min\{ d(x,y^m_j)\|\ j
+= 1,\ldots, k\}
+\]</span></p></li>
+<li><p>Construct new centers <span
+class="math inline">\(y^{m+1}_i\)</span> from the cluster subsets <span
+class="math inline">\(D^mi\)</span> we formed in the previous step. If
+<span class="math inline">\((X,d)\)</span> is a subset of a vector space
+then this is simply the average of all vectors in <span
+class="math inline">\(D^m_i\)</span>.</p></li>
+<li><p>Repeat steps 2 and 3 until <span class="math inline">\(y^m_i =
+y^{m+1}_i\)</span> for every <span
+class="math inline">\(i=1,\ldots,k\)</span>.</p></li>
+</ol>
+<h2 id="animplementationinlisp">An implementation in lisp</h2>
+<p>First, I need to write few utility functions.</p>
+<pre><code>(defun range (N) (loop for i from 0 below N collect i))
+
+(defun select-column (collection column)
+   (map &#39;vector (lambda (x) (aref x column)) collection))
+SELECT-COLUMN</code></pre>
+<p>I will assume that the data is given as a collection of comma
+seperated entries one data point per line. I would like to write a
+utility function so that I can select specific columns of data I would
+like to consider. I will also need the regular expression library
+<code>cl-ppcre</code></p>
+<pre><code>(require :cl-ppcre)</code></pre>
+<p>The next utility function will take the name of the data file as its
+argument and load the data. It will return a list of entries.</p>
+<pre><code>(defun read-data(name)
+    (with-open-file (file name)
+        (let (line)
+            (loop while (setf line (read-line file nil)) collect
+                  (if (&gt; (length line) 0)
+                     (map &#39;vector &#39;read-from-string (ppcre:split #\, line)))))))</code></pre>
+<p>Let us test the function on a sample data. The <a
+href="http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data">data</a>
+comes from the <a href="http://archive.ics.uci.edu/ml">UCI data
+repository</a>.</p>
+<pre><code>(setq data (read-data &quot;iris.csv&quot;))</code></pre>
+<p>Our algorithm will need two fundamental functions both of which
+should be specific to the data at hand. The first is the distance
+function. Both <code>distance</code> and <code>cluster-center</code>
+functions we are going to define must depend on the structures of the
+data points. For this data the <span
+class="math inline">\(L^1\)</span>-distance [also known as the <em>taxi
+cab distance</em>] is going to be our distance function.</p>
+<pre><code>(defun distance (x y)
+   (let ((N (length x)))
+       (loop for i from 0 below (1- N) sum (abs (- (aref x i) (aref y i))))))</code></pre>
+<p>Let us test the function on two points from our data set:</p>
+<pre><code>(setq NUM (length data))
+(setq point-1 (nth (random NUM) data))
+(setq point-2 (nth (random NUM) data))
+(format nil &quot;Distance between ~A and ~A is ~A~%&quot; point-1 point-2 (distance point-1 point-2))
+Distance between #(5.4 3.9 1.7 0.4 IRIS-SETOSA) and 
+#(6.8 3.0 5.5 2.1IRIS-VIRGINICA) is 7.8</code></pre>
+<p>The center of a collection of points is the point obtained by taking
+the averages of each coordinate.</p>
+<pre><code>(defun cluster-center (collection)
+   (let* ((N (length collection))
+          (m (length (car collection)))
+          (res (make-array m)))
+      (map-into res (lambda (x) (/ (reduce &#39;+ (select-column collection x)) N)) (range (1- m)))
+      res))</code></pre>
+<p>Let us test this function on the whole dataset to find the
+center.</p>
+<pre><code>(setq data-center (cluster-center data))
+    #(5.8433347 3.054 3.7586665 1.1986669 NIL)</code></pre>
+<p>Now, the following function <code>which-cluster</code> decides which
+cluster a given the data point belongs to. It takes two arguments: a
+data point <code>x</code> and <span
+class="math inline">\(k\)</span>-data points designated as cluster
+centers <code>centers</code>.</p>
+<pre><code>(defun which-cluster (x centers)
+    (let* ((N (length centers))
+           (class (aref x (1- (length x))))
+           (res (mapcar &#39;cons
+                     (coerce (map &#39;vector (lambda (u) (distance x u)) centers) &#39;list)
+                     (range N))))
+       (cdar (sort res (lambda (a b) (&lt; (car a) (car b)))))))</code></pre>
+<p>The next function <code>k-means-interate</code> takes two arguments:
+a training data set <code>training-data</code> and a set of data points
+of size <span class="math inline">\(k\)</span> for the clusters we would
+like to form. It returns the next set of centers for the clusters.</p>
+<pre><code>(defun k-means-iterate (training-data centers)
+   (let ((clusters (make-array (length centers))))
+      (dolist (y training-data)
+          (push y (aref clusters (which-cluster y centers))))
+      (map &#39;vector &#39;cluster-center clusters)))
+K-MEANS-ITERATE</code></pre>
+<p>One has to be careful here. It is possible that
+<code>k-means-iterate</code> returns less than <span
+class="math inline">\(k\)</span> centers even if it is given exactly
+<span class="math inline">\(k\)</span> centers. In that case the
+iteration will fail in the next run ungracefully. You are warned. I
+might add extra code to deal with this boundary case but I’d rather
+re-run the program until I get exactly <span
+class="math inline">\(k\)</span> centers.</p>
+<p>And finally we write the training function. This will take a training
+dataset and iterate <code>k-means-iterate</code> until the center points
+for our clusters stabilize enough.</p>
+<pre><code>(defun k-means-train (training-data centers &amp;optional (error 0.003))
+   (let ((N (length centers))
+         v u i)
+      (do* ((v centers u)
+            (u (k-means-iterate training-data v) (k-means-iterate training-data v)))
+           ((&lt; (loop for i from 0 below N sum (distance (aref u i) (aref v i))) error) u))))
+K-MEANS-TRAIN</code></pre>
+<p>I will run the whole data set through the algorithm. I will use three
+centers, that is I would like to split the data set into 3 clusters.</p>
+<pre><code>(setq centers
+   (let* ((copy (coerce data &#39;vector))
+          (NUM (length copy)))
+      (map &#39;vector (lambda (x) (aref copy (random NUM))) #(1 2 3))))
+#(#(6.4 2.9 4.3 1.3 IRIS-VERSICOLOR) #(6.0 2.2 5.0 1.5 IRIS-VIRGINICA)
+  #(4.6 3.2 1.4 0.2 IRIS-SETOSA))</code></pre>
+<p>Now, I will train the algorithm and it will give us the centers for
+the clusters. Then using these cluster centers, I can figure out which
+cluster does any given any point belong to using
+<code>which-cluster</code> function. I am going to use the error value
+<code>0.004</code> which was completely arbitrary. You are free to not
+to pass an error bound. In that case the default value will be
+<code>0.003</code>.</p>
+<pre><code>(setf class-centers (k-means-train data centers 0.004))
+#(#(5.006 3.418 1.4640001 0.24399994 NIL)
+  #(6.87027 3.0864863 5.7459464 2.0891888 NIL)
+  #(5.9047627 2.7460315 4.4126983 1.4333336 NIL))</code></pre>
+<p>Let us see how successful the algorithm was:</p>
+<pre><code>(setq N (length data-center))
+(setq results (loop for x in data collect (list (aref x (1- N))
+(which-cluster x class-centers))))
+(setq report nil)
+(dolist (x results)
+     (if (assoc x report :test #&#39;equal)
+       (incf (cdr (assoc x report :test #&#39;equal)))
+       (push (cons x 1) report)))
+report
+(((IRIS-VIRGINICA 2) . 15) ((IRIS-VIRGINICA 0) . 35)
+ ((IRIS-VERSICOLOR 0) . 2) ((IRIS-VERSICOLOR 2) . 48)
+ ((IRIS-SETOSA 1) . 50))</code></pre>
+<p>Consider the following 3x3 matrix where we display the way our
+clusters are formed.</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">Cluster 0</th>
+<th style="text-align: center;">Cluster 1</th>
+<th style="text-align: center;">CLuster 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Versicolor</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">48</td>
+</tr>
+<tr class="even">
+<td>Virginica</td>
+<td style="text-align: center;">35</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">15</td>
+</tr>
+<tr class="odd">
+<td>Setosa</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">50</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+<p>The results indicate that if the return value from
+<code>which-cluster</code> function for a data point <span
+class="math inline">\(x\)</span> was 1 using the centers provided by
+<code>k-means-train</code> function, the point <span
+class="math inline">\(x\)</span> is very likely to be a <em>Iris
+Setosa</em>. If the function returns 2 for <span
+class="math inline">\(x\)</span> then <span
+class="math inline">\(x\)</span> is very likely to be a <em>Iris
+Versicolor</em> or <em>Iris Virginica</em>. Moreover, the odds that it
+is a <em>Iris Versicolor</em> is approximately 3 times more than <span
+class="math inline">\(x\)</span> being a <em>Iris Virginica</em>. If the
+function returns 0, then <span class="math inline">\(x\)</span> is very
+likely to be a <em>Iris Virginica</em></p>
+<p>Ok. We are done with this data set. I am going to use <a
+href="http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data">another
+data set</a> from <a href="http://archive.ics.uci.edu/ml">UCI machine
+learning repository</a>.</p>
+<p>I am going to be lazy and instead of writing new
+<code>distance</code> and <code>cluster-center</code> functions specific
+to this new data set, I am going to modify the new data such that the
+last column is now the class ascribed to the data point on each row.</p>
+<pre><code>(setq data (read-data &quot;wine.csv&quot;))</code></pre>
+<p>Ok. Let us check the distance function</p>
+<pre><code>(setq NUM (length data))
+(setq point-1 (nth (random NUM) data))
+(setq point-2 (nth (random NUM) data))
+(format nil &quot;Distance between ~A and ~A is ~A~%&quot; point-1 point-2 (distance point-1 point-2))
+Distance between #(12.77 2.39 2.28 19.5 86 1.39 0.51 0.48 0.64
+9.899999 0.57 1.63 470 3) and
+#(12.08 1.83 2.32 18.5 81 1.6 1.5 0.52 1.64 2.4 1.08 2.27 480 2) is 28.179998</code></pre>
+<p>and test the <code>cluster-center</code> function on the whole
+data</p>
+<pre><code>(setf data-center (cluster-center data))
+#(13.000614 2.336348 2.3665185 19.494946 8877/89 2.2951121 2.02927
+  0.36185396 1.5908992 5.0580897 0.95744956 2.6116843 132947/178 NIL)</code></pre>
+<p>As before, I need 3 clusters. I will again recycle the code above for
+setting the first 3 cluster centers randomly:</p>
+<pre><code>(setq centers
+   (let* ((copy (coerce data &#39;vector))
+          (NUM (length copy)))
+      (map &#39;vector (lambda (x) (aref copy (random NUM))) #(1 2 3))))
+#(#(13.03 0.9 1.71 16 86 1.95 2.03 0.24 1.46 4.6 1.19 2.48 392 2)
+  #(12.37 0.94 1.36 10.6 88 1.98 0.57 0.28 0.42 1.95 1.05 1.82 520 2)
+  #(12.37 1.63 2.3 24.5 88 2.22 2.45 0.4 1.9 2.12 0.89 2.78 342 2))</code></pre>
+<p>Now, let us run <code>k-means-train</code></p>
+<pre><code>(setq class-centers (k-means-train data centers 0.004))
+#(#(12.51191 2.4873528 2.2838235 20.776472 6271/68 2.0670583 1.7754412
+    0.38808835 1.4613234 4.074706 0.9419118 2.4957347 7757/17 NIL)
+  #(13.804467 1.8834045 2.42617 17.023403 4959/47 2.867234 3.014256
+    0.28531918 1.9104254 5.702553 1.0782979 3.1140423 56172/47 NIL)
+  #(12.9284115 2.5112698 2.4112694 19.955551 932/9 2.114444 1.5684129
+    0.39063492 1.4923812 5.6387305 0.8840635 2.3620634 5083/7 NIL))</code></pre>
+<p>Let us see how successful the algorithm was:</p>
+<pre><code>(setq N (length data-center))
+(setq results (loop for x in data collect (list (aref x (1- N)) (which-cluster x class-centers))))
+(setq report nil)
+(dolist (x results)
+     (if (assoc x report :test #&#39;equal)
+       (incf (cdr (assoc x report :test #&#39;equal)))
+       (push (cons x 1) report)))
+report
+(((3 1) . 18) ((3 0) . 30) ((2 2) . 1) ((2 0) . 20) ((2 1) . 50)
+ ((1 0) . 13) ((1 2) . 46))</code></pre>
+<p>Consider the following 3x3 matrix where we display the way our
+clusters are formed.</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: left;">Cluster 0</th>
+<th style="text-align: left;">Cluster 1</th>
+<th style="text-align: left;">Cluster 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Class 1</td>
+<td style="text-align: left;">13</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">46</td>
+</tr>
+<tr class="even">
+<td>Class 2</td>
+<td style="text-align: left;">20</td>
+<td style="text-align: left;">50</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="odd">
+<td>Class 3</td>
+<td style="text-align: left;">30</td>
+<td style="text-align: left;">18</td>
+<td style="text-align: left;">0</td>
+</tr>
+</tbody>
+</table>
+<p>The table tells us the following. If the function
+<code>which-cluster</code> returns 2 for a data point <span
+class="math inline">\(x\)</span> using the centers we obtained from
+<code>k-means-train</code> then it is likely that the data point <span
+class="math inline">\(x\)</span> comes from a Class 1 wine. If the
+return value is 1 then <span class="math inline">\(x\)</span> most
+likely comes from a Class 2 or Class 3 wine. Moreover, the odds of <span
+class="math inline">\(x\)</span> being a Class 2 wine as opposed to a
+Class 3 wine is approximately 5 to 2. If the function
+<code>which-cluster</code> returns 0, the return value is not going to
+be much of a use.</p>
+<div id="footer">
+<p><span id="timestamp">October 10th, 2012 8:27am</span></p>
+</div>
+</body>
+</html>

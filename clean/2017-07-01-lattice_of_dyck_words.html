@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-07-01-lattice_of_dyck_words</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="lattice-of-dyck-words">Lattice of Dyck Words</h1>
+<h2 id="description-of-the-problems">Description of the problems</h2>
+<p>I will call an arbitrary sequence of 0’s and 1’s balanced if the
+number of 0’s and 1’s are the same. I will call a balanced sequence
+positive if in every initial segment of the sequence, the number of 0’s
+is greater than or equal to the number of 1’s. For example,</p>
+<pre><code>(0 1 0 1 0 0 1 1)</code></pre>
+<p>is a positive balanced sequence, while</p>
+<pre><code>(1 0 0 1) </code></pre>
+<p>is not.</p>
+<p>The proper name for a positive balanced sequence is <a
+href="http://blogs.ams.org/visualinsight/2015/07/15/dyck-words/">a Dyck
+word</a>. Today, I am going to write a short common lisp function that
+returns all Dyck words of a certain length.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>This following is the first implementation I came up with:</p>
+<pre><code>(defun dyck-words (n &amp;optional (a 0) (b n) (acc (list nil)))             
+  (labels ((insert (i xs) (mapcar (lambda (x) (cons i x)) xs)))          
+    (cond ((= a n) (mapcar (lambda (x) (append (loop repeat b collect 0) x)) acc))
+          ((= a 0) (dyck-words n (1+ a) b (insert 1 acc)))               
+          (t       (union (dyck-words n (1+ a) b (insert 1 acc))               
+                          (dyck-words (1- n) (1- a) (1- b) (insert 0 acc)))))))
+
+DYCK-WORDS</code></pre>
+<p>Here the index <span class="math inline">\(n\)</span> refers to the
+number of 0′s and 1′s.  One can refactor it to be a little shorter:</p>
+<pre><code>(defun dyck-words (n &amp;optional (a 0) (b n) (acc (list nil)))
+  (labels ((insert (i xs) (mapcar (lambda (x) (cons i x)) xs)))
+    (if (= a n)
+        (mapcar (lambda (x) (append (loop repeat b collect 0) x)) acc)
+        (union (dyck-words n (1+ a) b (insert 1 acc))
+               (if (&gt; a 0) (dyck-words (1- n) (1- a) (1- b) (insert 0 acc)))))))
+
+DYCK-WORDS</code></pre>
+<p>I prefer the first one even though it is longer. I think it is more
+readable.</p>
+<p>Here is a test. The set of Dyck words of length 8:</p>
+<pre><code>(dyck-words 4)
+
+((0 0 0 1 1 1 0 1) (0 0 1 0 1 1 0 1) (0 1 0 0 1 1 0 1) (0 1 0 1 0 1 0 1)
+ (0 0 1 1 0 1 0 1) (0 0 1 1 0 0 1 1) (0 1 0 1 0 0 1 1) (0 1 0 0 1 0 1 1)
+ (0 0 1 0 1 0 1 1) (0 0 0 1 1 0 1 1) (0 0 0 1 0 1 1 1) (0 0 1 0 0 1 1 1)
+ (0 1 0 0 0 1 1 1) (0 0 0 0 1 1 1 1))</code></pre>
+<h2 id="lattice-of-dyck-words-1">Lattice of Dyck words</h2>
+<p>I am going to create a graph out of Dyck words of a certain length.
+Two Dycks words are going to be connected if one is obtained from the
+other using a single transposition, i.e. by switching two consecutive
+letters. The following function checks if two Dyck words are connected
+by a single transposition.</p>
+<pre><code>(defun adjacentp (xs ys)
+  (labels ((vec-xor (x y) 
+             (mapcar (lambda (x y) (if (equal x y) 0 1)) x y)))
+    (let ((res (vec-xor xs ys)))
+      (and (= 2 (reduce #&#39;+ res))
+           (every #&#39;equal &#39;(1 1) (member 1 res))))))
+
+ADJACENTP</code></pre>
+<p>Here is the code for the graph:</p>
+<pre><code>(defun hasse (xs pred)
+  (mapcon (lambda (ys)
+            (let ((y (car ys))
+                  (zs (cdr ys))
+                  (res nil))
+              (dolist (z zs res)
+                (if (funcall pred y z)
+                    (push (list y z) res)))))
+          xs))
+
+HASSE</code></pre>
+<p>Let us see the graph for the set of Dyck words of length 8:</p>
+<pre><code>(defvar dyck8 (hasse (dyck-words 4) #&#39;adjacentp))
+
+DYCK8</code></pre>
+<figure class="tmblr-full" data-orig-width="308" data-orig-height="532">
+<img src="../media/2017-07-01-lattice_of_dyck_words_0.png" data-orig-width="308"
+data-orig-height="532" alt="image" />
+</figure>
+<p>Now, Dyck words of length 10:</p>
+<pre><code>(defvar dyck10 (hasse (dyck-words 5) #&#39;adjacentp))
+
+DYCK10</code></pre>
+<figure class="tmblr-full" data-orig-width="604" data-orig-height="789">
+<img src="../media/2017-07-01-lattice_of_dyck_words_1.png" data-orig-width="604"
+data-orig-height="789" alt="image" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">July 1st, 2017 5:19pm</span></p>
+</div>
+</body>
+</html>

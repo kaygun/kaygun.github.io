@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-02-22-math_phd_hiring_network_part_3</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="math-phd-hiring-network-part-3">Math PhD Hiring Network (Part
+3)</h1>
+<p>I have been looking at the hiring networks in Mathematics
+(2015-02-18-math_phd_hiring_network_part_1.html) and <a
+href="2015-02-19-math_phd_hiring_network_part_2.html">here</a> in the
+last two days. The resulting graphs are highly connected and difficult
+to read. In order to perform more flexible analyses and to simplify the
+workflow, I created another <a
+href="https://www.dropbox.com/s/b287p69ossjewc6/all-named-edges.csv?dl=0">dataset</a>
+which is easier to process, and I simplified the code that generates
+these graphs.  You can find everything you need to play with the code
+and the data <a
+href="https://github.com/kaygun/hiring-network">here</a>.</p>
+<p>The dataset now consists of person id, advisor’s school (name,
+country and id) and recipient’s school (name, country and id) and year
+of the degree. The code I wrote is bare bones. Depending on what you
+want, first you need to filter the data and then pipe it to the program.
+The command line parameters are</p>
+<ol type="1">
+<li>The first item is either 0 for school based graphs or 1 for country
+based graphs.</li>
+<li>If the weight is below this threshold, it is not displayed on the
+final graph.</li>
+<li>The title of the graph for information purposed delimited with
+quotation marks.</li>
+</ol>
+<p>The weight function: first all PhD’s are counted for the filtered
+dataset. Then these numbers are normalized between 0 and 1. Then I apply
+the following function: w(x)=log(1+x) to the result up to a suitable
+scalar multiple and a cut off function.</p>
+<h2 id="country-based-graphs">Country Based Graphs</h2>
+<p>Let us start looking at the graphs again:</p>
+<p><a
+href="https://www.dropbox.com/s/fql82u2a6f5meev/countries-before-1800.svg?dl=0">Hiring
+network before 1800</a></p>
+<p>France, The Netherlands and Germany (then Prussia) dominated the Math
+PhD network.</p>
+<p><a
+href="https://www.dropbox.com/s/830b78lm8ag1v2n/countries-1800-1910.svg?dl=0">Hiring
+network between 1800 and 1910</a></p>
+<p>The network has expanded, but the connections are not as strong as
+before. Germany still dominates, and we have new players appearing on
+the scene such as Russia and Ukraine. Also notice that both US and UK
+are importers of PhD degrees, and Germany is the main exporter. But this
+might be an inherent bias of the dataset. After all, Math Genealogy
+Project is based in the US.</p>
+<p><a
+href="https://www.dropbox.com/s/wru4t9bv4gul636/countries-1910-1940.svg?dl=0">Hiring
+network between 1910 and 1940</a></p>
+<p>The number of PhD’s among Germany, The Netherlands, Austria and
+Switzerland expands. Russia starts exporting degrees to US. Also, notice
+the relationship between Germany and Spain, but we see no discernible
+relations between Germany and Italy in between two World Wars.</p>
+<p><a
+href="https://www.dropbox.com/s/wrm6rderurq8ex3/countries-1940-1985.svg?dl=0">Hiring
+network between 1940 and 1985</a></p>
+<p>Wow! Almost all PhD’s between 1940’s and 1980’s are given in the US.
+The US looks like this large sink that swallows all the math PhD’s.
+Also, notice that Russia’s influence expands. India now is visible, but
+not China. </p>
+<p><a
+href="https://www.dropbox.com/s/vk7pwgzd5hh7158/countries-1985-2005.svg?dl=0">Hiring
+network between 1985 and 2005</a></p>
+<p>The US becomes the primary exporter of Math PhD’s. China shows up for
+the first time. </p>
+<p><a
+href="https://www.dropbox.com/s/fo5h6wblsypn3bh/countries-after-2005.svg?dl=0">Hiring
+network after 2005</a></p>
+<p>The US now dominating the scene. China appears on the horizon.</p>
+<h2 id="school-based-graphs">School Based Graphs</h2>
+<p>I will be looking at the specific network around the US, the UK and
+Canada.</p>
+<p><a
+href="https://www.dropbox.com/s/zj79cauoq3ibbei/universities-1800-1910.svg?dl=0">Anglo-American
+Network Between 1800–1910</a></p>
+<p>The Math PhD Network of the US is very small and largely depends on
+the UK and Germany.</p>
+<p><a
+href="https://www.dropbox.com/s/ny9y8uju7rbjm1w/universities-1910-1940.svg?dl=0">Anglo-American
+Network Between 1910–1940</a></p>
+<p>The network starts taking shape. The major hubs form: Chicago,
+Harvard, Urbana-Champaign, Johns Hopkins and Princeton.</p>
+<p><a
+href="https://www.dropbox.com/s/x420xx05je4ylhu/universities-1940-1985.svg?dl=0">Anglo-American
+Network Between 1940–1985</a></p>
+<p>After US became the major importer of PhD degrees in math after the
+2nd World War, major hubs form a tight network with some interesting
+subnetworks on the periphery: Texas Austin and small cluster of Southern
+Universities (not visible on this scale), New York University and its
+small network, Cambridge and its cross-continental subnetwork.</p>
+<p><a
+href="https://www.dropbox.com/s/nc62m2td2ne4jjp/universities-1985-2005.svg?dl=0">Anglo-American
+Network Between 1985–2005</a></p>
+<p>I don’t know what it is but the PhD network became even more
+connected than previous eras. Increasing and decreasing the threshold
+doesn’t much change the structure of the graph. It is a highly connected
+graph with plenty of connections between the major hubs and the rest of
+the universities.</p>
+<p><a
+href="https://www.dropbox.com/s/d12sni6qtpw2a5e/universities-after-2005.svg?dl=0">Anglo-American
+Network After 2005</a></p>
+<p>The graph didn’t change much from the previous era.</p>
+<div id="footer">
+<p><span id="timestamp">February 22nd, 2015 6:02pm</span></p>
+</div>
+</body>
+</html>

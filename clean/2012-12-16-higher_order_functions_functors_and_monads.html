@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-12-16-higher_order_functions_functors_and_monads</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="higher-order-functions-functors-and-monads">Higher order
+functions, functors and monads</h1>
+<blockquote>
+<p>A monad is a monoid in the category of endofunctors. So, what’s the
+problem?</p>
+<p>(Jokingly attributed to P. Wadler, from <a
+href="http://james-iry.blogspot.com/2009/05/brief-incomplete-and-mostly-wrong.html">A
+Brief, Incomplete, and Mostly Wrong History of Programming Languages</a>
+by J. Iry)</p>
+</blockquote>
+<p>As a mathematician, the joke is still lost on me. As a matter of fact
+I said the very same thing to myself when I first heard about the use of
+monads in computer science and then saw the torrent of posts and
+explanations on the subject on the <a
+href="http://www.haskell.org/haskellwiki/Monad_tutorials_timeline">interwebs</a>.
+As I understand it, one reason why they are used is because functional
+languages such as Haskell mostly shun side effects and monads are seen
+as one possible method to manipulate/simulate/keep track of side
+effects. I am <strong>not</strong> going to comment on that.
+(<strong>Addendum:</strong> Here is <a
+href="http://scienceblogs.com/goodmath/2007/01/31/the-theory-of-monads-and-the-m-1/">another
+exposition</a> I really like on the subject.)</p>
+<p>Today, I will dig into three notions with examples from common
+lisp:</p>
+<ol type="1">
+<li>Higher order functions</li>
+<li>Functors</li>
+<li>Monads</li>
+</ol>
+<h2 id="higher-order-functions">Higher order functions</h2>
+<p>Anyone who has some experience with a functional programming language
+would know that what separates this class of languages is the relative
+ease of passing functions as arguments to other functions. Such
+functions which accept other functions as arguments are called
+<strong>higher order functions</strong>. The standard <a
+href="https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node90.html"><code>mapcar</code></a>
+is such an example from common lisp. Here is another example:</p>
+<pre><code>(defun compose (f g)
+     (lambda (x) (funcall f (funcall g x))))
+COMPOSE</code></pre>
+<p>This function takes two lisp functions and returns a new function
+which is obtained by composing its arguments.</p>
+<pre><code>(defparameter new (compose (lambda (x) (* x x)) &#39;1+))
+NEW</code></pre>
+<p>This function <code>new</code> is the mathematical function <span
+class="math inline">\(f(x) = (x + 1)^2\)</span> written as a composition
+of an anonymous function and the standard lisp function <code>1+</code>.
+Let us test if it works as intended:</p>
+<pre><code>(loop for i from 1 to 10 collect (let ((x (random 9))) (cons x (funcall new x))))
+((4 . 25) (3 . 16) (2 . 9) (5 . 36) (1 . 4) (6 . 49) (5 . 36) (1 . 4)
+ (1 . 4) (2 . 9))</code></pre>
+<h2 id="functors">Functors</h2>
+<p>A <strong>functor</strong> is a higher order function which is
+compatible with composition. Mathematically speaking, a higher order
+function <span class="math inline">\(F\)</span> is a functor when for
+two composable ordinary functions <span class="math inline">\(g\colon
+X\to Y\)</span> and <span class="math inline">\(f\colon Y\to Z\)</span>
+one has <span class="math display">\[ F(f\circ g) = F(f)\circ F(g)
+\]</span> where <span class="math inline">\(\circ\)</span> denotes the
+binary operation of composition. I will give a non-example, and then an
+example.</p>
+<p>Consider the following higher order function</p>
+<pre><code>(defun twice (f) (lambda (x) (* 2 (funcall f x))))
+TWICE</code></pre>
+<p>which takes a numerical function as an argument and returns another
+numerical function whose return value is twice of the argument function.
+This is <strong>not</strong> a functor because the functions
+<code>(twice (compose f g))</code> and
+<code>(compose (twice f) (twice g))</code> need not return the same
+value when called with the same argument. For example take the identity
+function which returns its argument as is</p>
+<pre><code>(defun id (x) x)
+ID</code></pre>
+<p>and then compare these functions at some random point</p>
+<pre><code>(funcall (twice (compose &#39;id &#39;id)) 10)
+20</code></pre>
+<p>and</p>
+<pre><code>(funcall (compose (twice &#39;id) (twice &#39;id)) 10)
+40</code></pre>
+<p>These values are not the same. So, <code>twice</code> is a higher
+order function but not a functor.</p>
+<p>Now, consider the following higher order function
+<code>vectorize</code></p>
+<pre><code>(defun vectorize (f) (lambda (x) (mapcar f x)))
+VECTORIZE</code></pre>
+<p>which takes a function <span class="math inline">\(f:X\to Y\)</span>
+as an argument which operates some type of input <span
+class="math inline">\(X\)</span> to create an output of type <span
+class="math inline">\(Y\)</span>, and promotes it to another function
+<code>(vectorize f)</code> which takes a list of objects of type <span
+class="math inline">\(X\)</span> to create list of objects of type <span
+class="math inline">\(Y\)</span>. For example</p>
+<pre><code>(funcall (vectorize &#39;1+) &#39;(0 1 2 3))
+(1 2 3 4)</code></pre>
+<p>This higher order function is compatible with composition of
+functions.</p>
+<pre><code>(defun LHS (f g) (vectorize (compose f g)))
+LHS</code></pre>
+<p>and</p>
+<pre><code>(defun RHS (f g) (compose (vectorize f) (vectorize g)))
+RHS</code></pre>
+<p>are going to produce the same effect on every pair of composable
+functions. For example consider the following random list of
+integers</p>
+<pre><code>(defparameter some-list (loop for i from 1 to 10 collect (random 10)))
+SOME-LIST</code></pre>
+<p>Now we compare <code>LHS</code> and <code>RHS</code> on this list</p>
+<pre><code>(funcall (rhs (lambda (x) (* x x)) &#39;1+) some-list)
+(36 9 4 81 100 25 81 64 81 25)</code></pre>
+<p>and</p>
+<pre><code>(funcall (lhs (lambda (x) (* x x)) &#39;1+) some-list)
+(36 9 4 81 100 25 81 64 81 25)</code></pre>
+<p>Of course, seeing <code>RHS</code> and <code>LHS</code> producing the
+same output on some random list does not guarantee that <code>RHS</code>
+and <code>LHS</code> will produce the same output for all inputs but
+think for few seconds you will see that they should be the same. In
+other words, you will convince yourself that <code>vectorize</code> is a
+functor.</p>
+<p>If you think that functors are completely theoretical constructs and
+devoid of any <em>real-life</em> applications in every day computing,
+think again: imagine you have a file <code>data.csv</code> consisting of
+two columns of numbers and you need the sums of the first column and the
+second column and written on the third column.<br />
+I would use a awk one liner</p>
+<pre><code>awk &#39;{ print $1 &quot;\t&quot; $2 &quot;\t&quot; ($1+$2); }&#39; data.csv</code></pre>
+<p>and voila! What you should realize now is that you used a functor
+similar to <code>vectorize</code> I defined above :)</p>
+<h2 id="functors-and-type-signatures-of-functions">Functors and type
+signatures of functions</h2>
+<p>There is another aspect of functors I did not get into above. Yes, a
+functor operates on a function and give you another function, and yes it
+is also compatible with the composition of function. But what about the
+type signatures of the functions? A functor <span
+class="math inline">\(T\)</span> might transform the type signatures of
+the functions but it should do it without altering the composability of
+the functions. If <span class="math inline">\(f\colon Y\to Z\)</span>
+and <span class="math inline">\(g\colon X\to Y\)</span> is a composable
+pair of functions with their respective type signatures, then the
+resulting functions <span class="math inline">\(T(f)\)</span> and <span
+class="math inline">\(T(g)\)</span> should have compatible type
+signatures as well. We mathematicians write the resulting type
+signatures as <span class="math inline">\(T(f)\colon T(Y)\to
+T(Z)\)</span> and <span class="math inline">\(T(g)\colon T(X)\to
+T(Y)\)</span>.</p>
+<p>So, for the <code>vectorize</code> example above if we were to given
+a function of type <code>g:: Int -&gt; Char</code> then the resulting
+function <code>vectorize(g)</code> would have the type signature
+<code>vectorize(g):: [Int] -&gt; [Char]</code> (Here I am using Haskell
+notations and conventions.) And if have another function
+<code>f:: Char -&gt; String</code> then <code>vectorize(f)</code> will
+produce a function with the type signature
+<code>vectorize(f):: [Char] -&gt; [String]</code> without altering
+composability of <code>f</code> and <code>g</code>.</p>
+<h2 id="monads">Monads</h2>
+<p>OK, so you know that a monad is a monoid in the category of
+endofunctors. But what does that even mean?</p>
+<p>First of all a monad <span class="math inline">\(T\)</span> is a
+functor. The “endo” part indicates that the type signature of <span
+class="math inline">\(T\)</span> itself (it is a higher order function
+afterall, and therefore has its own type signature) is special. It must
+be of the form <span class="math inline">\(T\colon A\to A\)</span>. I
+would have a hard time describing this in Haskell. In lisp lingo I would
+say <span class="math inline">\(T\)</span> sends a lambda expression to
+another lambda expression. I suppose I can write
+<code>T: lambda -&gt; lambda</code>. As such, one can compose <span
+class="math inline">\(T\)</span> with itself many times. So, we can look
+at the whole sequence of lambda expressions <span
+class="math inline">\(T^n(f)\)</span>. If <span
+class="math inline">\(T\)</span> is a monoid (i.e. a monad) in this
+context then we have an extra piece of information to tell us how to
+flatten these iterated objects <span
+class="math inline">\(T^n(f)\)</span> consistently to level of <span
+class="math inline">\(T(f)\)</span>.</p>
+<p>Let me explain this on the <code>vectorize</code> example I defined
+above. If <code>f</code> is a function of type signature
+<code>f:Int -&gt; Char</code> then <code>(vectorize f)</code> sends
+lists of integers to lists of characters
+<code>[Int] -&gt; [Char]</code>. Now imagine you applied
+<code>vectorize</code> twice. The new function you get
+<code>(vectorize (vectorize f))</code> will operate on a list of lists
+of integers and will produce a list of lists of characters
+<code>[[Int]] --&gt; [[Char]]</code>. In this case the consistency
+requirement is as follows: Consider the generic function
+<code>flatten:[[a]]-&gt;[a]</code> which takes a nested list and
+flattens it. Then we ask that the resulting list from</p>
+<pre><code>(flatten (funcall (vectorize (vectorize &#39;f)) my-list-of-lists))</code></pre>
+<p>and from</p>
+<pre><code>(funcall (vectorize &#39;f) (flatten my-list-of-lists))</code></pre>
+<p>should be the same list of characters for any list of lists of
+integers <code>my-list-of-lists</code>.</p>
+<p>I will give just a simple example:</p>
+<pre><code>(defun flatten (x)
+    (cond ((null x) nil)
+          ((atom x) (list x))
+          (t (mapcan &#39;flatten x))))
+
+(defun f (x) (+ (* x x) x 1))
+
+(defparameter my-list-of-lists
+    (mapcar (lambda (n) (loop for i from 0 to n collect (random 12)))
+            (loop for i from 1 to 5 collect (1+ (random 7)))))
+
+my-list-of-lists
+((4 1 9 3 3) (9 3 11 2) (11 1 6 4 6) (2 6 5 4 7 1) (1 1 7 8 5 11 1 10))</code></pre>
+<p>Now, we calculate</p>
+<pre><code>(flatten (funcall (vectorize (vectorize &#39;f)) my-list-of-lists))
+(21 3 91 13 13 91 13 133 7 133 3 43 21 43 7 43 31 21 57 3 3 3 57 73 31 133 3 111)</code></pre>
+<p>and</p>
+<pre><code>(funcall (vectorize &#39;f) (flatten my-list-of-lists))
+(21 3 91 13 13 91 13 133 7 133 3 43 21 43 7 43 31 21 57 3 3 3 57 73 31 133 3 111)</code></pre>
+<p>We call such pairs <code>(vectorize,flatten)</code> as monads. You
+need an endofunctor <span class="math inline">\(T\)</span> and a generic
+function <span class="math inline">\(\eta\)</span> which
+<em>flattens</em> <span class="math inline">\(T^2\)</span> to <span
+class="math inline">\(T\)</span> in such a way that any sort of
+potentially different flattenings of higher order terms <span
+class="math inline">\(T^n\)</span> to <span
+class="math inline">\(T\)</span> via any use of consecutive <span
+class="math inline">\(\eta\)</span>’s produce the same effect.</p>
+<div id="footer">
+<p><span id="timestamp">December 16th, 2012 12:25pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2022-03-28-trade_deficit_vs_exchange_rate_curve</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="trade-deficit-vs-exchange-rate-curve">Trade Deficit vs Exchange
+Rate Curve</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I once remember reading an old paper by an economist (whose name
+escapes me) about relationship between trade deficit and exchange rates.
+Today, I’ll do a numerical experiment to see if there is a demonstrable
+relationship.</p>
+<h2 id="data">Data</h2>
+<p>I am going to pull the data from European Central Bank. Let us start
+with the libraries:</p>
+<pre><code>import json
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
+from urllib.request import urlopen</code></pre>
+<p>I am going to rehash a function I wrote <a
+href="2022-03-09-working_with_european_central_bank_data_in_python_revisited.html">earlier</a>
+to pull the data:</p>
+<pre><code>def ecbProbe(dataset,name,m):
+    mid = &#39;:&#39;.join([&#39;0&#39; for i in range(m)])
+    with urlopen(f&#39;https://sdw-wsrest.ecb.europa.eu/service/data/{dataset}?format=jsondata&#39;) as url:
+         raw = json.load(url)
+    dates = [x[&#39;name&#39;] for x in raw[&#39;structure&#39;][&#39;dimensions&#39;][&#39;observation&#39;][0][&#39;values&#39;]]
+    values = [x[0] for x in raw[&#39;dataSets&#39;][0][&#39;series&#39;][mid][&#39;observations&#39;].values()]
+    return pd.DataFrame({name: values}, index=dates)</code></pre>
+<p>I am going to pull the full data of total imports and exports of EU
+Area with the US:</p>
+<pre><code>country = &#39;US&#39;
+df1 = ecbProbe(f&#39;ECB,TRD/M.I8.Y.M.TTT.{country}.4.VAL&#39;,&#39;imports US&#39;,8)
+df2 = ecbProbe(f&#39;ECB,TRD/M.I8.Y.X.TTT.{country}.4.VAL&#39;,&#39;exports US&#39;,8)
+deficit = pd.DataFrame(df1[&#39;imports US&#39;]/df2[&#39;exports US&#39;])
+deficit.plot(figsize=(12,6))
+plt.savefig(&#39;us-ec-trade-deficit.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-width="1200" data-orig-height="600">
+<img
+src="../media/2022-03-28-trade_deficit_vs_exchange_rate_curve_0.png"
+data-orig-width="1200" data-orig-height="600" />
+</figure>
+<p>Next, the exchange rate data:</p>
+<pre><code>exchangeUStoEUR = ecbProbe(&#39;EXR/M.USD.EUR.SP00.A&#39;,&#39;EURXUS&#39;,5)
+exchangeUStoEUR.plot(figsize=(12,6))
+plt.savefig(&#39;us-ec-exchange-rate.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-width="1200" data-orig-height="600">
+<img
+src="../media/2022-03-28-trade_deficit_vs_exchange_rate_curve_1.png"
+data-orig-width="1200" data-orig-height="600" />
+</figure>
+<p>Now, we plot these things against each other. I’ll do a running
+average of 8 months.</p>
+<pre><code>tmp = deficit.join(exchangeUStoEUR,how=&#39;inner&#39;).rolling(8).mean()
+plt.plot(tmp.iloc[:,0],tmp.iloc[:,1])
+plt.savefig(&#39;us-ec-plot.png&#39;)</code></pre>
+<figure class="tmblr-full" data-orig-height="357" data-orig-width="707">
+<img
+src="../media/2022-03-28-trade_deficit_vs_exchange_rate_curve_2.png"
+data-orig-height="357" data-orig-width="707" />
+</figure>
+<h2 id="analysis">Analysis</h2>
+<p>Interesting!</p>
+<div id="footer">
+<p><span id="timestamp">March 28th, 2022 3:33pm</span></p>
+</div>
+</body>
+</html>

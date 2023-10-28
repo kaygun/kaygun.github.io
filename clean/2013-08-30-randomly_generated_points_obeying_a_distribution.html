@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-08-30-randomly_generated_points_obeying_a_distribution</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="randomly-generated-points-obeying-a-distribution">Randomly
+Generated Points Obeying a Distribution</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>You need a collection of randomly generated points obeying a weird
+funky distribution and say your favorite language does not support what
+you need. How would you go about generating a bunch of points fitting
+into the distribution you need?</p>
+<h2 id="solutionintheabstract">Solution in the abstract</h2>
+<p>I will assume that your funky distribution is continuous and you have
+its <a
+href="http://en.wikipedia.org/wiki/Probability_density_function">probability
+density function</a> <span class="math inline">\(f(x)\)</span> which is
+of the form <span class="math inline">\(f\colon \mathbb{R}\to
+\[0,1\]\)</span>. From this we need to create <a
+href="http://en.wikipedia.org/wiki/Cumulative_distribution_function">cumulative
+distribution function</a> <span class="math inline">\(F(x)\)</span>
+using <span class="math display">\[ F(x) = \int_{-\infty}^x f(t)dt
+\]</span> One interesting thing about <span
+class="math inline">\(F(x)\)</span> is that it is a non-decreasing
+function–after all its derivative is <span
+class="math inline">\(f(x)\)</span> which is non-negative. If it happens
+that <span class="math inline">\(f(x)\&gt;0\)</span> for every <span
+class="math inline">\(x\)</span> then <span
+class="math inline">\(F(x)\)</span> becomes increasing which makes it
+invertible. This is crucial for our purposes. The inverse function of
+the cumulative distribution function <span
+class="math inline">\(F(x)\)</span> is known as <a
+href="http://en.wikipedia.org/wiki/Quantile_function">the quartile
+function</a> and usually denoted by <span
+class="math inline">\(q(x)\)</span>.</p>
+<p>The punchline is this: if <span
+class="math inline">\(x_1,\ldots,x_n\)</span> is a collection of
+uniformly distributed random numbers in the interval <span
+class="math inline">\(\[0,1\]\)</span> then <span
+class="math inline">\(q(x_1),\ldots,q(x_n)\)</span> is a collection of
+random points obeying your funky distribution <span
+class="math inline">\(f(x)\)</span>.</p>
+<h2 id="someexamples">Some examples</h2>
+<p>Let me consider <a
+href="http://en.wikipedia.org/wiki/Logistic_distribution">the logistic
+distribution</a> <span class="math inline">\(f(x) =
+\frac{e^{-x}}{(1+e^{-x})^2}\)</span> whose cumulative distribution
+function is the <a
+href="http://en.wikipedia.org/wiki/Logistic_function">logistic
+function</a> <span class="math inline">\(F(x) =
+\frac{1}{1+e^{-x}}\)</span></p>
+<p><img
+src="../media/2013-08-30-randomly_generated_points_obeying_a_distribution_0.png" /></p>
+<p>The corresponding quartile function is <span class="math display">\[
+q(x) =
+-\ln\left(\frac{1}{x}-1\right) \]</span></p>
+<p>Let me implement this example in lisp:</p>
+<pre><code>(defun rlogistic (n)
+   (mapcar (lambda (x) (- (log (- (/ 1.0d0 x) 1.0d0)))) 
+           (loop repeat n collect (random 1.0d0))))
+
+(rlogistic 20)
+
+
+(0.5298456541903203d0 1.4603376713652383d0 -1.0775289157562622d0
+ 1.5627801169043383d0 -1.0215871944697368d0 -1.4173250174419307d0
+ 0.22898138757999306d0 -2.2685264832576038d0 2.3764562183479594d0
+ 2.583270634601332d0 -0.7757976556550247d0 2.7727596538742056d0
+ 2.3677328735264105d0 3.5022446835705177d0 0.4078009528377661d0
+ -0.9258251253274055d0 1.684671915269902d0 1.5960892904700303d0
+ 0.34092549767282637d0 2.428634046653897d0)</code></pre>
+<p>The arctangent function <span
+class="math inline">\(\arctan(x)\)</span> looks like a cumulative
+distribution function, but it needs a little help.</p>
+<p><img
+src="../media/2013-08-30-randomly_generated_points_obeying_a_distribution_1.png" /></p>
+<p>It is also known as <a
+href="http://en.wikipedia.org/wiki/Cauchy_distribution">the standard
+Cauchy distribution</a>, but for that one needs to transform the
+arctangent function to <span class="math inline">\(F(x) =
+\frac{1}{\pi}\arctan(x)+\frac{1}{2}\)</span>. Then its quartile function
+is <span class="math display">\[ q(x) = \tan(\pi(x-½)) \]</span></p>
+<p>Let me implement this in lisp as well:</p>
+<pre><code>(defun rcauchy (n)
+   (mapcar (lambda (x) (tan (* pi (- x 5.0d-1))))
+           (loop repeat n collect (random 1.0d0))))
+
+(rcauchy 20)
+
+
+(-0.6728178241045335d0 -4.3816447664507985d0 0.7182169549503769d0
+ 2.2713336517222817d0 -0.48030938137460755d0 0.04867258459647225d0
+ -0.04317757748226266d0 1.2438239778244204d0 -0.6752213446978993d0
+ -0.5400852348135747d0 -0.2834133390847261d0 -4.932859222280014d0
+ 0.17079522547651516d0 -3.3498087680276565d0 -1.4298686184346256d0
+ 0.4973818749248839d0 -0.36123936498421555d0 0.44849100016138715d0
+ 3.0923703098805753d0 -4.548038109047713d0)</code></pre>
+<p>My last example is called <a
+href="http://en.wikipedia.org/wiki/Rayleigh_distribution">Rayleigh
+distribution</a></p>
+<p><img
+src="../media/2013-08-30-randomly_generated_points_obeying_a_distribution_2.png" /></p>
+<p><span class="math display">\[ f(x,\sigma) = \frac{x}{\sigma^2}
+e^{-x^2/2\sigma^2} \]</span> This distribution works on the half
+infinite interval <span class="math inline">\(\[0,\infty)\)</span>, and
+its cumulative distribution function is <span class="math display">\[
+F(x,\sigma) = 1 -
+e^{-x^2/2\sigma^2} \]</span> whose quartile function would be <span
+class="math display">\[
+q(x,\sigma) = \sigma \sqrt{2\ln(1/(1-x))} \]</span> whose implementation
+will look like</p>
+<pre><code>(defun rrayleigh (n)
+   (mapcar (lambda (x) (sqrt (* 2.0d0 (log (/ (- 1.0d0 x))))))
+           (loop repeat n collect (random 1.0d0))))
+
+(rrayleigh 20)
+
+
+(2.0491697768168065d0 1.6971676917167022d0 1.230629172235978d0
+ 1.3360940539717456d0 0.9674690780386407d0 2.788813145388618d0
+ 2.1061746807804793d0 0.8321009769689073d0 1.0416711663387623d0
+ 1.1933751254466187d0 1.2673392219929287d0 0.943776637185836d0
+ 0.8617988749612544d0 0.8869880239628769d0 0.7372963125026611d0
+ 3.383064338683964d0 2.2447019432341575d0 1.511190782151179d0
+ 0.6115151660011018d0 1.089518226812614d0)</code></pre>
+<p>I took <span class="math inline">\(\sigma=1\)</span> in the
+implementation. All one has to do is to multiply the generated numbers
+by <span class="math inline">\(\sigma\)</span> to get the numbers one
+needs.</p>
+<div id="footer">
+<p><span id="timestamp">August 30th, 2013 5:22am</span></p>
+</div>
+</body>
+</html>

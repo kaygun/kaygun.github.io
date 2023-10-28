@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-06-10-yet_another_fizz-buzz_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="yet-another-fizz-buzz-in-common-lisp">Yet Another Fizz-Buzz in
+Common Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Finally, I’ve finished a pure math project and two computational
+humanities projects, and I have some free time on my hand. So, I thought
+it is time that I wrote my own version of <a
+href="https://en.wikipedia.org/wiki/Fizz_buzz">fizz-buzz</a> in Common
+Lisp.</p>
+<h2 id="the-code">The code</h2>
+<p>One can find many different solutions for the problem at <a
+href="https://rosettacode.org/wiki/FizzBuzz#Common_Lisp">Rosetta
+Code</a>. The solution I have is slightly different. I always hated the
+straightforward solution that checks divisibility by 15 first then by 5
+then by 3 because the last two precludes the first. Anyway, here is yet
+another solution for fizz-buzz:</p>
+<p>First, I need a function that does function composition:</p>
+<pre><code>(defun compose (&amp;rest fs)
+  (lambda (x)
+    (let ((res x))
+      (dolist (f (reverse fs) res)
+        (setf res (funcall f res))))))
+
+COMPOSE</code></pre>
+<p>Next, I need functions that do the right thing for a given
+number:</p>
+<pre><code>(defun do-the-right-thing (k response)
+  (lambda (x) 
+    (if (atom x)
+        (if (zerop (mod x k)) (cons x response) x)
+        (if (zerop (mod (car x) k)) (cons (car x) (cons response (cdr x))) x))))
+
+DO-THE-RIGHT-THING</code></pre>
+<p>And the final code:</p>
+<pre><code>(let ((fizz (do-the-right-thing 3 :fizz))
+      (buzz (do-the-right-thing 5 :buzz))
+      (extract (lambda (x) (if (atom x) x (cdr x)))))
+   (mapcar (compose extract fizz buzz) (loop for i from 0 to 50 collect i)))
+
+((FIZZ . BUZZ) 1 2 FIZZ 4 BUZZ FIZZ 7 8 FIZZ BUZZ 11 FIZZ 13 14 (FIZZ . BUZZ)
+ 16 17 FIZZ 19 BUZZ FIZZ 22 23 FIZZ BUZZ 26 FIZZ 28 29 (FIZZ . BUZZ) 31 32 FIZZ
+ 34 BUZZ FIZZ 37 38 FIZZ BUZZ 41 FIZZ 43 44 (FIZZ . BUZZ) 46 47 FIZZ 49 BUZZ)</code></pre>
+<div id="footer">
+<p><span id="timestamp">June 10th, 2020 2:11pm</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-10-24-the_number_of_inversions_in_a_sequence</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="the-number-of-inversions-in-a-sequence">The Number of Inversions
+in a Sequence</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Assume <span class="math inline">\((a_n)\)</span> is a sequence of
+integers. An <em>inversion</em> in <span
+class="math inline">\((a_n)\)</span> is a pair of integers <span
+class="math inline">\(a_i\)</span> and <span
+class="math inline">\(a_j\)</span> appearing in <span
+class="math inline">\((a_n)\)</span> such that <span
+class="math inline">\(i &lt; j\)</span> but <span
+class="math inline">\(a_i \&gt; a_j\)</span>. Today, I will describe an
+algorithm which will give us the number of inversions in a finite
+sequence of integers.</p>
+<h2 id="algorithm">Algorithm</h2>
+<p>Out algorithm is going to be recursive:</p>
+<pre><code>Algorithm Inversions:
+Input: A finite sequence SEQ
+Output: Number of inversions in SEQ
+Begin
+  Let N be the length of SEQ
+  Let M be the maximum of all elements of SEQ
+  Let I be the position of the rightmost 
+      appearence of M in SEQ
+  Let SEQ&#39; be the SEQ from which the rightmost
+      maximum is removed
+  Return N - I + Inversions(SEQ&#39;)
+End</code></pre>
+<p>The key idea is that the rightmost maximum gives us exactly N-I
+inversions. We handle the rest via recursion.</p>
+<h2 id="code">Code</h2>
+<p>I will give below a tail recursive version of the algorithm I
+described above</p>
+<pre><code>(defun inversions (seq &amp;optional (res 0))
+   (if (= (length seq) 1)
+      res
+      (let* ((n (length seq))
+             (m (apply #&#39;max seq))
+             (i (position m seq :from-end 0))
+             (seq2 (append (subseq seq 0 i) (subseq seq (1+ i)))))
+         (inversions seq2 (+ res (- n i 1))))))
+
+INVERSIONS</code></pre>
+<p>Let us test:</p>
+<pre><code>(inversions &#39;(1 1 1))
+
+0
+
+(inversions &#39;(3 4 5 6 1 2))
+
+8</code></pre>
+<p>Here is the list of the number of inversions for each permutation on
+5 letters:</p>
+<pre><code>(defun all-permutations (n)
+   (if (= n 1)
+       (list (list 1))
+       (mapcan (lambda (seq)
+                  (let (res)
+                     (dotimes (i n res)
+                        (push (nconc (subseq seq 0 i)
+                                     (cons n (subseq seq i)))
+                              res))))
+               (all-permutations (1- n)))))
+
+ALL-PERMUTATIONS
+
+(mapcar (lambda (x) (list (inversions x) x)) (all-permutations 5))
+
+((0 (1 2 3 4 5)) (1 (1 2 3 5 4)) (2 (1 2 5 3 4)) (3 (1 5 2 3 4))
+ (4 (5 1 2 3 4)) (1 (1 2 4 3 5)) (2 (1 2 4 5 3)) (3 (1 2 5 4 3))
+ (4 (1 5 2 4 3)) (5 (5 1 2 4 3)) (2 (1 4 2 3 5)) (3 (1 4 2 5 3))
+ (4 (1 4 5 2 3)) (5 (1 5 4 2 3)) (6 (5 1 4 2 3)) (3 (4 1 2 3 5))
+ (4 (4 1 2 5 3)) (5 (4 1 5 2 3)) (6 (4 5 1 2 3)) (7 (5 4 1 2 3))
+ (1 (1 3 2 4 5)) (2 (1 3 2 5 4)) (3 (1 3 5 2 4)) (4 (1 5 3 2 4))
+ (5 (5 1 3 2 4)) (2 (1 3 4 2 5)) (3 (1 3 4 5 2)) (4 (1 3 5 4 2))
+ (5 (1 5 3 4 2)) (6 (5 1 3 4 2)) (3 (1 4 3 2 5)) (4 (1 4 3 5 2))
+ (5 (1 4 5 3 2)) (6 (1 5 4 3 2)) (7 (5 1 4 3 2)) (4 (4 1 3 2 5))
+ (5 (4 1 3 5 2)) (6 (4 1 5 3 2)) (7 (4 5 1 3 2)) (8 (5 4 1 3 2))
+ (2 (3 1 2 4 5)) (3 (3 1 2 5 4)) (4 (3 1 5 2 4)) (5 (3 5 1 2 4))
+ (6 (5 3 1 2 4)) (3 (3 1 4 2 5)) (4 (3 1 4 5 2)) (5 (3 1 5 4 2))
+ (6 (3 5 1 4 2)) (7 (5 3 1 4 2)) (4 (3 4 1 2 5)) (5 (3 4 1 5 2))
+ (6 (3 4 5 1 2)) (7 (3 5 4 1 2)) (8 (5 3 4 1 2)) (5 (4 3 1 2 5))
+ (6 (4 3 1 5 2)) (7 (4 3 5 1 2)) (8 (4 5 3 1 2)) (9 (5 4 3 1 2))
+ (1 (2 1 3 4 5)) (2 (2 1 3 5 4)) (3 (2 1 5 3 4)) (4 (2 5 1 3 4))
+ (5 (5 2 1 3 4)) (2 (2 1 4 3 5)) (3 (2 1 4 5 3)) (4 (2 1 5 4 3))
+ (5 (2 5 1 4 3)) (6 (5 2 1 4 3)) (3 (2 4 1 3 5)) (4 (2 4 1 5 3))
+ (5 (2 4 5 1 3)) (6 (2 5 4 1 3)) (7 (5 2 4 1 3)) (4 (4 2 1 3 5))
+ (5 (4 2 1 5 3)) (6 (4 2 5 1 3)) (7 (4 5 2 1 3)) (8 (5 4 2 1 3))
+ (2 (2 3 1 4 5)) (3 (2 3 1 5 4)) (4 (2 3 5 1 4)) (5 (2 5 3 1 4))
+ (6 (5 2 3 1 4)) (3 (2 3 4 1 5)) (4 (2 3 4 5 1)) (5 (2 3 5 4 1))
+ (6 (2 5 3 4 1)) (7 (5 2 3 4 1)) (4 (2 4 3 1 5)) (5 (2 4 3 5 1))
+ (6 (2 4 5 3 1)) (7 (2 5 4 3 1)) (8 (5 2 4 3 1)) (5 (4 2 3 1 5))
+ (6 (4 2 3 5 1)) (7 (4 2 5 3 1)) (8 (4 5 2 3 1)) (9 (5 4 2 3 1))
+ (3 (3 2 1 4 5)) (4 (3 2 1 5 4)) (5 (3 2 5 1 4)) (6 (3 5 2 1 4))
+ (7 (5 3 2 1 4)) (4 (3 2 4 1 5)) (5 (3 2 4 5 1)) (6 (3 2 5 4 1))
+ (7 (3 5 2 4 1)) (8 (5 3 2 4 1)) (5 (3 4 2 1 5)) (6 (3 4 2 5 1))
+ (7 (3 4 5 2 1)) (8 (3 5 4 2 1)) (9 (5 3 4 2 1)) (6 (4 3 2 1 5))
+ (7 (4 3 2 5 1)) (8 (4 3 5 2 1)) (9 (4 5 3 2 1)) (10 (5 4 3 2 1)))</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 24th, 2014 6:34am</span></p>
+</div>
+</body>
+</html>

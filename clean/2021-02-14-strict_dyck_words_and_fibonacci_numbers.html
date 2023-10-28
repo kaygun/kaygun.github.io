@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2021-02-14-strict_dyck_words_and_fibonacci_numbers</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="strict-dyck-words-and-fibonacci-numbers">Strict Dyck Words and
+Fibonacci Numbers</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Today, I am going to work on an interesting counting problem.</p>
+<p><a href="https://mathworld.wolfram.com/DyckPath.html">A Dyck word</a>
+is a sequence of 0’s and 1’s in which the number of 0’s exceed the
+number of 1’s in every initial segment of the sequence. The set of Dyck
+words and the set of balanced parantheses are bijective, and therefore,
+the number of Dyck words are given by <a
+href="https://en.wikipedia.org/wiki/Catalan_number">Catalan
+numbers</a>.</p>
+<p>Now, I will call a sequence of 0’s and 1’s a <strong>strict Dyck
+word</strong> if in any contiguous subsequence that starts with 0, the
+number of 1’s are always less than or equal to the number of 0’s. Today,
+I am going to count the number of strict Dyck words.</p>
+<h2 id="theoretical-discussion">Theoretical discussion</h2>
+<p>It is clear that every strict Dyck word must start with a 0. Also,
+one cannot have two consecutive 1’s in a strict Dyck word: every 1 must
+be preceeded by at least one 0. So, if we take a finite sequence of 0’s
+and 1’s and replace every 1 with a “01” we get a strict Dyck word. This
+means <span class="math inline">\(D(n+k+1,k)\)</span> the number of
+strict Dyck words of length <span class="math inline">\(n+k+1\)</span>
+that contains <span class="math inline">\(k\)</span>-many 1’s is <span
+class="math inline">\(\binom{n+k}{k}\)</span>, or better yet, <span
+class="math display">\[
+D(n,k) = \binom{n-k-1}{k} \]</span> for every <span
+class="math inline">\(k=0,\ldots,n-1\)</span>. This means, the number of
+all strict Dyck words of length <span class="math inline">\(n\)</span>
+is <span class="math display">\[ D(n)
+= \sum_{k=0}^{\lfloor \frac{n-1}{2} \rfloor} \binom{n-1-k}{k}
+\]</span> Now, by an old result by <a
+href="https://www.jstor.org/stable/pdf/2310016.pdf?refreqid=excelsior%3Af0654975fc062b200603392683e08e4d">Ganis</a>
+that I saw at <a
+href="https://www.johndcook.com/blog/2018/02/22/fibonacci-binomial-coefficient-identity/#:~:text=Here&#39;s%20an%20identity%20relating%20Fibonacci,denominator%20is%20a%20larger%20integer.">John
+D. Cook’s blog</a> that number is <span
+class="math inline">\(F_n\)</span>, the n-th Fibonacci number.</p>
+<h2 id="experimental-verification">Experimental verification</h2>
+<p>Let us start with an implementation of the binomial:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">defun</span><span class="fu"> binom </span>(n k)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">or</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n k) table)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">setf</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n k) table)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">cond</span> ((<span class="kw">or</span> (<span class="op">&lt;</span> k <span class="dv">0</span>) (<span class="op">&gt;</span> k n)) <span class="dv">0</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                      ((<span class="kw">or</span> (<span class="op">=</span> k <span class="dv">0</span>) (<span class="op">=</span> n k)) <span class="dv">1</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                      ((<span class="op">&lt;</span> (<span class="kw">floor</span> n <span class="dv">2</span>) k) (binom n (<span class="op">-</span> n k)))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                      (<span class="kw">t</span> (<span class="op">*</span> (<span class="op">/</span> n k) (binom (<span class="op">1-</span> n) (<span class="op">1-</span> k)))))))))</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>BINOM</span></code></pre></div>
+<p>We are ready to implement:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> strict-dyck </span>(n &amp;optional (k <span class="dv">0</span>) (carry <span class="dv">0</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">if</span> (<span class="op">&gt;</span> k (<span class="kw">floor</span> (<span class="op">1-</span> n) <span class="dv">2</span>))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       carry</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>       (strict-dyck n (<span class="op">1+</span> k) (<span class="op">+</span> carry (binom (<span class="op">-</span> n k <span class="dv">1</span>) k)))))</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>STRICT-DYCK</span></code></pre></div>
+<p>and we test:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">25</span> collect (strict-dyck i))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">8</span> <span class="dv">13</span> <span class="dv">21</span> <span class="dv">34</span> <span class="dv">55</span> <span class="dv">89</span> <span class="dv">144</span> <span class="dv">233</span> <span class="dv">377</span> <span class="dv">610</span> <span class="dv">987</span> <span class="dv">1597</span> <span class="dv">2584</span> <span class="dv">4181</span> <span class="dv">6765</span> <span class="dv">10946</span> <span class="dv">17711</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">28657</span> <span class="dv">46368</span> <span class="dv">75025</span>)</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">February 14th, 2021 11:56am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-07-15-a_lower_bound_on_the_radius_of_a_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-lower-bound-on-the-radius-of-a-graph">A lower bound on the
+radius of a graph</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Assume we have an undirected graph <span
+class="math inline">\(G\)</span> given as a pair of sets <span
+class="math inline">\((V,E)\)</span> where <span
+class="math inline">\(V\)</span> is a finite set of vertices and <span
+class="math inline">\(E\subset\binom{V}{2}\)</span> is a collection of
+subsets of <span class="math inline">\(V\)</span> each of size 2
+denoting the set of edges.</p>
+<p>The <a
+href="https://en.wikipedia.org/wiki/Distance_(graph_theory)">distance
+between two vertices</a> is the length of the shortest path between
+these vertices. <a
+href="https://en.wikipedia.org/wiki/Distance_(graph_theory)">Eccentricity
+of a vertex</a> is defined to be the largest distance from that
+vertex.</p>
+<p><span class="math display">\[ Ecc(x)=max_{y\in V} d(x,y)
+\]</span></p>
+<p>Now, we can define <a
+href="https://en.wikipedia.org/wiki/Distance_(graph_theory)">the radius
+and diameter of a graph</a> as</p>
+<p><span class="math display">\[ Rad(G)=min_{x\in V} Ecc(x) \quad\text{
+and }\quad\
+Diam(G)=max_{x\in V} Ecc(x) \]</span></p>
+<p>Today, I would like to find a lower bound on the radius of <span
+class="math inline">\(G\)</span> by calculating two cheaper quantities:
+the number of vertices and the largest degree in the graph. Let us
+recall that the degree of a vertex is the number of edges connected to
+that vertex.</p>
+<h2 id="eccentricity">Eccentricity</h2>
+<p>Here is an <a
+href="2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited.html">algorithm</a>
+that I used earlier to calculate the eccentricity of a vertex <span
+class="math inline">\(x\)</span>:</p>
+<pre><code>Function Eccentricity
+Input: A vertex x and a graph G
+Output: Eccentricity of x in G
+Begin
+  Initialize R = 0
+  Initialize W = {x}
+  Initialize V = Vertices of G \ {x}
+  While V is non-empty
+    Let W = the intersection of V and the set of 
+            vertices adjacent to a vertex in W
+    Let V = V \ W
+    Increase R
+  End while
+  Return R
+End</code></pre>
+<p>which I re-implemented in common lisp as follows:</p>
+<pre><code>(defun eccentricity (x G)
+   (labels ((vicinity (u)
+               (delete u
+                  (remove-duplicates
+                     (vertices
+                        (remove-if-not (lambda (e) (member u e)) G))))))
+      (let* ((A (vertices G))
+             (size (length A)))
+         (do ((n 0 (1+ n))
+              (V (delete x A) (set-difference V W))
+              (W (vicinity x)
+                 (intersection V (mapcan #&#39;vicinity W))))
+             ((or (null V) (&gt; n size)) n)))))`&lt;/pre&gt;
+
+VERTICES
+ECCENTRICITY</code></pre>
+<p>For this implementation, a graph is represented as a list of edges
+where and edge is a list that contains two vertices. Using this
+implementation, now I can define the radius as:</p>
+<pre><code>(defun radius (G)
+  (reduce #&#39;min (mapcar (lambda (v) (eccentricity v G)) (vertices G))))
+
+RADIUS</code></pre>
+<p>Let me test this on the following tree</p>
+<pre><code>(defvar tree &#39;((-3 -1) (-4 -1) (-5 -2) (-6 -2) (-1 0) (-2 0) (0 1) 
+               (1 2) (1 3) (2 4) (2 5) (3 6) (3 7) (4 8) (4 9) (5 10) 
+               (5 11) (6 12) (6 13) (7 14) (7 15)))
+
+TREE</code></pre>
+<figure data-orig-width="175" data-orig-height="190">
+<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_0.png" data-orig-width="175"
+data-orig-height="190" />
+</figure>
+<pre><code>(mapcar (lambda (v) (eccentricity v tree)) (vertices tree))
+(radius tree)
+
+(6 6 6 6 5 5 4 3 4 4 6 5 6 6 5 6 6 5 6 6 5 6)
+3</code></pre>
+<h2 id="a-lower-bound-on-the-radius">A lower bound on the radius</h2>
+<p>In the first step of the eccentricity algorithm, we delete one
+vertex. Assume we have <span class="math display">\[ k = \max_{v\in V}
+deg(v) \]</span> Then in the second step we delete less than or equal to
+<span class="math inline">\(k\)</span> vertices. But at each next step,
+the number of edges we deleted is multiplied at most by <span
+class="math inline">\(k-1\)</span>. Thus we obtain <span
+class="math display">\[ \|V\| \leq 1 + k + k(k-1) + \cdots
+k(k-1)^{Ecc(v)-1} = 1 + \sum_{i=0}^{Ecc(v)-1} k(k-1)^i \]</span> Let us
+distinguish two cases: <span class="math inline">\(k=2\)</span> and
+<span class="math inline">\(k\&gt;2\)</span>. In the first case we get
+<span class="math display">\[ \|V\| \leq 1 + k\cdot Ecc(v) \]</span>
+which means <span class="math display">\[ Ecc(v) \geq
+\frac{\|V\|-1}{k} \]</span> In the second case we have <span
+class="math display">\[ \|V\| \leq 1 +
+\frac{k\left((k-1)^{Ecc(v)}-1\right)}{k-2} \]</span> Playing with the
+equation, we get <span class="math display">\[ Ecc(v)\geq
+\frac{\log\left((\|V\|-1)\left(1-\frac{2}{k}\right)+1\right)}{\log(k-1)}
+\]</span> The inequality holds for every vertex <span
+class="math inline">\(v\)</span>. Thus we get </p>
+<p><span class="math display">\[ \min_{v\in V}Ecc(v) = Rad(G)\geq
+\begin{cases}
+\frac{\|V\|-1}{k} &amp; \text{ if }
+k=2\\ \frac{\log\left((\|V\|-1)\left(1-\frac{2}{k}\right)+1\right)}{\log(k-1)}
+&amp; \text{ if } k\&gt;2 \end{cases} \]</span></p>
+<p>Let us look at some examples. First, our approximation function:</p>
+<pre><code>(defun approx (G)
+   (labels ((degree (x) (length (remove-if-not (lambda (e) (member x e :test #&#39;equal)) G))))
+       (let* ((vertices (remove-duplicates (reduce #&#39;append G)))
+              (k (reduce #&#39;max (mapcar #&#39;degree vertices)))
+              (n (length vertices)))
+          (cond ((&lt; k 2) nil)
+                ((= k 2) (ceiling (/ (- n 1.0) 2)))
+                (t (ceiling (/ (log (+ 1.0d0 (* (1- n) (/ (- k 2) k))))
+                               (log (- k 1.0d0)))))))))
+
+APPROX</code></pre>
+<p>Let us see first for <span class="math inline">\(K_5\)</span>:</p>
+<figure data-orig-height="83" data-orig-width="97" data-orig-src>
+<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_1.png" data-orig-height="83"
+data-orig-width="97" data-orig-src="" />
+</figure>
+<pre><code>(radius K5)
+(approx K5)
+
+1
+1</code></pre>
+<p>The inequality is indeed an equality. For the binary tree we used
+earlier</p>
+<figure data-orig-height="190" data-orig-width="175" data-orig-src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_0.png">
+<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_2.png" data-orig-height="190"
+data-orig-width="175" data-orig-src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_0.png" />
+</figure>
+<p>we get</p>
+<pre><code>(radius tree)
+(approx tree)
+
+3
+3</code></pre>
+<p>So, the inequality is tight in this direction too. For graphs of type
+<span class="math inline">\(A_n\)</span> and <span
+class="math inline">\(C_n\)</span>, we have <span
+class="math inline">\(k=2\)</span>.</p>
+<figure data-orig-height="30" data-orig-width="201" data-orig-src>
+<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_3.png" data-orig-height="30"
+data-orig-width="201" data-orig-src="" />
+</figure>
+<pre><code>(radius A7)
+(approx A7)
+
+4
+4</code></pre>
+<p>In other words, the inequality is still the best we can hope for for
+these graphs too.</p>
+<p>Ok. Now, for a random graph:</p>
+<figure data-orig-height="201" data-orig-width="196" data-orig-src>
+<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_4.png" data-orig-height="201"
+data-orig-width="196" data-orig-src="" />
+</figure>
+<pre><code>(radius graph)
+(approx graph)
+
+4
+3</code></pre>
+<h2 id="an-analysis">An analysis</h2>
+<p>For highly connected graphs, the lower bound is going to be worse
+since we would be badly overestimating the number of vertices we deleted
+in each step of the algorithm. For example for the following graph we
+get</p>
+<figure data-orig-height="239" data-orig-width="244" data-orig-src>
+<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_5.png" data-orig-height="239"
+data-orig-width="244" data-orig-src="" />
+</figure>
+<pre><code>(radius graph1)
+(approx graph1)
+
+6
+3</code></pre>
+<p>The complete graphs <span class="math inline">\(K_n\)</span> are
+exempt from the overestimation since our algorithm terminates at step 1
+already.</p>
+<div id="footer">
+<p><span id="timestamp">July 15th, 2017 12:57pm</span></p>
+</div>
+</body>
+</html>

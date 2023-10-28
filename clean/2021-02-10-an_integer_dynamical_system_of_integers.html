@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2021-02-10-an_integer_dynamical_system_of_integers</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="an-integer-dynamical-system-of-integers">An integer dynamical
+system of integers</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a href="2021-02-08-binary_symmetrization.html">Yesterday</a> I was
+looking at an integer dynamical system defined by the following
+procedure:</p>
+<pre><code>procedure symmetrize
+input: an integer n
+output: an integer m
+begin
+   let x be the integer given by radix 2 digits reversed
+   let m be x + n divided by the 2-part of x + n
+   return m
+end</code></pre>
+<p>where 2-part of an integer n is the largest power of 2 that divides
+n. Today, I am going to do the same in radix p.</p>
+<pre><code>procedure symmetrize
+input: a pair of integers n and p
+output: an integer m
+begin
+   let x be the integer given by radix p digits reversed
+   let y be (x + n) + p - ((x + n) mod p)
+   let m be y divided by the p-part of y
+   return m
+end</code></pre>
+<h2 id="an-implementation">An implementation</h2>
+<p>Let us look at my implementation. First, a function that returns the
+p-reduction of an integer:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> reduce-p </span>(n p)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">if</span> (<span class="kw">zerop</span> (<span class="kw">mod</span> n p))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       (reduce-p (<span class="op">/</span> n p) p)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>       n))</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>REDUCE-P</span></code></pre></div>
+<p>Next, symmetrization function:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> symmetrize-p </span>(n p)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let*</span> ((xs (<span class="kw">do*</span> ((m n (<span class="op">/</span> (<span class="op">-</span> m (<span class="kw">mod</span> m p)) p))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                   (rs (<span class="kw">list</span> (<span class="kw">mod</span> m p)) (<span class="kw">cons</span> (<span class="kw">mod</span> m p) rs)))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                  ((<span class="kw">zerop</span> m) rs)))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>         (re (<span class="kw">do*</span> ((rs (<span class="kw">cdr</span> xs) (<span class="kw">cdr</span> rs))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                   (g <span class="dv">1</span> (<span class="op">+</span> (<span class="op">*</span> g p) (<span class="kw">car</span> rs))))</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                  ((<span class="kw">null</span> (<span class="kw">cdr</span> rs)) g))))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">let</span> ((x (<span class="op">+</span> re n)))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      (reduce-p (<span class="op">+</span> x (<span class="op">-</span> p (<span class="kw">mod</span> x p))) p))))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>SYMMETRIZE-P</span></code></pre></div>
+<p>And finally, an iteration function:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> iterate </span>(n iterator &amp;optional carry)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">member</span> n carry <span class="bu">:test</span> <span class="op">#&#39;</span>equal)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">nreverse</span> carry)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>      (iterate (<span class="kw">funcall</span> iterator n) iterator (<span class="kw">cons</span> n carry))))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ITERATE</span></code></pre></div>
+<p>Let us test it: First for <span
+class="math inline">\(p=2\)</span>.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(iterate (reduce-p (<span class="kw">random</span> (<span class="kw">expt</span> <span class="dv">2</span> <span class="dv">12</span>)) <span class="dv">2</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">lambda</span> (n) (symmetrize-p n <span class="dv">2</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">3541</span> <span class="dv">1771</span> <span class="dv">443</span> <span class="dv">111</span> <span class="dv">7</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>Next, for <span class="math inline">\(p=3\)</span>.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(iterate (reduce-p (<span class="kw">random</span> (<span class="kw">expt</span> <span class="dv">2</span> <span class="dv">20</span>)) <span class="dv">3</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">lambda</span> (n) (symmetrize-p n <span class="dv">3</span>))))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">335216</span> <span class="dv">223478</span> <span class="dv">5518</span> <span class="dv">2950</span> <span class="dv">1967</span> <span class="dv">1069</span> <span class="dv">713</span> <span class="dv">395</span> <span class="dv">88</span> <span class="dv">59</span> <span class="dv">31</span> <span class="dv">7</span> <span class="dv">4</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>and finally for <span class="math inline">\(p=53\)</span>.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(iterate (reduce-p (<span class="kw">random</span> (<span class="kw">expt</span> <span class="dv">2</span> <span class="dv">20</span>)) <span class="dv">53</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">lambda</span> (n) (symmetrize-p n <span class="dv">53</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">363366</span> <span class="dv">10903</span> <span class="dv">306</span> <span class="dv">8</span> <span class="dv">1</span>)</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">February 10th, 2021 6:08pm</span></p>
+</div>
+</body>
+</html>

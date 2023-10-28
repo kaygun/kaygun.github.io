@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-06-01-conjugate_partitions</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="conjugate-partitions">Conjugate Partitions</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>An unordered <span class="math inline">\(k\)</span>-partition of
+<span class="math inline">\(n\)</span> is an ordered sequence of
+integers <span class="math inline">\(n_1 \leq \cdots \leq n_k\)</span>
+such that <span class="math inline">\(n = \sum_{i=1}^k n_i\)</span>. We
+can picture such a partition as boxes stacked on top of each other:</p>
+<figure data-orig-height="143" data-orig-width="234">
+<img src="../media/2016-06-01-conjugate_partitions_0.png" data-orig-height="143"
+data-orig-width="234" alt="image" />
+</figure>
+<p>When we read the diagram above we can view it as a <span
+class="math inline">\(3\)</span>-partition of <span
+class="math inline">\(10\)</span> as <span class="math inline">\(1\leq
+4\leq 5\)</span>. But we can also read it as a <span
+class="math inline">\(5\)</span>-partition of 10 as <span
+class="math inline">\(1\leq 2\leq 2 \leq 2\leq 3\)</span>. This is
+called the conjugate partition.</p>
+<p>Today, I am going to describe a short recursive algorithm which
+calculates the conjugate partition of a given partition.</p>
+<h2 id="algorithm">Algorithm</h2>
+<p>Given a <span class="math inline">\(k\)</span>-partition of <span
+class="math inline">\(n\)</span>, the number of terms in the conjugate
+partition is given by the largest number in that partition. Then largest
+number in the conjugate partition is the length of the original
+partition. Once we observe that we can write our algorithm
+recursively</p>
+<pre><code>Algorithm Dual
+Input: xs which is a k-partition n
+Output: the conjugate partition of xs
+Begin
+  If xs is null then
+     Return an empty list
+  Else
+     Let k be min(xs)
+     Let n be length(xs)
+     Let zs be the list containing k many n&#39;s
+     Let ys be the empty list
+     For each x in xs
+         If x &gt; k then
+            Append x - k to ys
+         End
+     End
+  End
+  Return the list after appending Dual(ys) to zs 
+End</code></pre>
+<h2 id="implementation">Implementation</h2>
+<p>Here is an implementation</p>
+<pre><code>(defun dual (xs &amp;optional ys)
+  (if (null xs)
+      ys
+      (let ((k (car xs))
+            (n (length xs)))            
+         (dual (remove-if #&#39;zerop
+                          (mapcar (lambda (x) (- x k))
+                                  xs))
+               (append (loop repeat k collect n) ys)))))
+DUAL</code></pre>
+<p>Let us test it on the example whose picture I gave above:</p>
+<pre><code>(dual &#39;(1 4 5))
+(1 2 2 2 3)
+
+(dual (dual &#39;(1 4 5)))
+(1 4 5)</code></pre>
+<p>Now, let us test it on a large random partition:</p>
+<pre><code>(defvar xs (sort (loop repeat 20 collect (1+ (random 10))) #&#39;&lt;))
+XS
+
+xs
+(1 1 1 2 2 2 3 4 5 5 5 7 8 8 9 9 9 9 9 9)
+
+(dual xs)
+(6 8 9 9 12 13 14 17 20)
+
+(dual (dual xs))
+(1 1 1 2 2 2 3 4 5 5 5 7 8 8 9 9 9 9 9 9)</code></pre>
+<h2 id="efficiency-issues">Efficiency Issues</h2>
+<p><a href="https://twitter.com/RainerJoswig">Rainer Joswig</a>
+correctly <a
+href="https://twitter.com/RainerJoswig/status/738306227499880448">commented</a>
+saying the original implementation wasn’t very efficient.  Since then I
+made few modifications making the implementation above even simpler.  He
+gave several different implementations, one of which is recursive. 
+Check out his versions <a
+href="https://gist.github.com/lispm/8967a967b3857d7b323a8dffda09e0c9">here</a>.<br />
+</p>
+<div id="footer">
+<p><span id="timestamp">June 1st, 2016 3:44pm</span></p>
+</div>
+</body>
+</html>

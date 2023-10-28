@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-01-20-eigen-values_of_the_laplacian_and_connected_components_of_a_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="eigen-values-of-the-laplacian-and-connected-components-of-a-graph">Eigen-values
+of the Laplacian and Connected Components of a Graph</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>This post is inspired by <a
+href="http://www.johndcook.com/blog/2016/01/07/connectivity-graph-laplacian/">a
+post</a> I saw at <a href="http://www.johndcook.com/blog/">John D.
+Cook’s blog</a>. John observes that the second smallest eigen-value of
+the <a
+href="https://en.wikipedia.org/wiki/Laplacian_matrix">Laplacian</a>
+gives us important information about the connectivity of the graph. The
+eigen-values tell more, of course. See for example Fan Graham’s <a
+href="http://www.math.ucsd.edu/~fan/research/cb/ch1.pdf">excellent</a>
+survey on the subject.</p>
+<p>Today, I will write my implementation of the experiment on testing
+the second smallest eigen-value of the Laplacian of a graph in common
+lisp.</p>
+<h2 id="implementation">Implementation</h2>
+<p>First, I am going to need two utility thunks: the first is a
+macro,</p>
+<pre><code> (defmacro -&gt; (x &amp;rest forms)
+   (dolist (f forms x)
+     (if (listp f)
+         (setf x (append (list (car f) x) (cdr f)))
+         (setf x (list f x))))) 
+-&gt;</code></pre>
+<p>while the other is a function.</p>
+<pre><code> (defun group-by (xs &amp;optional (fn (lambda (x) x)))
+   (let (res)
+     (dolist (x xs res)
+       (let* ((y (funcall fn x))
+              (z (cdr (assoc y res))))
+         (if (null z)
+             (push (cons y (list x)) res)
+             (setf (cdr (assoc y res))
+                   (cons x z)))))))
+GROUP-BY</code></pre>
+<p>I am going to use the threading macro <code>-&gt;</code> for
+compositions of functions on a single value, while I need
+<code>group-by</code> to group values in a list using a criterion, in
+this case the identity function.</p>
+<p>I have been using the set of edges as a representation of a graph.
+For example:</p>
+<pre><code>(defvar G &#39;((0 1) (0 2) (1 2) (1 3) (3 4)))
+G</code></pre>
+<p>represents the graph whose picture can be drawn as</p>
+<figure data-orig-width="131" data-orig-height="347">
+<img src="../media/2016-01-20-eigen-values_of_the_laplacian_and_connected_components_of_a_graph_0.png" data-orig-width="131"
+data-orig-height="347" alt="image" />
+</figure>
+<p>First, let us get the list of vertices and their degrees from a given
+graph.</p>
+<pre><code>(defun degrees (G)
+   (mapcar (lambda (x) (cons (car x) (length (cdr x))))
+           (group-by (reduce #&#39;append G)  (lambda (x) x))))
+DEGREES</code></pre>
+<p>For the graph we had above, the result is going to be</p>
+<pre><code>(degrees G)
+((4 . 1) (3 . 2) (2 . 2) (1 . 3) (0 . 2))</code></pre>
+<p>Next, a function that returns the Laplacian of a given graph:</p>
+<pre><code>(defun laplacian (G)
+  (let* ((degs (degrees G))
+         (n (1+ (reduce #&#39;max (mapcar #&#39;car degs))))
+         (res (make-array (list n n) :initial-element 0)))
+    (dolist (x degs)
+      (setf (aref res (car x) (car x)) (cdr x)))
+    (dolist (e G res)
+      (decf (apply #&#39;aref res e))
+      (decf (apply #&#39;aref res (reverse e))))))
+LAPLACIAN</code></pre>
+<p>Now, let me define our experiment function:</p>
+<pre><code>(defun experiment (G)
+  (-&gt; G
+      laplacian
+      cl-num-utils:hermitian-matrix
+      lla:eigenvalues
+      (sort #&#39;&lt;)
+      (aref 1)))
+EXPERIMENT</code></pre>
+<p>And our experiment</p>
+<pre><code>(experiment G)
+0.5188056959079844d0</code></pre>
+<p>For the next experiment, I am going to need a random disconnected
+graph:</p>
+<pre><code>(defun random-graph (n m a b)
+   (remove-duplicates
+       (loop repeat n collect
+           (let* ((x (+ b (random m)))
+                  (y (+ 1 (random a) x)))
+               (list x y)))
+       :test #&#39;equal))
+RANDOM-GRAPH</code></pre>
+<p>Here is our random graph:</p>
+<pre><code>(defvar H  (append (random-graph 16 4 3 0)
+                   (random-graph 25 5 3 8)))
+H</code></pre>
+<figure class="tmblr-full" data-orig-width="455" data-orig-height="555">
+<img src="../media/2016-01-20-eigen-values_of_the_laplacian_and_connected_components_of_a_graph_1.png" data-orig-width="455"
+data-orig-height="555" alt="image" />
+</figure>
+<p>And, the result of the experiment on this graph:</p>
+<pre><code>(format nil &quot;~4,3f&quot; (experiment H))
+.000</code></pre>
+<div id="footer">
+<p><span id="timestamp">January 20th, 2016 11:46am</span></p>
+</div>
+</body>
+</html>

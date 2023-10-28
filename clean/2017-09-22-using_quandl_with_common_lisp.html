@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-09-22-using_quandl_with_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="using-quandl-with-common-lisp">Using Quandl with Common
+Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I do give quite a number of senior graduation projects on data
+analysis. For these projects my students need good reliable sources of
+data. I have used <a href="http://quandl.com">Quandl</a> few times as a
+source of financial data, and I am quite happy about it. Its API has
+python and R bindings. But today, I am going to write a simple common
+lisp function to fetch data from Quandl.</p>
+<h2 id="implementation">Implementation</h2>
+<p>In order to fetch data from quandl, we are going to need an api-key.
+I am going to assume you already got an api-key from quandl. Once you
+get that, using the web API is quite simple.</p>
+<p>For the purposes of this implementation, I am going to need a JSON
+decoder and an http-client.</p>
+<pre><code>(mapc #&#39;require &#39;(:drakma :cl-json))
+
+(DRAKMA CL-JSON)</code></pre>
+<p>I am going to need a utility macro.</p>
+<pre><code>(defmacro -&gt;&gt; (x &amp;rest forms)
+  (dolist (f forms x)
+    (if (listp f)
+        (setf x (append f (list x)))
+        (setf x (list f x)))))
+
+-&gt;&gt;</code></pre>
+<p>Next, the api call function:</p>
+<pre><code>(defun get-quandl (api-key data-set start end)
+  (-&gt;&gt; (concatenate &#39;string
+                    &quot;https://www.quandl.com/api/v3/datasets/&quot;
+                    data-set 
+                    &quot;.json&quot;
+                    &quot;?api_key=&quot; api-key 
+                    &quot;&amp;start_date=&quot; start 
+                    &quot;&amp;end_date=&quot; end)
+       drakma:http-request
+       octets-to-string
+       cl-json:decode-json-from-string
+       (assoc :dataset)
+       cdr))
+
+GET-QUANDL</code></pre>
+<p>And here is a utility function that returns the selected portion of
+the data:</p>
+<pre><code>(defun get-column (data column)
+  (let ((n (position column
+                     (assoc :column--names data)
+                     :test #&#39;string-equal)))
+    (mapcar (lambda (x) (elt x n))
+            (cdr (assoc :data data)))))
+
+GET-COLUMN</code></pre>
+<p>I am going to calculate the correlation between EUR to CAD exchange
+rate to EUR to USD exchange rate. First let us get the data:</p>
+<pre><code>(defparameter CAD (get-quandl YOUR-API-KEY &quot;ECB/EURCAD&quot; &quot;2016-01-01&quot; &quot;2016-12-31&quot;))
+(defparameter USD (get-quandl YOUR-API-KEY &quot;ECB/EURUSD&quot; &quot;2016-01-01&quot; &quot;2016-12-31&quot;))
+
+CAD
+USD</code></pre>
+<p>Let us define some basic statistics functions I need below:</p>
+<pre><code>(defun mean (data)
+  (-&gt;&gt; (reduce #&#39;+ data)
+       (* (/ (length data)))))
+
+(defun cov (xs ys)
+  (let* ((x (mean xs))
+         (y (mean ys)))
+     (mean (mapcar (lambda (u v) (* (- u x) (- v y))) xs ys))))
+
+(defun std (xs)
+  (let ((x (mean xs)))
+    (sqrt (mean (mapcar (lambda (u) (* (- u x) (- u x))) xs)))))
+
+(defun cor (xs ys)
+  (/ (cov xs ys)
+     (* (std xs) (std ys))))
+
+MEAN
+COV
+STD
+COR</code></pre>
+<p>and finally the correlation between EURCAD and EURUSD.</p>
+<pre><code>(cor (get-column CAD &quot;Value&quot;) (get-column USD &quot;Value&quot;))
+
+0.21443476</code></pre>
+<div id="footer">
+<p><span id="timestamp">September 22nd, 2017 4:46pm</span></p>
+</div>
+</body>
+</html>

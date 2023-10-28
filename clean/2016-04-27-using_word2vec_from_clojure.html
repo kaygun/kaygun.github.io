@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-04-27-using_word2vec_from_clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="using-word2vec-from-clojure">Using Word2Vec from Clojure</h1>
+<p><a href="2016-04-24-using_word2vec_from_common_lisp.html">Few days
+ago</a> I wrote a post on using <a
+href="https://en.wikipedia.org/wiki/Word2vec">Word2Vec</a>, specifically
+<a href="https://github.com/medallia/Word2VecJava">Word2VecJava</a>
+library from common lisp, using <a href="http://abcl.org">Armed Bear
+Common Lisp</a> which a lisp hosted on JVM. This was one of the options
+I explored. Today I am going to write on another option: <a
+href="http://clojure.org">clojure</a>.<br />
+</p>
+<h2 id="leiningen-vs-boot">Leiningen vs Boot</h2>
+<p>For most of the blog posts here, I try to keep the code I am writing
+pretty tight. No multiple files, no hiearchy of subdirectories etc. <a
+href="http://leiningen.org/">Leiningen</a> is a powerful scaffolding
+tool to build projects, but not for this blog. <a
+href="http://boot-clj.com/">Boot</a> is a better choice.</p>
+<h2 id="lets-get-to-it">Let’s get to it</h2>
+<p>I am going to use <a href="http://boot-clj.com/">Boot</a> as I
+mentioned above. One of the things I like about it is that you can
+dynamically define your dependencies within your program body. I know
+that there is <a
+href="https://github.com/cemerick/pomegranate">pomegranate</a>, but I
+find using Boot easier.</p>
+<pre><code>(set-env! :dependencies
+    &#39;[[com.medallia.word2vec/Word2VecJava &quot;0.10.3&quot;]])</code></pre>
+<p>Now, let me load up the java classes <code>Word2VecModel</code> and
+<code>java.io.File</code>.</p>
+<pre><code>(import com.medallia.word2vec.Word2VecModel)
+(import java.io.File)</code></pre>
+<p>I am going to need <code>clojure.string</code> later on.</p>
+<pre><code>(require &#39;[clojure.string :as st])</code></pre>
+<p>I’ll define a function that would load up a binary model file and
+load the necessary java classes</p>
+<pre><code>(defn load-model [model-file]
+   (-&gt;&gt; model-file
+        File.
+        Word2VecModel/fromBinFile
+        .forSearch))
+#&#39;boot.user/load-model</code></pre>
+<p>OK. Now that’s done, I am going to define the functions I am going to
+test today:</p>
+<pre><code>(defn cosine-distance [w1 w2 engine]
+   (.cosineDistance engine w1 w2))
+#&#39;boot.user/cosine-distance
+
+
+(defn raw-vector [word engine]
+   (.getRawVector engine word))
+#&#39;boot.user/raw-vector
+
+
+(defn get-matches [word num engine]
+   (map (fn [x] (vector (.getKey x) (.getValue x)))
+        (.getMatches engine word num)))
+#&#39;boot.user/get-matches
+
+
+(defn analogy [w1 w2 w3 engine]
+   (get-matches w3 3 (.similarity engine w1 w2)))
+#&#39;analogy</code></pre>
+<p>Now, let me test. First I’ll load up a model:</p>
+<pre><code>(def *engine* (load-model &quot;english-news-model.bin&quot;))
+#&#39;boot.user/*engine*
+
+
+(cosine-distance &quot;allocate&quot; &quot;reserve&quot; *engine*)
+0.1157773104488681
+
+
+(get-matches &quot;home&quot; 4 *engine*)
+((&quot;home&quot; 0.9999999999999999) (&quot;bungalow&quot; 0.5845105015466799) (&quot;townhouse&quot; 0.5397085894763874) (&quot;residence&quot; 0.5256589338286517))</code></pre>
+<h2 id="training-a-model-within-clojure">Training a model within
+clojure</h2>
+<p>I couldn’t get this part of the post work within ABCL, but this is
+probably because I am not comfortable with the java FFI of ABCL.
+Clojure’s java interop, especially on the conversion of data structures
+in and out of java, is more straightforward.</p>
+<p>We can get the <code>Word2VecJava</code> library train a model from
+within clojure.</p>
+<pre><code>(defn train-model [data]
+   (.forSearch (.train (Word2VecModel/trainer) data)))</code></pre>
+<p>The variable <code>data</code> has to be a list of lists.</p>
+<pre><code>(defn get-data [data-file]
+   (-&gt;&gt;  (st/split (-&gt;&gt; data-file
+                        slurp
+                        (st/lower-case)
+                        (remove #((set &quot;!@#$%^&amp;*[]_+-=(){};&#39;\:\&quot;,/&lt;&gt;?â€œâ€â€™â€˜â€“â€”&quot;) %))
+                        (apply str))
+                   #&quot;\.\s+&quot;)
+         (map #(st/split % #&quot;\s+&quot;))))</code></pre>
+<p>I have a collection of writings of Mark Twain from <a
+href="https://www.gutenberg.org/">Project Gutenberg</a></p>
+<pre><code>(def new-engine (train-model (get-data &quot;twain.txt&quot;)))</code></pre>
+<p>Let us see what this model thinks about:</p>
+<pre><code>(cosine-distance &quot;tom&quot; &quot;finn&quot; new-engine)
+0.9997468543897505</code></pre>
+<div id="footer">
+<p><span id="timestamp">April 27th, 2016 5:00am</span></p>
+</div>
+</body>
+</html>

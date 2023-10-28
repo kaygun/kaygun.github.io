@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-12-18-counting_graphs_with_a_prescribed_degree_sequence</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="counting-graphs-with-a-prescribed-degree-sequence">Counting
+Graphs with a Prescribed Degree Sequence</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p><a
+href="2020-12-12-havelhakimi_algorithm_in_common-lisp.html">Here</a> and
+<a href="2020-12-13-havelhakimi_algorithm_in_clojure.html">here</a> I
+dealt with the problem that whether a given non-increasing sequence of
+positive integers can be realized as the <a
+href="https://en.wikipedia.org/wiki/Degree_(graph_theory)">degree
+sequence</a> of an undirected graph using <a
+href="https://en.wikipedia.org/wiki/Havel%E2%80%93Hakimi_algorithm">Havel-Hakimi</a>
+algorithm. Today, I’ll count the number of disctinct graphs with a fixed
+degree sequence.</p>
+<h2 id="the-algorithm">The algorithm</h2>
+<p>By a <a
+href="https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)">graph</a>
+I mean an undirected graph with no loops and no multiple edges. The
+algorith I am going to describe is recursive.</p>
+<pre><code>Function CountGraphs
+Input: A degree sequence DS = (d_1,...,d_n)
+Output: The number of distinct graph with DS as their degree sequence
+Begin
+  total &lt;- 0
+  For XS in the set of all subsets of {1,...,n-1} of size d_1
+      ES &lt;- (d_2,...,d_n)     
+      For x in XS
+          Reduce x-th term of ES by 1
+      End For
+      Sort ES and remove all 0&#39;s
+      total &lt;- total + CountGraphs(ES)
+  End For
+  Return total
+End</code></pre>
+<p>Assume <span class="math inline">\((d_1\leq \cdots\leq d_n)\)</span>
+is a degree sequence. We start with the first vertex. Since its degree
+is <span class="math inline">\(d_1\)</span> we must connect it to <span
+class="math inline">\(d_1\)</span> other vertices. In other words we
+must loop over all subsets of the index set <span
+class="math inline">\({1,\ldots,n-1}\)</span> of size <span
+class="math inline">\(d_1\)</span>. By connecting the vertex to another
+vertex, we must reduce the degree of the connected vertex by 1. Thus,
+for every choice of connection, we get another degree sequence. Now, we
+proceed by recursion.</p>
+<h2 id="an-implementation">An implementation</h2>
+<p>Before I give my implementation, I am going to need few helper
+functions. I am going to need a function that returns the set of subsets
+of a certain size of a given set:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> subsets </span>(k xs)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span> ((<span class="kw">null</span> xs) <span class="dt">&#39;nil</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        ((<span class="op">=</span> <span class="dv">1</span> k) (<span class="kw">loop</span> for x in xs collect (<span class="kw">list</span> x)))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">t</span> (<span class="kw">union</span> (subsets k (<span class="kw">cdr</span> xs))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                  (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (<span class="kw">cons</span> (<span class="kw">car</span> xs) x))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                          (subsets (<span class="op">1-</span> k) (<span class="kw">cdr</span> xs)))))))</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>SUBSETS</span></code></pre></div>
+<p>Next, a helper function that performs the necessary reductions in
+degrees, sorting and removing zeros:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> new-degree-sequence </span>(ds is)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> ((ys (<span class="kw">copy-list</span> ds)))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">dolist</span> (i is) (<span class="kw">decf</span> (<span class="kw">nth</span> i ys)))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">delete</span> <span class="dv">0</span> (<span class="kw">sort</span> ys <span class="op">#&#39;</span>&lt;))))</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>NEW-DEGREE-SEQUENCE</span></code></pre></div>
+<p>Finally, our implementation. Notice the built-in <a
+href="https://en.wikipedia.org/wiki/Memoization#:~:text=In%20computing%2C%20memoization%20or%20memoisation,the%20same%20inputs%20occur%20again.">memoization</a>
+and the <a
+href="2014-09-23-a_memoization_macro_for_common_lisp.html">thread-last</a>
+macro I stole from <a href="https://clojure.org/">clojure</a>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> graph-count </span>(ds)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="kw">equal</span> ds &#39;(<span class="dv">1</span> <span class="dv">1</span>)) <span class="dv">1</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">&lt;</span> (<span class="kw">length</span> ds) <span class="dv">3</span>) <span class="dv">0</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      ((<span class="kw">oddp</span> (<span class="kw">reduce</span> <span class="op">#&#39;</span>+ ds)) <span class="dv">0</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> ds table)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> ds table)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">let</span> ((es (<span class="kw">cdr</span> ds)))</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                      (-&gt;&gt; (<span class="kw">loop</span> for i from <span class="dv">0</span> below (<span class="kw">length</span> es) collect i)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                           (subsets (<span class="kw">car</span> ds))</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (new-degree-sequence es x)))</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> <span class="op">#&#39;</span>graph-count)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">reduce</span> <span class="op">#&#39;</span>+)))))))))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>GRAPH-COUNT</span></code></pre></div>
+<h2 id="tests">Tests</h2>
+<p>Let us start with <span class="math inline">\(K_5\)</span> the <a
+href="https://en.wikipedia.org/wiki/Complete_graph#:~:text=In%20the%20mathematical%20field%20of,(one%20in%20each%20direction).">complete
+graph</a> on 5 vertices. The only graph with the degree sequence <span
+class="math inline">\((4,4,4,4,4)\)</span> is <span
+class="math inline">\(K_5\)</span>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div>
+<p>The line graph <span class="math inline">\(A_5\)</span> (a.k.a. <a
+href="https://en.wikipedia.org/wiki/Dynkin_diagram">Dynkin diagram</a>
+of type <span class="math inline">\(A_5\)</span>) has the degree
+sequence <span class="math inline">\((1,1,2,2,2)\)</span>. Including the
+permutations of the vertices of degree 2, there are 6 of them:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dv">7</span></span></code></pre></div>
+<p>This threw me off at the beginning until I realize there is another
+graph with the same degree sequence: the disjoint union of <span
+class="math inline">\(A_2\)</span> and <a
+href="https://en.wikipedia.org/wiki/Cycle_graph#:~:text=In%20graph%20theory%2C%20a%20cycle,vertices%20is%20called%20Cn.">the
+cycle graph</a> on three vertices <span
+class="math inline">\(C_3\)</span>. So, the count is correct.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dv">15</span></span></code></pre></div>
+<p>For this count, essentially we are counting the set of all subsets of
+size 2 of a set of size 6, which is <span
+class="math inline">\(\binom{6}{2}=15\)</span>.</p>
+<p>Next, let us count the number of 3-regular graphs on 5 vertices:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dv">0</span></span></code></pre></div>
+<p>This was a trick question: no such graph exists because of the <a
+href="https://en.wikipedia.org/wiki/Handshaking_lemma">hand-shake
+lemma</a> which I put as one of the base cases in the recursion above.
+The smallest non-trivial 3-regular graph is <span
+class="math inline">\(K_4\)</span>. The next one must have at least 6
+vertices:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">70</span></span></code></pre></div>
+<p>Now finally, the count on a large sequence:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">7</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dv">21065283747</span></span></code></pre></div>
+<h2 id="addendum">Addendum</h2>
+<p>Using the algorithm above, I’ll count the number of of 2-regular
+graphs on <span class="math inline">\(n\)</span> vertices from <span
+class="math inline">\(n=3\)</span> to <span
+class="math inline">\(n=12\)</span> below:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">3</span> to <span class="dv">12</span> collect</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>     (graph-count (<span class="kw">loop</span> repeat i collect <span class="dv">2</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">3</span> <span class="dv">12</span> <span class="dv">70</span> <span class="dv">465</span> <span class="dv">3507</span> <span class="dv">30016</span> <span class="dv">286884</span> <span class="dv">3026655</span> <span class="dv">34944085</span>)</span></code></pre></div>
+<p>This is the sequence <a href="http://oeis.org/A001205">A001205</a> at
+<a href="http://oeis.org/">OEIS</a>. Next is <a
+href="http://oeis.org/A002829">A002829</a> the the number of 3-regular
+graph on <span class="math inline">\(2n\)</span> vertices from <span
+class="math inline">\(n=2\)</span> to <span
+class="math inline">\(n=11\)</span>.</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">2</span> to <span class="dv">11</span> collect</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>   (graph-count (<span class="kw">loop</span> repeat (<span class="op">*</span> <span class="dv">2</span> i) collect <span class="dv">3</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">70</span> <span class="dv">19355</span> <span class="dv">11180820</span> <span class="dv">11555272575</span> <span class="dv">19506631814670</span> <span class="dv">50262958713792825</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">187747837889699887800</span> <span class="dv">976273961160363172131825</span> <span class="dv">6840300875426184026353242750</span>)</span></code></pre></div>
+<p>Continuing on to <a href="http://oeis.org/A005815">A005815</a> the
+number of 4-regular labeled graphs with n vertices.</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">5</span> to <span class="dv">15</span> collect</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>     (graph-count (<span class="kw">loop</span> repeat i collect <span class="dv">4</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">15</span> <span class="dv">465</span> <span class="dv">19355</span> <span class="dv">1024380</span> <span class="dv">66462606</span> <span class="dv">5188453830</span> <span class="dv">480413921130</span> <span class="dv">52113376310985</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">6551246596501035</span> <span class="dv">945313907253606891</span>)</span></code></pre></div>
+<p>And finally my own contribution to <a
+href="http://oeis.org/">OEIS</a>: <a
+href="https://oeis.org/A338978">A338978</a> the number of 5-regular
+labeled graphs with 2n vertices.</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">3</span> to <span class="dv">14</span> collect</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>     (graph-count (<span class="kw">loop</span> repeat (<span class="op">*</span> <span class="dv">2</span> i) collect <span class="dv">5</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">3507</span> <span class="dv">66462606</span> <span class="dv">2977635137862</span> <span class="dv">283097260184159421</span> <span class="dv">52469332407700365320163</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">17647883828569858659972268092</span> <span class="dv">10148613081040117624319536901932188</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a> <span class="dv">9494356410654311931931879706070629989407</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">13859154719468565627065764000731047706917194485</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">30467359843410315617245696171806527102000553683468790</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a> <span class="dv">97852745740262121632666427672231508891042342116161424342990</span>)</span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">December 18th, 2020 1:53pm</span></p>
+</div>
+</body>
+</html>

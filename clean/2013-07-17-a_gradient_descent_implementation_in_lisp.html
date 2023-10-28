@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-07-17-a_gradient_descent_implementation_in_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-gradient-descent-implementation-in-lisp">A Gradient Descent
+Implementation in Lisp</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Assume we have a function of the form <span
+class="math inline">\(f\colon \mathbb{R}^n\to \mathbb{R}\)</span>. We
+would like to find a local extremum point of this function iteratively
+starting from an initial point. I will use the method of <a
+href="http://en.wikipedia.org/wiki/Gradient_descent">gradient
+descent</a>. In its iterative form it says that the recursive sequence
+<span class="math display">\[ x_{n+1} = x_n -
+\gamma \nabla f(x_n) \]</span> will converge to a local extremum point
+if <span class="math inline">\(f\)</span> is well-behaved and the
+initial choice <span class="math inline">\(x_0\)</span> it is close
+enough. Here, our parameters are the initial point <span
+class="math inline">\(x_0\)</span> and a iteration parameter <span
+class="math inline">\(\gamma\)</span>.</p>
+<h2 id="atoyexample">A toy example</h2>
+<p>Let me implement a toy example. Let us find local extremum for a
+function <span class="math inline">\(f(x)\)</span> of a single real
+variable <span class="math inline">\(x\)</span>. I don’t have to work
+really hard for this case: one can write a simple lisp function which
+returns the numerical derivative <span
+class="math inline">\(f&#39;(x)\)</span> of the given function <span
+class="math inline">\(f(x)\)</span> and then I could plug the derivative
+function into the <a
+href="http://web.bahcesehir.edu.tr/atabey_kaygun/other/newton-raphson.html">Newton-Raphson
+Algorithm</a> to find out where local extrema are. But today I am going
+to follow a different path.</p>
+<p>First, I need a function which would calculate the derivative of a
+function (as a number) at a point.</p>
+<pre><code>(defun diff (f x &amp;optional (epsilon 1.0d-4))
+   (/ (- (funcall f (+ x epsilon)) 
+         (funcall f (- x epsilon))) 
+      (* 2 epsilon)))
+DIFF</code></pre>
+<p>Let me test this function. We all know that the derivative of <span
+class="math inline">\(\sin(x)\)</span> is <span
+class="math inline">\(\cos(x)\)</span>. I will compare these functions
+on a random number between <span class="math inline">\(0\)</span> and
+<span class="math inline">\(\pi\)</span>:</p>
+<pre><code>(let ((x (random (* 4 (atan 1))))) (cons (cos x) (diff &#39;sin x)))
+(-0.39555392 . -0.39555389353740367d0)</code></pre>
+<p>Now, my implementation of the gradient descent for the toy case of a
+function of a single real variable:</p>
+<pre><code>(defun descent1 (fun x &amp;key (error 1.0d-4) (rate 1.0d-2) (max-steps 10000))
+   (do* ((y x (- y step))
+         (step (* rate (diff fun y)) (* rate (diff fun y)))
+         (n 0 (1+ n)))
+        ((or (&lt; (abs step) error) (&gt;= n max-steps)) (if (&lt; n max-steps) y))))
+DESCENT1</code></pre>
+<p>I designed the function in such a way that if it can’t find a
+solution within the first 10000 steps (or some number of steps fed into
+the function) it will return <code>nil</code>.</p>
+<p>The function <span class="math inline">\(f(x)=x(1-x)\)</span> has a
+local maximum at <span class="math inline">\(x=0.5\)</span>. So, let me
+see if we can find this local extremum using the function
+<code>descent1</code> we defined above:</p>
+<pre><code>(descent1 (lambda (x) (* x (1- x))) 1.1 :error 1.0d-6 :rate 3.5d-2)
+0.5000139683370232d0</code></pre>
+<h2 id="thegeneralcase">The general case</h2>
+<p>First, I will need a function <span
+class="math inline">\(f(x)\)</span> which will take a vector input <span
+class="math inline">\(x\)</span>, another vector <span
+class="math inline">\(v\)</span> for direction to calculate the
+directional derivative <span
+class="math inline">\(\nabla_v(f)\|_x\)</span> of <span
+class="math inline">\(f\)</span> along <span
+class="math inline">\(v\)</span> at <span
+class="math inline">\(x\)</span>.</p>
+<pre><code>(defun norm (x)
+   (sqrt (reduce &#39;+ (map &#39;vector (lambda (i) (expt i 2)) x))))
+
+(defun nabla (f x v &amp;optional (epsilon 1.0d-4))
+   (let* ((dir (map &#39;vector (lambda (u) (* epsilon u)) v))
+          (ter (map &#39;vector &#39;+ x dir))
+          (ini (map &#39;vector &#39;- x dir)))
+      (/ (- (funcall f ter) 
+            (funcall f ini))
+         (* 2 (norm dir)))))
+NABLA</code></pre>
+<p>Let me take <span class="math inline">\(f(x,y) = x^2 + y^2\)</span>
+and find its partial derivatives at <span
+class="math inline">\((0,0)\)</span>.</p>
+<pre><code>(defun f (v)
+   (reduce &#39;+ (map &#39;vector (lambda (i) (expt i 2)) v)))
+
+(cons (nabla &#39;f #(0 0) #(0 1)) (nabla &#39;f #(0 0) #(1 0)))
+(0.0d0 . 0.0d0)</code></pre>
+<p>Before going into implementing my gradient descent, I will need some
+utility functions:</p>
+<pre><code>(defun range (n &amp;optional (ini 0) (step 1))
+   (loop for i from ini to n by step collect i))
+
+(defun basis (i n)
+   (map &#39;vector (lambda (j) (if (equal i j) 1 0)) (range n)))
+BASIS</code></pre>
+<p>Let me test these:</p>
+<pre><code>(mapcar (lambda (i) (norm (basis i 10))) (range 10))
+(1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0)</code></pre>
+<p>Now, the full implementation of the gradient descent.</p>
+<pre><code>(defun descent (fun x &amp;key (error 1.0d-5) 
+                           (rate 1.0d-2) 
+                           (max-steps 10000))
+  (let ((len (length x)))
+     (do* ((y x (map &#39;vector &#39;- y step))
+           (step (map &#39;vector 
+                      (lambda (i) (* rate (nabla fun y (basis i len)))) 
+                      (range len))
+                 (map &#39;vector 
+                      (lambda (i) (* rate (nabla fun y (basis i len)))) 
+                      (range len)))
+           (n 0 (1+ n)))
+          ((or (&lt; (norm step) error) 
+               (&gt;= n max-steps)) 
+           (if (&lt; n max-steps) y)))))
+DESCENT</code></pre>
+<p>We defined <span class="math inline">\(f(x,y) = x^2 + y^2\)</span>
+above earlier. Let me test the function <code>descent</code> on <span
+class="math inline">\(f(x,y)\)</span>:</p>
+<pre><code>(let ((result (descent &#39;f #(1.0 1.0) :rate 3.3d-2)))
+  (format nil &quot;~%    We found a local extremum at x=~3,3F y=~3,3F~%&quot; (aref result 0) (aref result 1)))
+
+We found a local extremum at x=.000 y=.000</code></pre>
+<p>Let me test a more complicated function: <span
+class="math inline">\(g(x,y,z) = \sin(x/2)\cos(y) + z^2\)</span>.</p>
+<pre><code>(defun g(x) (+ (* (sin (* 0.5 (aref x 0))) (cos (aref x 1))) (expt (aref x 2) 2)))
+
+(let ((result (descent &#39;g #(-1.2 -0.2 0.9) :rate 2.3d-2 :error 1.d-6)))
+  (format nil &quot;~%    We found a local extremum at x=~3,3F y=~3,3F z=~3,3F~%&quot; 
+              (aref result 0) 
+              (aref result 1) 
+              (aref result 2)))
+
+We found a local extremum at x=-3.141 y=-.000 z=.000</code></pre>
+<h2 id="anapplication:fittingaregressionlineviagradientdescent">An
+application: fitting a regression line via gradient descent</h2>
+<p>For simplicity, assume we have a collection of points <span
+class="math inline">\((x_1,y_1),\ldots,(x_n,y_n)\)</span> on the
+xy-plane and we want to fit an approximating line to this dataset. We
+will write an error function <span class="math display">\[
+E(a,b) = \frac{1}{2n}\sum_{i=1}^n (a x_i + b - y_i)^2 \]</span> and then
+minimize this function using gradient descent.<br />
+I need a suitably random dataset.</p>
+<pre><code>(defvar a (- (random 8.6) 4.3))
+(defvar b (- (random 6.8) 3.4))
+
+(defvar mydata
+   (map &#39;vector 
+        (lambda (x) (coerce (list x (+ b (* a x) (- (random 0.8) 0.4))) 
+                            &#39;vector))
+        (loop for i from 1 to 520 collect (random 2.0))))
+MYDATA</code></pre>
+<p>First, I chose a random slope and a random intercept then I generated
+a set of 520 points from the interval <span
+class="math inline">\(\[0,2\]\)</span> and calculated <span
+class="math inline">\(ax+b\)</span> plus a small error term. Now, let me
+create the error function from this dataset. For this purpose, I will
+write a lisp function that returns my error function from a given
+dataset. In order to construct the error function I will take only a
+sample of the dataset. The percentage can be passed as an argument. The
+default is 5%.</p>
+<pre><code>(defun lse (raw-data &amp;optional (sample-size 0.05))
+   (let* ((n (length raw-data))
+          (m (floor (* n sample-size)))
+          (subset (loop for z from 1 to m 
+                        collect (aref raw-data (random n)))))
+       (lambda (x) (/ (reduce &#39;+ 
+                              (map &#39;list 
+                                   (lambda (i) (expt (+ (aref x 1) 
+                                                        (* (aref x 0) 
+                                                           (aref i 0)) 
+                                                        (- 0 (aref i 1))) 
+                                               2)) 
+                                   subset)) 
+                      (* 2 m)))))
+LSE</code></pre>
+<p>Here comes our error function and then our calculation of the best
+fitting line:</p>
+<pre><code>(defvar myerr (lse mydata 0.08))
+
+(let ((result (descent myerr #(-2.2 -1.2))))
+  (format nil &quot;~%    We found the best fitting line at a=~3,3F b=~3,3F
+The original values were: a=~3,3F and b=~3,3F~%&quot; 
+              (aref result 0) 
+              (aref result 1) 
+              a 
+              b)) 
+
+We found the best fitting line at a=-2.012 b=2.121
+The original values were: a=-1.970 and b=2.119</code></pre>
+<p>The method can easily be modified to accommodate datasets of higher
+dimensions. We just need to rewrite the <code>lse</code> function for
+that purpose.</p>
+<div id="footer">
+<p><span id="timestamp">July 17th, 2013 3:54pm</span></p>
+</div>
+</body>
+</html>

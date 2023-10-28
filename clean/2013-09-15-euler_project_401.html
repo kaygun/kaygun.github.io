@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-09-15-euler_project_401</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="euler-project-401">Euler Project #401</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p><a href="http://projecteuler.net/problem=401">Euler Project, Problem
+401</a> is a number theory question. It asks the reader to calculate the
+sum <span class="math display">\[
+\sum_{m=1}^n\sum_{q\|m} q^2 \]</span> modulo <span
+class="math inline">\(10^9\)</span> for <span
+class="math inline">\(n=10^{15}\)</span>. In a <a
+href="2013-09-11-an_unsuccessful_attempt_for_solving_euler_project_401.html">previous
+post</a>, I rewrote the sum in a diffent way as <span
+class="math display">\[ \sum_{q=1}^n
+q^2\left\lfloor\frac{n}{q}\right\rfloor \]</span> But even with the
+reduction, the calculation was out of reach under the 1 minute mark of a
+generic Project Euler problem.</p>
+<h2 id="mathematicalreduction">Mathematical Reduction</h2>
+<p>Let me recall the theoretical reduction phase: <span
+class="math display">\[ \Upsilon(n,s) =
+\sum_{m=1}^n \sum_{q\|m} q^s \]</span> I will define the following
+auxiliary function <span class="math display">\[ \nu(q,n) =
+\begin{cases} 1 &amp; \text{ if }
+q\|n\\ 0 &amp; \text{ otherwise} \end{cases} \]</span> Then I can
+rewrite <span class="math inline">\(\Upsilon(n,s)\)</span> as follows:
+<span class="math display">\[ \Upsilon(n,s) =
+\sum_{m=1}^n\sum_{q=1}^m \nu(q,m) q^s \]</span> Now we can switch the
+summations <span class="math display">\[ \Upsilon(n,s) = \sum_{q=1}^n
+\sum_{m=a}^n
+\nu(q,m) q^s = \sum_{q=1}^n q^s \left(\sum_{m=a}^n
+\nu(q,m)\right) \]</span> Notice that, the inner sum terms are <span
+class="math inline">\(m=q,q+1,\ldots,n\)</span> but the function we sum
+is non-zero only if <span class="math inline">\(m\)</span> is a multiple
+of <span class="math inline">\(q\)</span>. This means the sum <span
+class="math inline">\(\sum_{m=q}^n \nu(q,m) =
+\left\lfloor\frac{n}{q}\right\rfloor\)</span>. Therefore, <span
+class="math display">\[
+\Upsilon(n,s) = \sum_{q=1}^n q^s
+\left\lfloor\frac{n}{q}\right\rfloor \]</span> Take <span
+class="math inline">\(m\)</span> such that <span
+class="math inline">\(m\|n\)</span> and split the sum as <span
+class="math display">\[ \Upsilon(n,s) = \sum_{q=1}^{m-1}
+q^s \left\lfloor\frac{n}{q}\right\rfloor + \sum_{q=m}^n
+q^s\left\lfloor\frac{n}{q}\right\rfloor = \sum_{q=1}^{m-1} q^s
+\left\lfloor\frac{n}{q}\right\rfloor + \sum_{k=1}^{n/m} k\
+\sum_{\lfloor n/q\rfloor = k} q^s \]</span> But this can also be written
+as <span class="math display">\[ \Upsilon(n,s) = \sum_{q=1}^{m-1} q^s
+\left\lfloor\frac{n}{q}\right\rfloor + \sum_{\lfloor n/q
+\rfloor=1}^{\lfloor n/(m-1)\rfloor-1} q^s + \sum_{\lfloor n/q
+\rfloor=2}^{\lfloor n/(m-1)\rfloor-1} q^s + \cdots +
+\sum_{\lfloor n/q \rfloor=n/m}^{\lfloor n/(m-1)\rfloor-1} q^s
+\]</span> Now, we observe that <span class="math display">\[
+\left\lfloor\frac{n}{q}\right\rfloor\geq k \quad\text{ whenever
+}\quad q\leq \left\lfloor\frac{n}{k}\right\rfloor \]</span> This means
+<span class="math display">\[ \Upsilon(n,s) = \sum_{q=1}^{m-1} q^s
+\left\lfloor\frac{n}{q}\right\rfloor + \sum_{k=1}^{n/m}
+\sum_{q=1}^{\lfloor n/k\rfloor} q^s -
+\frac{n}{m}\sum_{q=1}^{\left\lfloor\frac{n}{\lfloor
+n/(m-1)\rfloor}\right\rfloor}q^s \]</span> For example when <span
+class="math inline">\(n=6\)</span> and <span
+class="math inline">\(m=3\)</span> the original summation was <span
+class="math display">\[ \sum_{q=1}^6 q^s
+\left\lfloor\frac{6}{q}\right\rfloor = 6\cdot 1^s + 3 \cdot
+2^s + 2\cdot 3^s + 1\cdot 4^s + 1\cdot 5^s + 1\cdot 6^s \]</span> Our
+reduction indicates the sum above equals to <span
+class="math display">\[ 6\cdot 1^s +
+3\cdot 2^s + (1^s + \cdots + 6^s) + (1^s + 2^s + 3^s) - 2(1^s +
+2^s) \]</span> which they are.</p>
+<h2 id="implementationwiththenewreduction">Implementation with the new
+reduction</h2>
+<p>I already implemented the first part of the summation for <span
+class="math inline">\(s=2\)</span>:</p>
+<pre><code>(defun upsilon1 (n &amp;optional (m (1- (truncate (sqrt n)))))
+   (let ((res 0))
+      (do ((q 1 (1+ q)))
+          ((&gt; q m) res)
+        (incf res (* q q (truncate n q))))))</code></pre>
+<p>As for the second part:</p>
+<pre><code>(defun upsilon2 (n &amp;optional (m (truncate (sqrt n))))
+  (labels ((sq (n) (* n (1+ n) (1+ (+ n n)) (/ 6))))
+     (let* ((a (truncate (/ n m)))
+            (res (- (* a (sq (truncate (/ n (truncate (/ n (1- m))))))))))
+         (do* ((k 1 (1+ k)))
+              ((&gt; k a) res)
+           (incf res (sq (truncate (/ n k))))))))</code></pre>
+<p>I will not post the answer here. Plus, the lisp implementation I used
+took about 2 minutes to calculate the result which is twice as long as a
+generic Euler Project question should take.</p>
+<div id="footer">
+<p><span id="timestamp">September 15th, 2013 2:20am</span></p>
+</div>
+</body>
+</html>

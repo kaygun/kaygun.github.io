@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-04-24-using_word2vec_from_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="using-word2vec-from-common-lisp">Using Word2Vec from Common
+Lisp</h1>
+<p>I have been looking into using <a
+href="https://en.wikipedia.org/wiki/Word2vec">word2vec</a>
+representation of words in some applications. <a
+href="https://code.google.com/archive/p/word2vec/">The original
+implementation</a>, which is in C, is heavily optimized and fast, but
+not written as a library. There are two java implementations, but since
+I didn’t want to use java, I explored several options: Using an external
+java Word2Vec library from</p>
+<ol type="1">
+<li><a href="denied:htto://clojure.org/">clojure</a> via its java
+interoperability tools</li>
+<li><a href="http://www.scala-lang.org/">scala</a> via its java
+interoperability tools</li>
+<li><a href="http://abcl.org/">ABCL</a> via its Java FFI</li>
+<li><a href="https://www.python.org/">python</a> via the <a
+href="https://radimrehurek.com/gensim/">gensim</a> library, and no
+FFI.</li>
+</ol>
+<p>Today, I’d like to write about the 3rd option.<br />
+</p>
+<h2 id="abcl-and-word2vecjava">ABCL and Word2VecJava</h2>
+<p>I found two java implementation that I can use as a library for
+word2vec:</p>
+<ol type="1">
+<li><a href="http://deeplearning4j.org/word2vec">DeepLearning4j</a>’s
+implementation</li>
+<li><a href="https://github.com/medallia/Word2VecJava">Medallia</a>’s
+implementation</li>
+</ol>
+<p>DeepLearning4j has an extensive framework for many data analysis
+tasks, but I have a distaste for large frameworks. Yes, I want the
+banana but not the gorilla holding it, nor the jungle behind it.</p>
+<p>As for lisp implementations on JVM <a
+href="http://abcl.org/">ABCL</a> seems to be the most sensible choice. I
+have been experimenting with ABCL for a while. This seems to be a good
+project to put into use what I have learned.</p>
+<h2 id="talk-is-cheap.-show-me-your-code">Talk is cheap. Show me your
+code</h2>
+<p>All of the code below runs on ABCL.</p>
+<p>First, let us load the external dependencies from <a
+href="https://maven.apache.org/what-is-maven.html">maven</a>. For that I
+am going to need <code>abcl-asdf</code> library:</p>
+<pre><code>(require :abcl-asdf)
+
+(java:add-to-classpath
+   (abcl-asdf:as-classpath
+      (abcl-asdf:resolve &quot;com.medallia.word2vec:Word2VecJava&quot;)))</code></pre>
+<p>Now, we need to load a pre-trained model. You can download one from
+<a
+href="https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit?usp=sharing">google</a>.
+Warning, the model I link here is really large. The function below loads
+such a module up:</p>
+<pre><code>(defun load-model (model-file)
+   (jcall (jmethod (jss:find-java-class &quot;Word2VecModel&quot;)
+                   &quot;fromBinFile&quot;
+                   (jss:find-java-class &quot;java.io.File&quot;))
+          (jss:find-java-class &quot;Word2VecModel&quot;)
+          (jss:new &quot;java.io.File&quot; model-file)))</code></pre>
+<p>Instead of the model I linked above, I am going to use a model I
+trained from Charles Dickens novels I got from <a
+href="https://www.gutenberg.org/">Project Gutenberg</a>.</p>
+<pre><code>(defvar *model* (load-model &quot;dickens-model.bin&quot;))</code></pre>
+<p>Loading the model is not enough. Before we can work with it, we must
+load the classes that will do the heavy lifting for us:</p>
+<pre><code>(defvar *engine* (#&quot;forSearch&quot; *model*))</code></pre>
+<p>Now, that we loaded our model and get our engine, we can do several
+things: We can get the raw numerical vector for a given word:</p>
+<pre><code>(defun get-raw-vector (word)
+   (jss:jlist-to-list (#&quot;getRawVector&quot; *engine* word)))
+
+(get-raw-vector &quot;home&quot;)
+(-0.045455124953779076d0 -0.07530373816504114d0 -0.1373770205861963d0 -0.09495558319523743d0 -0.19750882287429283d0 -0.04369557384124098d0 0.056864173803157614d0 0.22692607775773763d0 -0.04918216427536493d0 -0.06573755212904461d0 0.010485399806856952d0 -0.0125644020514777d0 -0.03867824662489532d0 -0.12456286407334217d0 -0.012954963105658404d0 0.030908279730781325d0 -0.11467134544176405d0 0.06539173695163725d0 0.13103033598097535d0 7.144583495236003d-4 -0.07119027128394684d0 0.07924226790092176d0 -0.28841552796482617d0 0.19415477991101823d0 -0.08192961323919903d0 -0.11783073799680197d0 0.02541784057745355d0 -0.07604135763281597d0 0.053157081515501685d0 -0.01957647728980732d0 -0.09085722216510987d0 -0.14392533472382035d0 0.03668373024862821d0 0.057883023922329746d0 0.015932456392836705d0 0.02183309123133587d0 -0.01694965098894987d0 0.12502777065149165d0 0.18801864213570413d0 0.024514509414527853d0 0.13138849001188765d0 -0.052477432982261325d0 0.11191356280404362d0 0.12131386500449419d0 -0.1580452165120508d0 -0.03601234870473234d0 -0.11794962962967813d0 0.0696481313652186d0 -0.09822390449213687d0 -0.01863944486286492d0 -0.045831517365810745d0 -0.0326415507430022d0 0.015811289743998244d0 0.03560473087510719d0 -0.06695631037666895d0 -0.030046096497852563d0 0.02240055310634835d0 0.10337602826378908d0 -0.09319892659156494d0 0.09822674374606084d0 0.09359655815308475d0 -0.13900886052709738d0 -0.10425136004763672d0 -0.01143917766889959d0 -0.10838075735344216d0 0.10956555931424225d0 0.006879066499163433d0 0.07245139307028406d0 -0.11482412110500234d0 0.10310742124136513d0 -0.07018913249875851d0 -0.14215548494023766d0 -0.18817284592666467d0 -0.06328703372099141d0 0.17183195350602862d0 0.15445845673613365d0 -0.09132729720549218d0 0.09245411548061742d0 0.049801117380410244d0 0.03749830709895903d0 -0.0025661189184682997d0 0.09430764674811494d0 0.03997497384554557d0 0.0741059470425769d0 -0.04097753225769587d0 0.024709648616479025d0 0.14781939698282584d0 -0.0795485757950607d0 0.029375951814573274d0 -0.2373760623347922d0 -0.0582029925381927d0 -0.035078423305661834d0 -0.00451008525825166d0 -0.11079127543413236d0 0.21376441866656629d0 -0.035605651082404405d0 0.04872234965260608d0 -0.05782217548045017d0 -0.09422334470870174d0 -0.07470838742083385d0)</code></pre>
+<p>We can calculate cosine distance between pairs of words:</p>
+<pre><code>(defun cosine-distance (w1 w2)
+   (#&quot;cosineDistance&quot; *engine* w1 w2))
+
+(cosine-distance &quot;home&quot; &quot;sea&quot;)
+0.23492995551523996d0</code></pre>
+<p>We can get a list of similar words:</p>
+<pre><code>(defun get-matches (word num &amp;optional searcher)
+   (mapcar (lambda (x) (cons (#&quot;getKey&quot; x) (#&quot;getValue&quot; x)))
+           (jss:jlist-to-list
+               (#&quot;getMatches&quot; (or searcher *engine*) word num))))
+
+(get-matches &quot;terrible&quot; 5)
+((&quot;terrible&quot; . 0.9999999999999996d0) (&quot;horrible&quot; . 0.7570643210268546d0) (&quot;dreadful&quot; . 0.6858479525397655d0) (&quot;frightful&quot; . 0.6734959984485096d0) (&quot;fearful&quot; . 0.6431009514957757d0))</code></pre>
+<p>We can even do analogies:</p>
+<pre><code>(defun analogy (w1 w2 w3)
+   (let ((semantic-difference
+            (#&quot;similarity&quot; *engine* w1 w2)))
+       (car (get-matches w3 1 semantic-difference))))
+
+(analogy &quot;king&quot; &quot;queen&quot; &quot;man&quot;)
+(&quot;woman&quot; . 0.9041833779267661d0)</code></pre>
+<h2 id="how-about-training-a-model-within-lisp">How about training a
+model within lisp?</h2>
+<p>I would advise against it. The <a
+href="https://code.google.com/archive/p/word2vec/">original
+implementation</a> is optimized to be very fast and handles large
+corpuses really well. However, the original implementation does not
+clean the training data from punctuation marks, stop words etc., nor
+does it down-cases words. One must pre-process the corpus before it is
+fed to that particular implementation. For that purpose, you can use any
+language you’d like.</p>
+<div id="footer">
+<p><span id="timestamp">April 24th, 2016 9:05am</span></p>
+</div>
+</body>
+</html>

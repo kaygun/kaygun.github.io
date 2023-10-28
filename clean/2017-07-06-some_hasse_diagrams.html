@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-07-06-some_hasse_diagrams</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="some-hasse-diagrams">Some Hasse Diagrams</h1>
+<p>Today is nice pictures day :) I’ll be giving you pictures of Hasse
+diagrams of few posets of shuffles. First, a function for
+shuffles:<br />
+</p>
+<pre><code>(defun shuffles (xs ys &amp;optional (acc (list nil)))
+  (labels ((insert (a as)
+              (mapcar (lambda (x) (cons a x)) as))
+           (paste (as bs)
+              (mapcar (lambda (b) (append (reverse b) as)) bs)))
+      (cond ((null xs) (paste ys acc))
+            ((null ys) (paste xs acc))
+            (t (append (shuffles (cdr xs) ys (insert (car xs) acc))
+                       (shuffles xs (cdr ys) (insert (car ys) acc)))))))
+
+SHUFFLES</code></pre>
+<p>I’ll check the adjacency by being different by a transposition or a
+cyclic transposition:</p>
+<pre><code>(defun connected-by-a-transpose-p (xs ys)
+  (let* ((zs (mapcar (lambda (x y) (if (equal x y) 0 1)) xs ys)))
+    (and (= 2 (reduce #&#39;+ zs))
+         (every #&#39;equal &#39;(1 1) (member 1 zs)))))
+
+(defun connected-by-a-cyclic-rotation-p (xs ys)
+  (labels ((cyclep (as bs)
+              (equal as (append (cdr bs) (list (car bs))))))
+     (or (cyclep xs ys) (cyclep ys xs))))
+
+(defun adjacentp (xs ys)
+  (or (connected-by-a-transpose-p xs ys)
+      (connected-by-a-cyclic-rotation-p xs ys)))
+
+CONNECTED-BY-A-TRANSPOSE-P
+CONNECTED-BY-A-CYCLIC-ROTATION-P
+ADJACENTP</code></pre>
+<p>Next, a function for generating the graph for the Hasse diagram and
+next a function writing the graphviz dot file:</p>
+<pre><code>(defun hasse (xs pred)
+  (mapcon (lambda (ys)
+            (let ((y (car ys))
+                  (zs (cdr ys))
+                  (res nil))
+              (dolist (z zs res)
+                (if (and (not (member (list y z) res :test #&#39;equal))
+                         (not (member (list z y) res :test #&#39;equal))
+                         (funcall pred z y))
+                    (push (list z y) res)))))
+          xs))
+
+(defun write-dot (G filename &amp;optional (engine &quot;neato&quot;) (shape &quot;point&quot;))
+  (progn 
+     (with-open-file (dot-file (format nil &quot;~A.dot&quot; filename) 
+                   :direction :output 
+                   :if-exists :supersede
+                   :if-does-not-exist :create)
+       (format dot-file &quot;graph G {~% node[shape=~A]; ~% ~{ ~{\&quot;~{~A~}\&quot; -- \&quot;~{~A~}\&quot;; ~} ~% ~} }~%&quot; shape G))
+     (uiop:run-program 
+      (format nil &quot;~A -T png -o ~A.png ~:*~A.dot&quot; engine filename))
+     (format nil &quot;![](~a.png)~%&quot; filename)))
+
+HASSE
+WRITE-DOT</code></pre>
+<p>I am going to need two helper function:</p>
+<pre><code>(defun rep (n k &amp;optional acc)
+  (if (= n 0)
+      acc
+      (rep (1- n) k (cons k acc))))
+
+(defun range (a b &amp;optional (k 1) acc)
+  (if (= a b)
+      (nreverse acc)
+      (range (+ a k) b k (cons a acc))))
+
+REP
+RANGE</code></pre>
+<p>OK. Here are the graphs:</p>
+<pre><code>(defvar graph1 (hasse (shuffles (range 0 2) (rep 4 3)) #&#39;adjacentp))
+
+GRAPH1</code></pre>
+<figure class="tmblr-full" data-orig-width="408" data-orig-height="397">
+<img src="../media/2017-07-06-some_hasse_diagrams_0.png" data-orig-width="408"
+data-orig-height="397" alt="image" />
+</figure>
+<p>Next one:</p>
+<pre><code>(defvar graph2 (hasse (shuffles (range 0 6) (rep 2 &quot;*&quot;)) #&#39;adjacentp))
+
+GRAPH2</code></pre>
+<figure class="tmblr-full" data-orig-width="556" data-orig-height="553">
+<img src="../media/2017-07-06-some_hasse_diagrams_1.png" data-orig-width="556"
+data-orig-height="553" alt="image" />
+</figure>
+<p>Finally,</p>
+<pre><code>(defvar graph3 (hasse (shuffles (range 0 4) (rep 3 &quot;*&quot;)) #&#39;adjacentp))
+
+GRAPH3</code></pre>
+<figure class="tmblr-full" data-orig-width="591" data-orig-height="567">
+<img src="../media/2017-07-06-some_hasse_diagrams_2.png" data-orig-width="591"
+data-orig-height="567" alt="image" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">July 6th, 2017 11:14pm</span></p>
+</div>
+</body>
+</html>

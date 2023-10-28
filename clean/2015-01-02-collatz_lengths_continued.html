@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-01-02-collatz_lengths_continued</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="collatz-lengths-continued">Collatz Lengths (Continued)</h1>
+<p>I was looking at the following function <span
+class="math inline">\(f\colon\mathbb{N}\to\mathbb{N}\)</span> defined as
+<span class="math display">\[ f(n) =
+\begin{cases} 1 &amp; \text{ if } n = 1\\ \frac{n}{2} &amp; \text{ if
+$n$ is even}\\ \frac{3n+1}{2} &amp; \text{ otherwise} \end{cases}
+\]</span> and the recursive function <span class="math display">\[
+\ell(n) = \begin{cases} 0 &amp;
+\text{ if } n = 1\\ 1 + \ell(f(n)) &amp; \text{ otherwise }
+\end{cases} \]</span> I am specifically interested in <span
+class="math inline">\(\ell(n)/\log_2(n)\)</span>.</p>
+<p>Yesterday, I made a mistake in typing in <span
+class="math inline">\(f(n)\)</span> and instead I defined <span
+class="math display">\[ g(n) = \begin{cases} 1 &amp; \text{ if } n =
+1,3\\ \frac{n}{2} &amp;
+\text{ if $n$ is even}\\ \frac{3(n+1)}{2} &amp; \text{ otherwise}
+\end{cases} \]</span> and I didn’t notice the mistake until later. If
+you have experimented with Collatz lengths you should know that it is a
+rather interesting accident that the recursive length terminates. So,
+having found another function whose termination behavior is similar to
+the original <span class="math inline">\(f(n)\)</span> is nice.</p>
+<p>This gave me an idea: what if I plotted the lengths of sequences
+coming from <span class="math inline">\(f(n)\)</span> and <span
+class="math inline">\(g(n)\)</span> against each other would I see that
+the convergence behaviors of the recursive lengths are similar.</p>
+<h2 id="code">Code</h2>
+<p>First I will need our functions:</p>
+<pre><code>(defun f (n)
+   (cond ((= n 1) 1)
+         ((evenp n) (/ n 2))
+         (t (/ (1+ (* 3 n)) 2))))
+F
+
+
+(defun g (n)
+   (cond ((&lt; n 4) 1)
+         ((evenp n) (/ n 2))
+         (t (* (/ 3 2) (1+ n)))))
+G</code></pre>
+<p>Then an iterator:</p>
+<pre><code>(defun iterate (fn n &amp;optional (m 0))
+   (if (= n 1)
+      m
+      (iterate fn (funcall fn n) (1+ m))))
+ITERATE</code></pre>
+<p>Next, the data on lengths:</p>
+<pre><code>(let ((n (expt 2 22))
+      (filename &quot;collatz7Data.csv&quot;))
+   (with-open-file (out filename
+                        :direction :output
+                        :if-exists :supersede
+                        :if-does-not-exist :create)
+      (loop for i from 2 to n
+            do (let ((x (log i 2)))
+                   (format out &quot;~d ~4,1f ~4,1f~%&quot;
+                               i
+                               (/ (iterate #&#39;f i) x)
+                               (/ (iterate #&#39;g i) x))))))
+NIL</code></pre>
+<figure data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2015-01-02-collatz_lengths_continued_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">January 2nd, 2015 7:37am</span></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-04-11-basic_data_analysis_with_cl_without_frameworks</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="basic-data-analysis-with-cl-without-frameworks">Basic Data
+Analysis with CL without Frameworks</h1>
+<p>I was looking at <a
+href="https://mmaul.github.io/clml.tutorials//2015/09/08/CLML-Wine-pca-k-means-and-hierarchical-clustering.html">CLML
+Tutorial</a>.  CLML seems to be a well-designed and comprehensive
+machine learning library that can do a lot of things from time series
+analysis to neural networks.</p>
+<p>I am against using heavy frameworks for doing anything. I think
+libraries too should confine themselves to do one thing well.  If your
+language is well-designed, like common lisp, combining specialized
+libraries to do even the most difficult and complicated tasks become
+possible after careful design.</p>
+<p>Today’s task, then, is to use common lisp and relatively familiar
+common lisp libraries to achieve what has been done in the
+aforementioned tutorial.  Instead of using babel and org mode, I will do
+this post on <a
+href="https://github.com/fredokun/cl-jupyter"><code>cl-jupyter</code></a>.</p>
+<h2 id="lets-get-to-it">Let’s get to it<a
+href="http://localhost:8888/notebooks/Untitled.ipynb#Let%27s-get-to-it"></a></h2>
+<p>First, let us define our package and load our libraries:</p>
+<pre><code>(mapc #&#39;require &#39;(:drakma :cl-ppcre :lla :gsll))
+
+(defpackage #:my-test
+    (:use #:cl)
+    (:import-from #:lla svd svd-u svd-d svd-vt dot)
+    (:import-from #:grid column row)
+    (:import-from #:cl-ppcre split)
+    (:import-from #:drakma http-request))
+
+(in-package #:my-test)
+#&lt;PACKAGE &quot;MY-TEST&quot;&gt;</code></pre>
+<p>Now, let me define a function to get the data from the web from a
+given URL:</p>
+<pre><code>(defun slurp-data (URL &amp;optional (separator &quot;,&quot;))
+    (mapcar (lambda (x) (mapcar #&#39;read-from-string (split separator x)))
+            (split &quot;\n+&quot; (http-request URL))))
+SLURP-DATA</code></pre>
+<p>OK. Let us get the data:</p>
+<pre><code>(defparameter raw (slurp-data &quot;http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data&quot;))
+(list (car raw) (cadr raw))
+
+((1 14.23 1.71 2.43 15.6 127 2.8 3.06 0.28 2.29 5.64 1.04 3.92 1065)
+ (1 13.2 1.78 2.14 11.2 100 2.65 2.76 0.26 1.28 4.38 1.05 3.4 1050))</code></pre>
+<p>We don’t need the first column since it tells us the class.  </p>
+<pre><code>(defparameter wine (mapcar #&#39;cdr raw))
+
+WINE</code></pre>
+<p>I am going to apply singular value decomposition on the data.  For
+that I am using the LLA library.  The library requires that the data is
+in the form of a 2d-array:</p>
+<pre><code>(defparameter matrix
+    (let ((n (length wine))
+          (m (length (car wine))))
+       (make-array (list n m) :initial-contents wine)))
+
+(defparameter svd-result (svd matrix))
+
+SVD-RESULT</code></pre>
+<p>Let us check the singular values:</p>
+<pre><code>(slot-value (svd-d svd-result) &#39;cl-num-utils.matrix::elements)
+
+#(10886.66990656052d0 493.56204760867354d0 57.1488432147479d0
+  30.100125524021887d0 18.54281551828445d0 14.46302059358436d0
+  11.036037653318322d0 5.289890187623465d0 4.456588316877591d0
+  3.575271453862534d0 2.6012217367795545d0 1.9868082509451046d0
+  1.2139139647789066d0)</code></pre>
+<p>Result indicates that the first two singular vectors should be just
+enough.   In order to project our 14D vectors to 2D vectors, I am going
+to need a dot-product. The <code>LLA</code> library already has that.
+ After I project the data-points, I will combine the wine-class data
+with the projected vector.  The result will be written in a file which I
+will use with gnuplot.</p>
+<pre><code>(let* ((vecs (mapcar (lambda (i) (row (svd-u svd-result) i)) (list 0 1)))
+       (data (mapcar (lambda (x) (coerce x &#39;vector)) wine))
+       (class (mapcar #&#39;car raw))
+       (projected-data 
+           (mapcar (lambda (x y) (cons y (mapcar (lambda (z) (dot z x)) vecs))) 
+                  data 
+                  class)))
+   (with-open-file (out &quot;data.csv&quot; :direction :output :if-does-not-exist :create :if-exists :supersede)
+       (format out &quot;~{~{~5,4F~^, ~}~%~}&quot; projected-data)))
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="480" data-orig-width="640">
+<img src="../media/2016-04-11-basic_data_analysis_with_cl_without_frameworks_0.png" data-orig-height="480"
+data-orig-width="640" alt="image" />
+</figure>
+<h2 id="analysis">Analysis<a
+href="http://localhost:8888/notebooks/Untitled.ipynb#Analysis"></a></h2>
+<p>Good separation between class 1 and class 2 wines, and class 3 is
+scattered in between.  Looking at the data, one might have used only the
+most dominant vector to achieve the same separation.</p>
+<p>Unlike the <a
+href="https://mmaul.github.io/clml.tutorials//2015/09/08/CLML-Wine-pca-k-means-and-hierarchical-clustering.html">CLML
+Tutorial</a>, I didn’t normalize the data because the separation was
+much worse after a normalization.</p>
+<p>So, there you have it. “Look ma! No frameworks.”</p>
+<div id="footer">
+<p><span id="timestamp">April 11th, 2016 12:28pm</span></p>
+</div>
+</body>
+</html>

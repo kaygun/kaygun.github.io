@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-12-27-polarization_in_the_us_congress</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="polarization-in-the-us-congress">Polarization in the US
+Congress</h1>
+<p>I realized that I haven’t posted anything on data analysis lately, or
+something with python. When I found that <a
+href="https://www.govtrack.us/developers/data">Civic Impulse</a> has
+been collecting data on voting records of the US Congress, I thought I
+would type up something.</p>
+<h2 id="decriptionoftheproblem">Decription of the problem</h2>
+<p>Polarization of the Congress and the Senate has been described as a
+big problem in the US politics. Could we actually see or quantify this
+polarization from the voting behaviours of the US Congress?</p>
+<h2 id="dataanalysis">Data analysis</h2>
+<p>First, I am going to need some libraries:</p>
+<pre><code> import glob as g
+ import json</code></pre>
+<p>I downloaded data from <a
+href="https://www.govtrack.us/developers/data">govTrack.us</a>. I
+arranged the data in directories separated by years.</p>
+<p>First, I will define a function that will process the data</p>
+<pre><code> def process(year):
+   data = {}
+   bills = g.glob(str(year)+&#39;/h*&#39;)
+   for x in bills:
+      with open(x+&#39;/data.json&#39;) as input:
+         raw = json.load(input)
+      if(raw[u&#39;category&#39;] == u&#39;passage&#39;):
+         data.update({x: raw[u&#39;votes&#39;]})
+   return(data)</code></pre>
+<p>I will extract ’Yea’s and ’Nay’s as follows:</p>
+<pre><code> def extract(data):
+   z = [&#39;y&#39;,&#39;n&#39;,&#39;x&#39;]
+   votes = {}
+   for x in data.keys():
+      try:
+         data[x][u&#39;Aye&#39;]
+         y = [&#39;Aye&#39;,&#39;No&#39;,&#39;Not Voting&#39;]
+      except:
+         y = [&#39;Yea&#39;,&#39;Nay&#39;,&#39;Not Voting&#39;]
+      res = {}
+      for i in range(3):
+         temp = {u&#39;D&#39;:0, u&#39;R&#39;:0, u&#39;I&#39;:0}
+         for j in data[x][y[i]]:
+            temp[j[u&#39;party&#39;]]+=1
+         res.update({z[i]: temp})
+      votes.update({x: res})
+   return(votes)</code></pre>
+<p>And finally a function that calculates <em>polarization</em>. I used
+the following idea: if <span class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span> are Democrats and Republicans on an
+issue voting a particular way then I will say the polarization is <span
+class="math inline">\(\frac{\|a-b\|}{a+b}\)</span>. Then I will sum up
+these values for Yea’s and Nay’s.</p>
+<p>The following function returns the percentage of bipartisan bills
+from a given year’s voting data. I will consider a specific voting
+<em>bipartisan</em> if the polarization measure is less than or equal to
+0.5.</p>
+<pre><code> def polarization(votes):
+   result = 0
+   for x in votes.keys():
+      local = votes[x]
+      measure  = abs(local[&#39;y&#39;][&#39;D&#39;]-local[&#39;y&#39;][&#39;R&#39;])
+      measure += abs(local[&#39;n&#39;][&#39;D&#39;]-local[&#39;n&#39;][&#39;R&#39;])
+      measure += abs(local[&#39;x&#39;][&#39;D&#39;]-local[&#39;x&#39;][&#39;R&#39;])
+
+      total = 0
+      for k in [&#39;y&#39;,&#39;n&#39;,&#39;x&#39;]:
+         for l in [&#39;D&#39;,&#39;R&#39;,&#39;I&#39;]:
+            total += local[k][l]
+
+      measure /= (1.0*total)
+
+      if(measure&lt;=0.5):
+        result+=1
+
+   return(100.0*result/len(votes))</code></pre>
+<p>Let us run this over our data:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Year</th>
+<th style="text-align: right;">Percent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1990</td>
+<td style="text-align: right;">61.38</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1991</td>
+<td style="text-align: right;">59.06</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1992</td>
+<td style="text-align: right;">47.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1993</td>
+<td style="text-align: right;">24.29</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1994</td>
+<td style="text-align: right;">40.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1995</td>
+<td style="text-align: right;">37.63</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1996</td>
+<td style="text-align: right;">48.74</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1997</td>
+<td style="text-align: right;">53.24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1998</td>
+<td style="text-align: right;">45.58</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1999</td>
+<td style="text-align: right;">50.61</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2000</td>
+<td style="text-align: right;">58.44</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2001</td>
+<td style="text-align: right;">54.96</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2002</td>
+<td style="text-align: right;">50.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">44.52</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">50.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2005</td>
+<td style="text-align: right;">46.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">33.33</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">20.52</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2008</td>
+<td style="text-align: right;">15.33</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2009</td>
+<td style="text-align: right;">10.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">10.16</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2011</td>
+<td style="text-align: right;">14.62</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2012</td>
+<td style="text-align: right;">12.38</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">11.63</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2014</td>
+<td style="text-align: right;">17.05</td>
+</tr>
+</tbody>
+</table>
+<p>Here is the plot of the data:</p>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-12-27-polarization_in_the_us_congress_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<h2 id="analysis">Analysis</h2>
+<p>Something must happened in 1993. My guess is that prior to 1994 when
+the Republicans gained control of both chambers first time in the last
+40 years, the tensions in the Congress must have been high. But of
+course, this is a wild guess. I am not a political scientist. One can
+also see that the situation got worse during the second term of Bush the
+Second, and has not improved since.</p>
+<div id="footer">
+<p><span id="timestamp">December 27th, 2014 2:34pm</span></p>
+</div>
+</body>
+</html>

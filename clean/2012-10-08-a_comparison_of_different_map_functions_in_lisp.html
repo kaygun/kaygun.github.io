@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2012-10-08-a_comparison_of_different_map_functions_in_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="acomparisonofdifferentmapfunctionsinlisp">A comparison of
+different map functions in lisp</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>When I write lisp code, I have different map functions I can use
+provided by common lisp, or any other lisps. There is the familiar
+<code>mapcar</code> and there is the <code>map</code> function. The
+former takes a list and returns a list. Simple. The latter provides some
+flexibility in terms of the input and output types. Today I will compare
+the different versions of these map functions for two lisp interpreters:
+<a href="http://ecls.sourceforge.net">ecl</a> and <a
+href="http://www.sbcl.org">sbcl</a>.</p>
+<h2 id="test">Test code</h2>
+<p>The test code I am going to use is as follows</p>
+<pre><code> (setq VLA (make-array 9999999))
+ (setq VLL (make-list  9999999))
+
+ (time (progn (map &#39;list (lambda (x) (random 10)) VLA) nil))
+ (time (progn (map &#39;vector (lambda (x) (random 10)) VLA) nil))
+ (time (progn (map &#39;list (lambda (x) (random 10)) VLL) nil))
+ (time (progn (map &#39;vector (lambda (x) (random 10)) VLL) nil))
+ (time (progn (mapcar (lambda (x) (random 10)) VLL) nil))</code></pre>
+<p>And the results are</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: left;">ECL</th>
+<th style="text-align: left;">SBCL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>map</code> array to list</td>
+<td style="text-align: left;">3.9190 [0.0012]</td>
+<td style="text-align: left;">0.9866 [0.0000]</td>
+</tr>
+<tr class="even">
+<td><code>map</code> array to array</td>
+<td style="text-align: left;">3.3938 [0.0030]</td>
+<td style="text-align: left;">0.5529 [0.0000]</td>
+</tr>
+<tr class="odd">
+<td><code>map</code> list to list</td>
+<td style="text-align: left;">3.5696 [0.0063]</td>
+<td style="text-align: left;">0.6416 [0.0000]</td>
+</tr>
+<tr class="even">
+<td><code>map</code> list to array</td>
+<td style="text-align: left;">4.0166 [0.0033]</td>
+<td style="text-align: left;">1.4948 [0.0063]</td>
+</tr>
+<tr class="odd">
+<td><code>mapcar</code></td>
+<td style="text-align: left;">3.3802 [0.0010]</td>
+<td style="text-align: left;">1.3909 [0.0004]</td>
+</tr>
+</tbody>
+</table>
+<p>I ran the code 10 times for each interpreter and then I took the
+averages. The numbers in brackets are the standard deviations. It seems
+that <code>sbcl</code> executes <code>map</code> from array to array
+very efficiently while for <code>ecl</code> executes the same code on
+par with <code>mapcar</code>. Call me impatient: <code>sbcl</code> is
+very big and takes too long to launch while <code>ecl</code> is very
+small and fires up much faster in comparison. But it is clear that
+<em>there is no free lunch</em>. I would pay for my initial impatience
+in terms of total run time.</p>
+<div id="footer">
+<p><span id="timestamp">October 8th, 2012 12:15pm</span></p>
+</div>
+</body>
+</html>

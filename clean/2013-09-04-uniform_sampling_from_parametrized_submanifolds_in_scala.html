@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2013-09-04-uniform_sampling_from_parametrized_submanifolds_in_scala</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1
+id="uniform-sampling-from-parametrized-submanifolds-in-scala">Uniform
+Sampling from Parametrized Submanifolds in Scala</h1>
+<p>Here is the code for <a
+href="2013-09-04-uniform_sampling_from_parametrized_submanifolds.html">yesterday’s
+post</a> but written in <a
+href="http://www.scala-lang.org/documentation/">scala language</a>
+instead of <a href="http://cliki.net/">lisp</a>.</p>
+<pre><code>import scala.collection.immutable
+
+def writeSampleToFile(n: Int, fn: () =&gt; IndexedSeq[Double], filename:String) = {
+  val      out = new java.io.PrintWriter(filename)
+  val mySample = (1 to n) map (x =&gt; fn())
+
+  for(point &lt;- mySample) 
+     out.println(point.foldLeft(&quot;&quot;)( (a,b) =&gt; &quot;%s %4.3f &quot; format(a,b) ))
+
+  out.close
+}
+
+
+def sampleFromSimplex() = {
+  val x = math.sqrt(math.random)
+  val y = math.random
+
+  IndexedSeq(x*y,x-x*y,1-x)
+}
+
+
+def sampleFromSphere() = {
+  val   rho = math.pow(math.random,1/3)
+  val   phi = math.acos(2*(math.random - 0.5))
+  val theta = 2*math.Pi*math.random
+
+  IndexedSeq(rho*math.cos(theta)*math.sin(phi),
+             rho*math.sin(theta)*math.sin(phi),
+             rho*math.cos(phi))
+}
+
+
+def sampleFromTorus(a:Double, b:Double) = {
+  val theta = 2*math.Pi*math.random
+  val   phi = 2*math.Pi*math.random
+  val   rho = a + b*math.cos(theta)
+
+  IndexedSeq(rho*math.cos(phi),
+             rho*math.sin(phi),
+             rho*math.sin(theta))
+} 
+
+writeSampleToFile(400,sampleFromSimplex,&quot;./simplex.csv&quot;)
+writeSampleToFile(400,sampleFromSphere,&quot;./sphere.csv&quot;)
+writeSampleToFile(2000,(()=&gt;sampleFromTorus(6.0,1.0)),&quot;./torus-large.csv&quot;)
+writeSampleToFile(2000,(()=&gt;sampleFromTorus(2.1,1.0)),&quot;./torus-small.csv&quot;)</code></pre>
+<div id="footer">
+<p><span id="timestamp">September 4th, 2013 7:27pm</span></p>
+</div>
+</body>
+</html>

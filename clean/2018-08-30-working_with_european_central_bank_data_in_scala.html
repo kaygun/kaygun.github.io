@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2018-08-30-working_with_european_central_bank_data_in_scala</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="working-with-european-central-bank-data-in-scala">Working with
+European Central Bank Data in Scala</h1>
+<p>It seems my <a
+href="2017-10-01-working_with_european_central_bank_data_in_python.html"><em>Working
+with ECB Data in Python</em></a> post is popular. But I noticed that the
+code in there stopped working.</p>
+<p>I have been trying since morning, but I can’t get the
+<code>urllib.request</code> library work nicely. Then, as much as I love
+common lisp, playing with XML under CL is nauseating, and unfortunately
+clojure isn’t any better. One option is to convert XML to JSON but I’d
+like to stick with XML.</p>
+<p>So, I’ll re-write the code in scala this time :)</p>
+<h2 id="libraries">Libraries</h2>
+<p>I am going to use <a
+href="https://github.com/softwaremill/sttp">sttp</a> for the http
+requests. Scala plays really nicely with XML data: far better than
+python, clojure, and even common lisp. I am going to exploit that as
+well.</p>
+<p>So, let us load the required libraries.</p>
+<pre class="scala211"><code>import $ivy.`com.softwaremill.sttp::core:1.0.5`
+import com.softwaremill.sttp._
+import scala.xml.XML.loadString</code></pre>
+<pre><code>import $ivy.$                                  
+import com.softwaremill.sttp._
+import scala.xml.XML.loadString</code></pre>
+<p>By the way, I am using <a href="http://jupyter.org/">jupyter</a>’s <a
+href="https://github.com/jupyter-scala/jupyter-scala">scala kernel</a>
+for this post. But the first import statement I wrote above also works
+in <a href="http://ammonite.io/">ammonite</a>.</p>
+<p>I am going to need a backend to handle connections.</p>
+<pre class="scala211"><code>implicit val backend = com.softwaremill.sttp.HttpURLConnectionBackend()</code></pre>
+<pre><code>backend: SttpBackend[Id, Nothing] = com.softwaremill.sttp.FollowRedirectsBackend@7d4124a1</code></pre>
+<p>Now, the function that handles connections and returns the
+result.</p>
+<pre class="scala211"><code>def ECBRequest(series: String) = {
+    val raw = sttp.get(uri&quot;https://sdw-wsrest.ecb.europa.eu/service/data/EXR/$series.EUR.SP00.A&quot;)
+                  .header(&quot;Accept&quot;,&quot;application/vnd.sdmx.structurespecificdata+xml;version=2.1&quot;)
+                  .send()
+    val res = loadString(raw.unsafeBody)
+    val left = (res \ &quot;@TIME_PERIOD&quot;).map(_.text)
+    val right = (res \ &quot;@OBS_VALUE&quot;).map(_.text.toDouble)
+    left.zip(right).toMap
+}</code></pre>
+<pre><code>defined function ECBRequest</code></pre>
+<p>The <code>series</code> string has 2 components:</p>
+<ol type="1">
+<li>The frequency: this could be annual (‘A’), monthly (‘M’), quarterly
+('Q’), or daily (‘D’)</li>
+<li>The currency.</li>
+</ol>
+<p>Let us test:</p>
+<pre class="scala211"><code>ECBRequest(&quot;M.TRY&quot;)</code></pre>
+<pre><code>res3: Map[String, Double] = Map(
+  &quot;2017-10&quot; -&gt; 4.323390909090909,
+  &quot;2010-02&quot; -&gt; 2.07559,
+  &quot;2013-09&quot; -&gt; 2.695233333333333,
+  &quot;2012-08&quot; -&gt; 2.229082608695652,
+  &quot;2003-11&quot; -&gt; 1.7267813,
+  &quot;2001-08&quot; -&gt; 1.265762304347826,
+  &quot;2015-07&quot; -&gt; 2.970504347826088,
+  &quot;2000-03&quot; -&gt; 0.559335521739131,
+  &quot;2010-11&quot; -&gt; 1.971663636363636,
+  &quot;2012-01&quot; -&gt; 2.375854545454545,
+  &quot;2014-01&quot; -&gt; 3.029704545454546,
+...</code></pre>
+<p>And let us be nice and close the backend :)</p>
+<pre class="scala211"><code>backend.close</code></pre>
+<div id="footer">
+<p><span id="timestamp">August 30th, 2018 10:07am</span></p>
+</div>
+</body>
+</html>

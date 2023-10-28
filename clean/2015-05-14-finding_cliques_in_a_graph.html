@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2015-05-14-finding_cliques_in_a_graph</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="finding-cliques-in-a-graph">Finding Cliques in a Graph</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Today’s post is about <a
+href="http://en.wikipedia.org/wiki/Clique_problem">finding cliques</a>
+in a graph: A <a
+href="http://en.wikipedia.org/wiki/Clique_(graph_theory)">clique</a> in
+an undirected graph G is a subgraph which is complete. One specific
+algorithm on finding cliques is a family of algorithms called <a
+href="http://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm">Bron-Kerbosch
+Algrithm(s)</a>. They were simple enough to implement.</p>
+<h2 id="the-algorithm">The algorithm</h2>
+<pre><code>Algorithm Bron-Kerbosch
+Input: Three subsets of vertices P, X and R
+Output: A family of cliques defined as subsets of the set of vertices
+Begin
+   if P and X are both empty:
+       report R as a maximal clique
+   end if
+   for each vertex v in P:
+       N &lt;- set of neighbors of v
+       call Bron-Kerbosch with R union {v}, P intersection N, X intersection N
+       P &lt;- P \ {v}
+       X &lt;- X union {v}
+   end for
+End</code></pre>
+<h2 id="an-implementation-in-common-lisp">An implementation in Common
+Lisp</h2>
+<p>The pseudo-code of the first variation was easy enough to translate
+to Common Lisp. I will assume (as I did in most of the posts on graphs
+on this blog) that a graph is given as a list of edges where each edge
+is a list of pairs of vertices.  <br />
+</p>
+<pre><code>(defun cliques (graph)
+    (let* ((vertices (remove-duplicates (reduce #&#39;append graph)))
+           (neighbors
+            (loop for x in vertices collect
+                (let (res)
+                   (dolist (v vertices (cons x (remove-duplicates (sort res #&#39;&lt;))))
+                      (if (member (sort (list v x) #&#39;&lt;)graph :test #&#39;equal)
+                          (push v res))))))
+           (cliques nil))
+      (labels ((bron-kerbosch (p r x)
+                 (if (and (null p) (null x))
+                     (push r cliques))
+                 (mapl (lambda (q)
+                         (let* ((v (car q))
+                                (n (cdr (assoc v neighbors))))
+                           (bron-kerbosch (intersection q n)
+                                          (union (list v) r)
+                                          (intersection x n))
+                           (setf x (cons v x))))
+                       p)))
+         (bron-kerbosch vertices nil nil))
+      (sort (mapcar (lambda (x) (sort x #&#39;&lt;)) cliques)
+            (lambda (x y) (&gt; (length x) (length y))))))
+CLIQUES</code></pre>
+<p>I implemented neighbors as an <code>assoc</code> list instead of
+implementing it as a function to save time. Also, the <code>for</code>
+loop inside the recursive core was using <code>P</code> with one element
+removed each time. This was the perfect use case for <a
+href="http://www.lispworks.com/documentation/HyperSpec/Body/f_mapc_.htm"><code>mapl</code></a>.</p>
+<p>Let us test it on a complete graph:</p>
+<pre><code>(let ((G (loop for i from 0 to 9 append
+              (loop for j from (1+ i) to 10 collect
+                 (list i j)))))
+     (cliques G))
+((0 1 2 3 4 5 6 7 8 9 10))</code></pre>
+<p>and now on a random graph:</p>
+<pre><code>(defun random-graph (n m k)
+    (remove-if
+     (lambda (x) (= (car x) (cadr x)))
+     (remove-duplicates 
+      (sort (mapcar (lambda (x) (sort x #&#39;&lt;))
+                    (loop repeat (floor m k) append
+                         (loop repeat k collect
+                              (list (random n) (+ (random n) k)))))
+            (lambda (a b) (or (&lt; (car a) (car b)) (and (= (car a) (car b)) (&lt; (cadr a) (cadr b))))))
+      :test #&#39;equal)))
+RANDOM-GRAPH
+(defvar G (random-graph 10 100 3)) 
+G</code></pre>
+<figure class="tmblr-full" data-orig-height="739" data-orig-width="1350">
+<img src="../media/2015-05-14-finding_cliques_in_a_graph_0.png" data-orig-height="739"
+data-orig-width="1350" alt="image" />
+</figure>
+<pre><code>(cliques G)
+((0 3 4 5 6 7 9) (3 4 5 6 7 10) (2 3 4 5 6 10) (0 3 5 6 7 8) (0 3 4 6 9 11)
+ (3 4 7 9 12) (2 3 4 6 11) (1 3 6 7 10) (0 3 6 8 11) (3 7 8 12) (2 3 4 12)
+ (1 3 6 11))</code></pre>
+<div id="footer">
+<p><span id="timestamp">May 14th, 2015 4:24am</span></p>
+</div>
+</body>
+</html>

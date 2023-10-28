@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2020-04-13-turkish_hyphenation_in_common_lisp</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="turkish-hyphenation-in-common-lisp">Turkish Hyphenation in
+Common Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Unlike <a
+href="https://english.stackexchange.com/questions/385/what-are-the-rules-for-splitting-words-at-the-end-of-a-line">English,</a>
+<a href="https://en.wikipedia.org/wiki/Turkish_language">Turkish</a> has
+a very regular <a
+href="https://en.wikipedia.org/wiki/Orthography">orthography</a>
+especially when it comes to hyphenation rules. Today, I am going to
+write a common lisp program that gives you the proper Turkish
+hyphenation of a Turkish word. Back in the day, I wrote <a
+href="https://github.com/kaygun/Turkish-hyphenation">the original</a> in
+C for <a href="https://en.wikipedia.org/wiki/ISO/IEC_8859-9">ISO8859-9
+encoding</a>. I should extend it for <a
+href="https://en.wikipedia.org/wiki/Unicode">unicode</a>, but dealing
+with unicode in C feels like cleaning hair from shower drain.</p>
+<h2 id="the-code">The code</h2>
+<p>First, I need a function which would tell us whether a given
+character is a vowel or a consonant:</p>
+<pre><code>(let ((vowels &#39;(#\a #\â #\e #\ı #\i #\o #\ö #\u #\ü #\û)))
+  (defun vowelp (ch)
+    (member ch vowels)))
+
+VOWELP</code></pre>
+<p>Next, the function that hypenates a given word:</p>
+<pre><code>(defun hyphen (raw)
+  (let ((w (format nil &quot;~a  &quot; raw))
+        res flag dash)
+    (dotimes (i (length raw))
+      (if (vowelp (elt w i))
+          (setf flag nil
+                dash (some #&#39;vowelp (subseq w (1+ i) (+ i 3))))
+          (when (not (or (setf flag (not flag))
+                         (setf dash (not (vowelp (elt w (1+ i)))))))
+            (push #\- res)))
+      (push (elt w i) res)
+      (when dash (push #\- res))
+      (setf dash nil))
+    (ppcre:split #\- (concatenate &#39;string (reverse res)))))
+
+HYPHEN</code></pre>
+<p>And few tests:</p>
+<pre><code>(mapcar #&#39;hyphen &#39;(&quot;işkillendim&quot; &quot;ağrılarımsa&quot; &quot;erkekle&quot; &quot;tarımsal&quot; &quot;yap&quot; &quot;üre&quot; &quot;tank&quot; &quot;ionya&quot; &quot;çekoslavakyalılaştıramadıklarımızdanmışcasınaymışsa&quot;))
+
+((iş kil len dim) (ağ rı la rım sa) (er kek le) (ta rım sal) (yap) (ü re)
+ (tank) (i on ya)
+ (çe kos la vak ya lı laş tı ra ma dık la rı mız dan mış ca sı nay mış sa))</code></pre>
+<div id="footer">
+<p><span id="timestamp">April 13th, 2020 12:51pm</span></p>
+</div>
+</body>
+</html>

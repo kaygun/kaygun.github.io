@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-06-08-hexadecimal_digits_of_\pi</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="hexadecimal-digits-of-pi">Hexadecimal digits of <span
+class="math inline">\(\pi\)</span></h1>
+<h2 id="some-theory">Some theory</h2>
+<p>There is a non-recursive formula that computes <span
+class="math inline">\(\pi\)</span> given as <span
+class="math display">\[
+\sum_{k=0}^\infty \sum_{i=1}^7 \frac{a_i}{16^k(8k+i)} =
+\sum_{i=1}^7 \sum_{k=0}^\infty \frac{a_i}{16^k(8k+i)} \]</span> where
+<span class="math display">\[ a_1 = 4,\quad a_2 = a_3 = a_7 = 0,\quad
+a_4 = -2,\quad a_5
+= a_6 = -1 \]</span> This is known as the <a
+href="http://en.wikipedia.org/wiki/Bailey%E2%80%93Borwein%E2%80%93Plouffe_formula">Bailey–Borwein–Plouffe
+formula</a>. One can use this series to calculate the hexadecimal digits
+of <span class="math inline">\(\pi\)</span> as follows: First, we
+consider this sum in separate summands as <span class="math display">\[
+\sum_{k=0}^\infty \frac{a_i}{16^k(8k+i)} \]</span> for <span
+class="math inline">\(i=1,\ldots,7\)</span>. In order to get the n-th
+hexadecimal digit we need to multiply the whole series by <span
+class="math inline">\(16^n\)</span>. <span class="math display">\[
+\sum_{k=0}^\infty
+\frac{a_i\cdot 16^n}{16^k(8k+i)} = a_i \cdot \sum_{k=0}^\infty
+\frac{16^{n-k}}{8k+i} \]</span> and the relevant part of the sum for us
+is the integer value of the sum <span class="math display">\[ a_i\cdot
+\sum_{k=0}^n
+\frac{16^{n-k}}{8k+i} \]</span> modulo 16, again for <span
+class="math inline">\(i=1,\ldots,7\)</span>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>The lisp code that generates the n-th hexadecimal digit.</p>
+<pre><code>(let ((mtable (make-hash-table :test &#39;equal)))
+   (defun mpow (n p)
+      (cond 
+         ((= n 0) 0)
+         ((= p 0) 1)
+         ((&lt; p 0) (/ (mpow n (- p))))
+         ((= p 2) (* n n))
+         (t (or (gethash (cons n p) mtable)
+                (setf (gethash (cons n p) mtable)
+                    (if (evenp p) 
+                       (mpow (mpow n (/ p 2)) 2)
+                       (* n (mpow n (1- p))))))))))
+
+(defun msum (n i)
+   (loop for k from 0 to n 
+       sum (/ (mpow 16 (- n k)) 
+              (+ i (* 8 k)))))
+
+(defun nth-hexa-digit (n)
+   (mod 
+      (floor 
+         (reduce &#39;+ 
+            (mapcar (lambda (i j) (* j (msum n i)))
+               (list 1 4 5 6)
+               (list 4 -2 -1 -1))))
+      16))</code></pre>
+<p>So, here is the output for the first 2500 hecadecimal digits:</p>
+<pre><code>    3243F6A8885A308D313198A2E03707344A4093822299F31D00
+    82EFA98EC4E6C89452821E638D01377BE5466CF34E90C6CC0A
+    C29B7C97C50DD3F84D5B5B54709179216D5D98979FB1BD1310
+    BA698DFB5AC2FFD72DBD01ADFB7B8E1AFED6A267E96BA7C904
+    5F12C7F9924A19947B3916CF70801F2E2858EFC16636920D87
+    1574E69A458FEA3F4933D7E0D95748F728EB658718BCD58821
+    54AEE7B54A41DC25A59B59C30D5392AF26013C5D1B02328608
+    5F0CA417918B8DB38EF8E79DCB0603A180E6C9E0E8BB01E8A3
+    ED71577C1BD314B2778AF2FDA55605C60E65525F3AA55AB945
+    748986263E8144055CA396A2AAB10B6B4CC5C341141E8CEA15
+    486AF7C72E993B3EE1411636FBC2A2BA9C55D741831F6CE5C3
+    E169B87931EAFD6BA336C24CF5C7A325381289586773B8F489
+    86B4BB9AFC4BFE81B6628219361D809CCFB21A991487CAC605
+    DEC8032EF845D5DE98575B1DC262302EB651B8823893E81D39
+    6ACC50F6D6FF383F442392E0B4482A484200469C8F04A9E1F9
+    B5E21C66842F6E96C9A670C9C61ABD388F06A51A0D2D8542F6
+    8960FA728AB5133A36EEF0B6C137A3BE4BA3BF0507EFB2A98A
+    1F1651D39AF017666CA593E82430E888CEE8619456F9FB47D8
+    4A5C33B8B5EBEE06F75D885C12073401A449F56C16AA64ED3A
+    A62363F77061BFEDF72429B023D37D0D724D00A1248DB0FEAD
+    349F1C09B075372C980991B7B25D479D8F6E8DEF7E3FE501AB
+    6794C3B976CE0BD04C006BAC1A94FB6409F60C45E5C9EC2196
+    A246368FB6FAF3E6C53B51339B2EB3B52EC6F6DFC511F9B309
+    52CCC814544AF5EBD09BEE3D004DE334AFD660F2807192E4BB
+    3C0CBA85745C8740FD20B5F39B9D3FBDB5579C0BD1A60320AD
+    6A100C6402C7279679F25FEFB1FA3CC8EA5E9F8DB3222F83C7
+    516DFFD616B152F501EC8AD0552AB323DB5FAFD23876053317
+    B483E00DF829E5C57BBCA6F8CA01A87562EDF1769DBD542A8F
+    6287EFFC3AC6732C68C4F5573695B27B0BBCA58C8E1FFA35DB
+    8F011A010FA3D98FD2183B84AFCB56C2DD1D35B9A53E479B6F
+    84565D28E49BC4BFB9790E1DDF2DAA4CB7E3362FB1341CEE4C
+    6E8EF20CADA36774C01D07E9EFE2BF11FB495DBDA4DAE90919
+    8EAAD8E716B93D5A0D08ED1D0AFC725E08E3C5B2F8E7594B78
+    FF6E2FBF2122B648888B812900DF01C4FAD5EA0688FC31CD1C
+    FF191B3A8C1AD2F2F2218BE0E1777EA752DFE8B021FA1E5A0C
+    C0FB56F74E818ACF3D6CE89E299B4A84FE0FD13E0B77CC43B8
+    1D2ADA8D9165FA2668095770593CC7314211A1477E6AD20657
+    7B5FA86C75442F5FB9D35CFEBCDAF0C7B3E89A0D6411BD3AE1
+    E7E4900250E2D2071B35E226800BB57B8E0AF2464369BF009B
+    91E5563911D59DFA6AA78C14389D95A537F207D5BA202E5B9C
+    5832603766295CFA911C819684E734A41B3472DCA7B14A94A1
+    B5100529A532915D60F573FBC9BC6E42B60A47681E6740008B
+    A6FB5571BE91FF296EC6B2A0DD915B6636521E7B9F9B6FF340
+    52EC585566453B02D5DA99F8FA108BA47996E85076A4B7A70E
+    9B5B32944DB75092EC4192623AD6EA6B049A7DF7D9CEE60B88
+    FEDB266ECAA8C71699A17FF5664526CC2B19EE1193602A5750
+    94C29A0591340E4183A3E3F54989A5B429D656B8FE4D699F73
+    FD6A1D29C07EFE830F54D2D38E6F0255DC14CDD20868470EB2
+    66382E9C6021ECC5E09686B3F3EBAEFC93C9718146B6A70A16
+    87F358452A0E286B79C5305AA5007373E07841C7FDEAE5C8E7</code></pre>
+<div id="footer">
+<p><span id="timestamp">June 8th, 2014 10:28am</span></p>
+</div>
+</body>
+</html>

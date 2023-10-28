@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2017-10-01-working_with_european_central_bank_data_in_python</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="working-with-european-central-bank-data-in-python">Working with
+European Central Bank Data in Python</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>This is my third in my series of working with econometric data
+queried from a specific data store using a specific API. Today, I am
+going to work with <a href="http://sdw.ecb.europa.eu/">European Central
+Bank</a>’s datasets using their API. My language of choice today is
+going to be python.</p>
+<h2 id="implementation">Implementation</h2>
+<p>ECB serves its data in <a
+href="https://en.wikipedia.org/wiki/XML">XML</a> format. Python has an
+excellent library called <a
+href="https://pypi.python.org/pypi/xmldict/0.3"><code>xmldict</code></a><code> </code>that
+converts an XML object into a python hash map (dictionary in python
+parlance.) First, let us load the libraries we are going to need.</p>
+<pre><code>from urllib.request import urlopen
+from xmltodict import parse</code></pre>
+<p>Here is the query function. One needs to poke around the hashmap a
+while to figure out how to extract the relevant bits. It is ugly, to say
+the least. I am sure ECB has its own reasons for structuring the
+response this way, but it eludes me.</p>
+<pre><code>def QueryECB(series):
+    with urlopen(&quot;https://sdw-wsrest.ecb.europa.eu/service/data/EXR/&quot; + series) as url:
+         raw = parse(url.read().decode(&#39;utf8&#39;))
+    data = raw[&#39;message:GenericData&#39;][&#39;message:DataSet&#39;][&#39;generic:Series&#39;][&#39;generic:Obs&#39;]
+    res = {x[&#39;generic:ObsDimension&#39;][&#39;@value&#39;]: 
+           float(x[&#39;generic:ObsValue&#39;][&#39;@value&#39;])
+           for x in data}
+    return res</code></pre>
+<p>As an example, I am going to query Euro (EUR) and Canadian Dollar
+(CAD) daily exchange rate:</p>
+<pre><code>res = QueryECB(&quot;D.CAD.EUR.SP00.A&quot;)</code></pre>
+<p>You should poke around this data too. As this is Sunday, and I am
+still waking up, I am going to just draw it:</p>
+<pre><code>import matplotlib.pyplot as plt
+
+dates = res.keys()
+xs = list(range(len(dates)))
+ys = [res[x] for x in sorted(dates)]
+
+plt.figure(figsize=(12, 6), dpi=80)
+plt.ylim(0.0, 2.0)
+
+plt.plot(xs,ys)
+plt.show()</code></pre>
+<figure class="tmblr-full" data-orig-width="796" data-orig-height="400">
+<img
+src="../media/2017-10-01-working_with_european_central_bank_data_in_python_0.png"
+data-orig-width="796" data-orig-height="400" alt="image" />
+</figure>
+<div id="footer">
+<p><span id="timestamp">October 1st, 2017 6:32am</span></p>
+</div>
+</body>
+</html>

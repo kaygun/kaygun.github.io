@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-10-20-hofstadter-conway_10000_sequence</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="hofstadter-conway-10000-sequence">Hofstadter-Conway $10,000
+sequence</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>Consider the recursively defined sequence of integers:</p>
+<pre><code>a(1) = 1
+a(2) = 1
+a(n) = a(a(n-1)) + a(n-a(n-1))</code></pre>
+<p>This is called <a
+href="http://rosettacode.org/wiki/Hofstadter-Conway_%2410,000_sequence">Hofstadter-Conway
+$10,000 sequence</a>. Originally, the challenge was to find <span
+class="math inline">\(p\)</span> such that <span
+class="math inline">\(a(n)/n\&gt;0.55\)</span> for every <span
+class="math inline">\(p\geq n\)</span>. But we are going to find <span
+class="math inline">\(p\)</span> such that <span
+class="math inline">\(a(n)/n\&gt;0.55\)</span> for every <span
+class="math inline">\(2^{23}\&gt;n\&gt;p\)</span>.</p>
+<h2 id="an-implementation-for-the-solution">An implementation for the
+solution</h2>
+<p>First, I am going to need a function which generates the values of
+the sequence. I am going to memoize the computation using a hash
+table:</p>
+<pre><code>(let ((lookup (make-hash-table)))
+  (defun seq(n)
+    (if (or (= n 1) (= n 2))
+        1
+        (or (gethash n lookup)
+            (setf (gethash n lookup)
+                  (+ (seq (seq (1- n)))
+                     (seq (- n (seq (1- n))))))))))
+SEQ</code></pre>
+<p>Next is a function that calculates the maximum of the sequence <span
+class="math inline">\(a(n)/n\)</span> between two consecutive power of
+2:</p>
+<pre><code>(defun test (n)
+  (let* ((a (expt 2 n))
+         (b (* a 2)))
+    (do* ((i a (1+ i))
+          (j (/ (seq i) i 1.0) (/ (seq i) i 1.0))
+          (l a (if (&gt; j m) i l))
+          (m j (max m j)))
+         ((= i b) (cons m l)))))
+TEST</code></pre>
+<p>Let us see how this works:</p>
+<pre><code>(loop for i from 2 to 23 collect
+   (test i))
+((0.6666667 . 6) (0.6363636 . 11) (0.6086956 . 23) (0.59090906 . 44)
+ (0.57608694 . 92) (0.5674157 . 178) (0.55945945 . 370) (0.5549374 . 719)
+ (0.55010086 . 1487) (0.5474629 . 2897) (0.54414475 . 5969)
+ (0.5424427 . 11651) (0.54007107 . 22223) (0.538784 . 45083)
+ (0.53704363 . 89516) (0.53602004 . 181385) (0.53464544 . 353683)
+ (0.5337792 . 722589) (0.53267705 . 1423078) (0.5319232 . 2903564)
+ (0.53101355 . 5696576) (0.53034115 . 11635313))</code></pre>
+<p>Next, let us solve the challenge for numbers less than <span
+class="math inline">\(2^{23}\)</span></p>
+<pre><code>(defun marrow (n)
+   (do ((i (expt 2 n) (1- i)))
+       ((&gt; (/ (seq i) i 1.0) 0.55) i)))
+MARROW
+
+(marrow 23)
+1489</code></pre>
+<div id="footer">
+<p><span id="timestamp">October 20th, 2016 10:35am</span></p>
+</div>
+</body>
+</html>

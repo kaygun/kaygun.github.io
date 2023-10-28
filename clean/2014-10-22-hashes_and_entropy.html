@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2014-10-22-hashes_and_entropy</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="hashes-and-entropy">Hashes and Entropy</h1>
+<h2 id="descriptionoftheproblem">Description of the problem</h2>
+<p>Today, I would like to investigate relative entropy change (before
+and after) in hashing. In others words, if I have a bag of words which
+have an initial entropy, after I hash these words what happens to the
+entropy of the resulting words?</p>
+<h2 id="code">Code</h2>
+<p>First, I need a random vector of 8-bit vectors:</p>
+<pre><code>(defun random-vector (n)
+   (coerce (loop repeat n collect (random 256)) &#39;(vector (unsigned-byte 8))))
+
+RANDOM-VECTOR</code></pre>
+<p>But, I don’t need single individual words but sets of words since I
+need to calculate entropy:</p>
+<pre><code>(defun random-collection (n m)
+   (loop repeat n collect (random-vector (+ 10 (random m)))))
+
+RANDOM-COLLECTION</code></pre>
+<p>Now, the entropy function</p>
+<pre><code>(defun entropy (collection)
+   (let ((result (make-array 256 :initial-element 0))
+         (entrop 0.0d0)
+         (N 0))
+     (dolist (i (loop for x in collection append (coerce x &#39;list)))
+        (incf (aref result i)))
+     (setf N (reduce #&#39;+ result))
+     (- (log N 2) 
+        (/ (reduce #&#39;+ (map &#39;list (lambda (x) (if (&gt; x 0) (* x (log x 2)) 0)) result)) 
+           N))))
+
+ENTROPY</code></pre>
+<p>For hashing I will use the <a
+href="http://method-combination.net/lisp/ironclad/">ironclad</a> crypto
+library. I will define several hash functions where each return a vector
+of 8-bit bytes.</p>
+<pre><code>(require :ironclad)
+
+(SB-ROTATE-BYTE IRONCLAD)
+
+(let ((hasher (ironclad:make-digest :md5)))
+   (defun md5-digest (x)
+      (ironclad:digest-sequence hasher x)))
+
+MD5-DIGEST
+
+(let ((hasher (ironclad:make-digest :sha1)))
+   (defun sha1-digest (x)
+      (ironclad:digest-sequence hasher x)))
+
+SHA1-DIGEST
+
+(let ((hasher (ironclad:make-digest :sha224)))
+   (defun sha224-digest (x)
+      (ironclad:digest-sequence hasher x)))
+
+SHA224-DIGEST</code></pre>
+<h2 id="theexperiment">The experiment</h2>
+<p>First, I need to write a function which will perform the numerical
+experiments:</p>
+<pre><code>(defun experiment (hashfn rep batch len filename)
+   (with-open-file (data (concatenate &#39;string filename &quot;.csv&quot;)
+                         :direction :output
+                         :if-exists :overwrite
+                         :if-does-not-exist :create)
+      (loop repeat rep do
+         (let* ((N (+ 5 (random batch)))
+                (M (+ 5 (random len)))
+                (clear (random-collection N M))
+                (hashed (mapcar hashfn clear)))
+            (format data &quot;~4,2f ~4,2f~%&quot; (entropy clear) (entropy hashed))))))
+
+EXPERIMENT</code></pre>
+<p>Next, let me see what happens with the MD5 hash:</p>
+<pre><code>(experiment #&#39;md5-digest 1000 100 10 &quot;hash2-data-md5&quot;)
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-10-22-hashes_and_entropy_0.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>Now, with the SHA1 hash:</p>
+<pre><code>(experiment #&#39;sha1-digest 1000 100 10 &quot;hash2-data-sha1&quot;)
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-10-22-hashes_and_entropy_1.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<p>And, finally with SHA224 hash:</p>
+<pre><code>(experiment #&#39;sha224-digest 1000 100 10 &quot;hash2-data-sha224&quot;)
+
+NIL</code></pre>
+<figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
+<img src="../media/2014-10-22-hashes_and_entropy_2.png" data-orig-height="375"
+data-orig-width="500" data-orig-src="" />
+</figure>
+<h2 id="analysis">Analysis</h2>
+<p>The result is not surprising: hashing isn’t supposed to add or take
+away any entropy since we expect the hash to be collision-free.
+Mathematically speaking, we ask the hash function to be one-to-one in
+practice. Theoretically speaking, this is impossible, hence the
+adjective <em>in practice</em>. In any case, this was an interesting
+experiment to see if there is any weaknesses in the SHA1, SHA224 or MD5
+hashing.</p>
+<p>There is something interesting: There is a slight <em>bent</em> in
+the SHA224 graph above: it looks like it is sub-linear. This could be an
+artifact of the small sample size, and definitely worth investigating in
+the future.</p>
+<div id="footer">
+<p><span id="timestamp">October 22nd, 2014 1:25pm</span></p>
+</div>
+</body>
+</html>

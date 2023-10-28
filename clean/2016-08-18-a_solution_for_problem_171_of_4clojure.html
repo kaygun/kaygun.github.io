@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2016-08-18-a_solution_for_problem_171_of_4clojure</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="/home/kaygun/local/lib/mlisp.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="a-solution-for-problem-171-of-4clojure">A Solution for Problem
+171 of 4Clojure</h1>
+<p>Being an occasional insomniac, I sometimes find myself wide awake at
+night. Instead of counting sheep, I sometimes do simple coding problems.
+Tonight, I solved <a href="http://www.4clojure.com/problem/171">Problem
+171</a> on <a href="http://www.4clojure.com/problem/171">4Clojure</a>
+using Common Lisp listening to <a
+href="https://youtu.be/mr5AJJuzO8A?list=PLJNbijG2M7OxQbdJNbASE5BYg5S6P-6wd">Pink
+Floyd’s The Wall</a> album.</p>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<blockquote>
+<p>Write a function that takes a sequence of integers and returns a
+sequence of “intervals”. Each interval is a a vector of two integers,
+start and end, such that all integers between start and end (inclusive)
+are contained in the input sequence.</p>
+</blockquote>
+<h2 id="a-solution">A Solution</h2>
+<p>Here is my solution in Common Lisp:</p>
+<pre><code>(defun intervals (xs &amp;optional a b carry)
+  (cond ((null xs) (nreverse (and a (cons (list a b) carry))))
+        ((null a) (intervals (sort xs #&#39;&lt;) t nil nil))
+        ((null b) (intervals (cdr xs) (car xs) (car xs) nil))
+        ((&gt;= (1+ b) (car xs)) (intervals (cdr xs) a (car xs) carry))
+        (t (intervals (cdr xs) (car xs) (car xs) (cons (list a b) carry)))))
+INTERVALS</code></pre>
+<p>and here are the tests:</p>
+<pre><code>(every (lambda (test) (equal (intervals (car test)) (cdr test)))
+       &#39;(((1 2 3) . ((1 3)))
+         ((10 9 8 1 2 3) . ((1 3) (8 10)))
+         ((1 1 1 1 1 1 1) . ((1 1)))
+         (nil . nil)
+         ((19 4 17 1 3 10 2 13 13 2 16 4 2 15 13 9 6 14 2 11) . ((1 4) (6 6) (9 11) (13 17) (19 19)))))
+T</code></pre>
+<p>Ok. Let me try to sleep again.</p>
+<div id="footer">
+<p><span id="timestamp">August 18th, 2016 2:40am</span></p>
+</div>
+</body>
+</html>
