@@ -31,12 +31,14 @@ div.content {
 
 div.navigate p {
  adding-left: 0.1em;
+ padding-right: 8%;
 }
 
 div.navigate a {
   display: block;
   text-decoration: none;
   color: black;
+ padding-right: 8%;
 }
 
 div.navigate a:hover {
