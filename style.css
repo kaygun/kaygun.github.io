@@ -39,7 +39,7 @@ div.navigate a {
   display: block;
   text-decoration: none;
   color: black;
-  text-align: right;
+  text-align: left;
 }
 
 div.navigate a:hover {
