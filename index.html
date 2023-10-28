@@ -42,11 +42,11 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a 
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Split a list into n equal-ish pieces.&quot;</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> ((N (<span class="kw">ceiling</span> (<span class="kw">length</span> xs) n)))</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">labels</span> ((select (ys i zs zss)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">cond</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>         ((<span class="kw">null</span> ys) (<span class="kw">reverse</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>         ((<span class="kw">zerop</span> i) (select ys N <span class="kw">nil</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">t</span> (select (<span class="kw">cdr</span> ys) (<span class="kw">decf</span> i) (<span class="kw">cons</span> (<span class="kw">car</span> ys) zs) zss)))))</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      (select xs n <span class="kw">nil</span> <span class="kw">nil</span>))))</span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">cond</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                 ((<span class="kw">null</span> ys) (<span class="kw">reverse</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                 ((<span class="kw">zerop</span> i) (select ys N <span class="kw">nil</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">t</span> (select (<span class="kw">cdr</span> ys) (<span class="kw">decf</span> i) (<span class="kw">cons</span> (<span class="kw">car</span> ys) zs) zss)))))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        (select xs n <span class="kw">nil</span> <span class="kw">nil</span>))))</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>CUT</span></code></pre></div>
 <p>Let us test</p>
@@ -65,13 +65,13 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a 
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>     (zs (<span class="kw">mapcar</span> <span class="op">#&#39;</span>- (<span class="kw">cdr</span> bins) bins))</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>     (ns (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (b) (<span class="kw">ceiling</span> (<span class="op">*</span> N b))) zs)))</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">labels</span> ((select (ys ms zs zss)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">cond</span> </span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>         ((<span class="kw">null</span> ys) (<span class="kw">reverse</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>         ((<span class="kw">zerop</span> (<span class="kw">car</span> ms)) (select ys (<span class="kw">cdr</span> ms) <span class="kw">nil</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">t</span> (<span class="kw">let</span> ()</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">decf</span> (<span class="kw">car</span> ms))</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>              (select (<span class="kw">cdr</span> ys) ms (<span class="kw">cons</span> (<span class="kw">car</span> ys) zs) zss))))))</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      (select xs ns <span class="kw">nil</span> <span class="kw">nil</span>))))</span></code></pre></div>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">cond</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                 ((<span class="kw">null</span> ys) (<span class="kw">reverse</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                 ((<span class="kw">zerop</span> (<span class="kw">car</span> ms)) (select ys (<span class="kw">cdr</span> ms) <span class="kw">nil</span> (<span class="kw">cons</span> (<span class="kw">reverse</span> zs) zss)))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">t</span> (<span class="kw">let</span> ()</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                       (<span class="kw">decf</span> (<span class="kw">car</span> ms))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                       (select (<span class="kw">cdr</span> ys) ms (<span class="kw">cons</span> (<span class="kw">car</span> ys) zs) zss))))))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        (select xs ns <span class="kw">nil</span> <span class="kw">nil</span>))))</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>QCUT</span></code></pre></div>
 <p>with its own test</p>
