@@ -49,10 +49,9 @@ id="feed-forward-and-back-propagation-in-a-neural-network">Feed-forward
 and Back-propagation in a Neural Network</h2>
 <p>A neural network is composed of <a
 href="https://en.wikipedia.org/wiki/Perceptron">perceptrons</a>
-connected via a computation graph. <img
-src="neural-networks-graph1.png" /><img
-src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_0.png"
-alt="image" /></p>
+connected via a computation graph.</p>
+<p><img
+src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_0.png" /></p>
 <p>A perceptron on the other hand is a computation unit which takes a
 vector <span class="math inline">\(\mathbf{x}\)</span> as an input and
 produces a scalar output</p>
@@ -70,8 +69,8 @@ adjusting the weights of the perceptrons to produce the correct output.
 I wrote about perceptrons and <a
 href="https://en.wikipedia.org/wiki/Backpropagation">back-propagation</a>
 before (2018-05-18-online_regression.html), <a
-href="clean/2018-05-26-online_perceptron.html">here</a> and <a
-href="clean/2018-05-28-online_perceptron_in_common_lisp.html">here</a></p>
+href="2018-05-26-online_perceptron.html">here</a> and <a
+href="2018-05-28-online_perceptron_in_common_lisp.html">here</a></p>
 <p>The observation I made is this feed-forward is a left fold, while
 back-propagation is a right-fold operation. In pseudo-code we can
 express these operations as follows:</p>
@@ -238,9 +237,9 @@ meanwhile the other layer uses the <a
 href="https://en.wikipedia.org/wiki/Sigmoid_function">sigmoid
 function</a>.</p>
 <p>The best result I received is in the file <code>data/plot.csv</code>
-whose plot is given in <img
-src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_1.png"
-alt="image" /><img src="neural-networks-graph2.png" /></p>
+whose plot is given below:</p>
+<p><img
+src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_1.png" /></p>
 <div id="footer">
 <p><span id="timestamp">December 4th, 2018 9:32am</span></p>
 </div>
