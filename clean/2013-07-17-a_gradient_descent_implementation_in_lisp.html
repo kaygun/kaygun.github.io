@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -56,28 +59,27 @@
 Implementation in Lisp</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Assume we have a function of the form <span
-class="math inline"><em>f</em>: ℝ<sup><em>n</em></sup> → ℝ</span>. We
+class="math inline">\(f\colon \mathbb{R}^n\to \mathbb{R}\)</span>. We
 would like to find a local extremum point of this function iteratively
 starting from an initial point. I will use the method of <a
 href="http://en.wikipedia.org/wiki/Gradient_descent">gradient
 descent</a>. In its iterative form it says that the recursive sequence
-<span
-class="math display"><em>x</em><sub><em>n</em> + 1</sub> = <em>x</em><sub><em>n</em></sub> − <em>γ</em>∇<em>f</em>(<em>x</em><sub><em>n</em></sub>)</span>
-will converge to a local extremum point if <span
-class="math inline"><em>f</em></span> is well-behaved and the initial
-choice <span class="math inline"><em>x</em><sub>0</sub></span> it is
-close enough. Here, our parameters are the initial point <span
-class="math inline"><em>x</em><sub>0</sub></span> and a iteration
-parameter <span class="math inline"><em>γ</em></span>.</p>
+<span class="math display">\[ x_{n+1} = x_n -
+\gamma \nabla f(x_n) \]</span> will converge to a local extremum point
+if <span class="math inline">\(f\)</span> is well-behaved and the
+initial choice <span class="math inline">\(x_0\)</span> it is close
+enough. Here, our parameters are the initial point <span
+class="math inline">\(x_0\)</span> and a iteration parameter <span
+class="math inline">\(\gamma\)</span>.</p>
 <h2 id="atoyexample">A toy example</h2>
 <p>Let me implement a toy example. Let us find local extremum for a
-function <span class="math inline"><em>f</em>(<em>x</em>)</span> of a
-single real variable <span class="math inline"><em>x</em></span>. I
-don’t have to work really hard for this case: one can write a simple
-lisp function which returns the numerical derivative <span
-class="math inline"><em>f</em>′(<em>x</em>)</span> of the given function
-<span class="math inline"><em>f</em>(<em>x</em>)</span> and then I could
-plug the derivative function into the <a
+function <span class="math inline">\(f(x)\)</span> of a single real
+variable <span class="math inline">\(x\)</span>. I don’t have to work
+really hard for this case: one can write a simple lisp function which
+returns the numerical derivative <span
+class="math inline">\(f&#39;(x)\)</span> of the given function <span
+class="math inline">\(f(x)\)</span> and then I could plug the derivative
+function into the <a
 href="http://web.bahcesehir.edu.tr/atabey_kaygun/other/newton-raphson.html">Newton-Raphson
 Algorithm</a> to find out where local extrema are. But today I am going
 to follow a different path.</p>
@@ -89,10 +91,10 @@ function (as a number) at a point.</p>
       (* 2 epsilon)))
 DIFF</code></pre>
 <p>Let me test this function. We all know that the derivative of <span
-class="math inline">sin (<em>x</em>)</span> is <span
-class="math inline">cos (<em>x</em>)</span>. I will compare these
-functions on a random number between <span class="math inline">0</span>
-and <span class="math inline"><em>π</em></span>:</p>
+class="math inline">\(\sin(x)\)</span> is <span
+class="math inline">\(\cos(x)\)</span>. I will compare these functions
+on a random number between <span class="math inline">\(0\)</span> and
+<span class="math inline">\(\pi\)</span>:</p>
 <pre><code>(let ((x (random (* 4 (atan 1))))) (cons (cos x) (diff &#39;sin x)))
 (-0.39555392 . -0.39555389353740367d0)</code></pre>
 <p>Now, my implementation of the gradient descent for the toy case of a
@@ -106,24 +108,22 @@ DESCENT1</code></pre>
 <p>I designed the function in such a way that if it can’t find a
 solution within the first 10000 steps (or some number of steps fed into
 the function) it will return <code>nil</code>.</p>
-<p>The function <span
-class="math inline"><em>f</em>(<em>x</em>) = <em>x</em>(1−<em>x</em>)</span>
-has a local maximum at <span
-class="math inline"><em>x</em> = 0.5</span>. So, let me see if we can
-find this local extremum using the function <code>descent1</code> we
-defined above:</p>
+<p>The function <span class="math inline">\(f(x)=x(1-x)\)</span> has a
+local maximum at <span class="math inline">\(x=0.5\)</span>. So, let me
+see if we can find this local extremum using the function
+<code>descent1</code> we defined above:</p>
 <pre><code>(descent1 (lambda (x) (* x (1- x))) 1.1 :error 1.0d-6 :rate 3.5d-2)
 0.5000139683370232d0</code></pre>
 <h2 id="thegeneralcase">The general case</h2>
 <p>First, I will need a function <span
-class="math inline"><em>f</em>(<em>x</em>)</span> which will take a
-vector input <span class="math inline"><em>x</em></span>, another vector
-<span class="math inline"><em>v</em></span> for direction to calculate
-the directional derivative <span
-class="math inline">∇<sub><em>v</em></sub>(<em>f</em>)∥<sub><em>x</em></sub></span>
-of <span class="math inline"><em>f</em></span> along <span
-class="math inline"><em>v</em></span> at <span
-class="math inline"><em>x</em></span>.</p>
+class="math inline">\(f(x)\)</span> which will take a vector input <span
+class="math inline">\(x\)</span>, another vector <span
+class="math inline">\(v\)</span> for direction to calculate the
+directional derivative <span
+class="math inline">\(\nabla_v(f)\|_x\)</span> of <span
+class="math inline">\(f\)</span> along <span
+class="math inline">\(v\)</span> at <span
+class="math inline">\(x\)</span>.</p>
 <pre><code>(defun norm (x)
    (sqrt (reduce &#39;+ (map &#39;vector (lambda (i) (expt i 2)) x))))
 
@@ -135,10 +135,9 @@ class="math inline"><em>x</em></span>.</p>
             (funcall f ini))
          (* 2 (norm dir)))))
 NABLA</code></pre>
-<p>Let me take <span
-class="math inline"><em>f</em>(<em>x</em>,<em>y</em>) = <em>x</em><sup>2</sup> + <em>y</em><sup>2</sup></span>
+<p>Let me take <span class="math inline">\(f(x,y) = x^2 + y^2\)</span>
 and find its partial derivatives at <span
-class="math inline">(0,0)</span>.</p>
+class="math inline">\((0,0)\)</span>.</p>
 <pre><code>(defun f (v)
    (reduce &#39;+ (map &#39;vector (lambda (i) (expt i 2)) v)))
 
@@ -172,16 +171,15 @@ BASIS</code></pre>
                (&gt;= n max-steps)) 
            (if (&lt; n max-steps) y)))))
 DESCENT</code></pre>
-<p>We defined <span
-class="math inline"><em>f</em>(<em>x</em>,<em>y</em>) = <em>x</em><sup>2</sup> + <em>y</em><sup>2</sup></span>
+<p>We defined <span class="math inline">\(f(x,y) = x^2 + y^2\)</span>
 above earlier. Let me test the function <code>descent</code> on <span
-class="math inline"><em>f</em>(<em>x</em>,<em>y</em>)</span>:</p>
+class="math inline">\(f(x,y)\)</span>:</p>
 <pre><code>(let ((result (descent &#39;f #(1.0 1.0) :rate 3.3d-2)))
   (format nil &quot;~%    We found a local extremum at x=~3,3F y=~3,3F~%&quot; (aref result 0) (aref result 1)))
 
 We found a local extremum at x=.000 y=.000</code></pre>
 <p>Let me test a more complicated function: <span
-class="math inline"><em>g</em>(<em>x</em>,<em>y</em>,<em>z</em>) = sin (<em>x</em>/2)cos (<em>y</em>) + <em>z</em><sup>2</sup></span>.</p>
+class="math inline">\(g(x,y,z) = \sin(x/2)\cos(y) + z^2\)</span>.</p>
 <pre><code>(defun g(x) (+ (* (sin (* 0.5 (aref x 0))) (cos (aref x 1))) (expt (aref x 2) 2)))
 
 (let ((result (descent &#39;g #(-1.2 -0.2 0.9) :rate 2.3d-2 :error 1.d-6)))
@@ -194,10 +192,10 @@ We found a local extremum at x=-3.141 y=-.000 z=.000</code></pre>
 <h2 id="anapplication:fittingaregressionlineviagradientdescent">An
 application: fitting a regression line via gradient descent</h2>
 <p>For simplicity, assume we have a collection of points <span
-class="math inline">(<em>x</em><sub>1</sub>,<em>y</em><sub>1</sub>), …, (<em>x</em><sub><em>n</em></sub>,<em>y</em><sub><em>n</em></sub>)</span>
-on the xy-plane and we want to fit an approximating line to this
-dataset. We will write an error function <span class="math display">$$
-E(a,b) = \frac{1}{2n}\sum_{i=1}^n (a x_i + b - y_i)^2 $$</span> and then
+class="math inline">\((x_1,y_1),\ldots,(x_n,y_n)\)</span> on the
+xy-plane and we want to fit an approximating line to this dataset. We
+will write an error function <span class="math display">\[
+E(a,b) = \frac{1}{2n}\sum_{i=1}^n (a x_i + b - y_i)^2 \]</span> and then
 minimize this function using gradient descent.<br />
 I need a suitably random dataset.</p>
 <pre><code>(defvar a (- (random 8.6) 4.3))
@@ -211,13 +209,13 @@ I need a suitably random dataset.</p>
 MYDATA</code></pre>
 <p>First, I chose a random slope and a random intercept then I generated
 a set of 520 points from the interval <span
-class="math inline">$\[0,2\]$</span> and calculated <span
-class="math inline"><em>a</em><em>x</em> + <em>b</em></span> plus a
-small error term. Now, let me create the error function from this
-dataset. For this purpose, I will write a lisp function that returns my
-error function from a given dataset. In order to construct the error
-function I will take only a sample of the dataset. The percentage can be
-passed as an argument. The default is 5%.</p>
+class="math inline">\(\[0,2\]\)</span> and calculated <span
+class="math inline">\(ax+b\)</span> plus a small error term. Now, let me
+create the error function from this dataset. For this purpose, I will
+write a lisp function that returns my error function from a given
+dataset. In order to construct the error function I will take only a
+sample of the dataset. The percentage can be passed as an argument. The
+default is 5%.</p>
 <pre><code>(defun lse (raw-data &amp;optional (sample-size 0.05))
    (let* ((n (length raw-data))
           (m (floor (* n sample-size)))

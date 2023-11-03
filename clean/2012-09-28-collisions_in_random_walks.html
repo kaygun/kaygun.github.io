@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,11 +58,11 @@
 <h1 id="collisionsinrandomwalks">Collisions in random walks</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Imagine we have a directed graph in which each edge connecting a
-vertex <span class="math inline"><em>a</em></span> to another vertex
-<span class="math inline"><em>b</em></span> is labelled by the
-probability of jumping from <span class="math inline"><em>a</em></span>
-to <span class="math inline"><em>b</em></span>. This precludes the
-condition that the sum of the labels of all outgoing edges is 1.</p>
+vertex <span class="math inline">\(a\)</span> to another vertex <span
+class="math inline">\(b\)</span> is labelled by the probability of
+jumping from <span class="math inline">\(a\)</span> to <span
+class="math inline">\(b\)</span>. This precludes the condition that the
+sum of the labels of all outgoing edges is 1.</p>
 <figure class="tmblr-full" data-orig-height="419" data-orig-width="304">
 <img
 src="../media/2012-09-28-collisions_in_random_walks_0.png"
@@ -69,160 +72,143 @@ data-orig-height="419" data-orig-width="304" />
 particles moving between the states designated by the vertices of a
 directed graph according to the probabilities assigned to each edge,
 what is the probability of collision at step <span
-class="math inline"><em>n</em></span>?</p>
+class="math inline">\(n\)</span>?</p>
 <h2 id="anunsatisfactorysolution">An Unsatisfactory Solution</h2>
-<p>Assume we have <span class="math inline"><em>m</em></span> possible
-states labelled by <span class="math inline">1, …, <em>m</em></span>,
-and let <span
-class="math inline"><em>p</em><sub><em>i</em><em>j</em></sub></span>
-denote the probability of jumping from state <span
-class="math inline"><em>i</em></span> to step <span
-class="math inline"><em>j</em></span>. If I form the transition matrix
-<span
-class="math inline"><em>P</em> = (<em>p</em><sub><em>i</em><em>j</em></sub>)</span>
-the entries of <span
-class="math inline"><em>P</em><sup><em>n</em></sup> = (<em>a</em><sub><em>i</em><em>j</em></sub>)</span>
-calculate the probability of jumping from state <span
-class="math inline"><em>i</em></span> to state <span
-class="math inline"><em>j</em></span> in <span
-class="math inline"><em>n</em></span>-steps. Then the probability of
-having a collision at step <span class="math inline"><em>n</em></span>
-at a state <span class="math inline"><em>k</em></span> is <span
-class="math inline"><em>a</em><sub><em>i</em><em>k</em></sub><em>a</em><sub><em>j</em><em>k</em></sub></span>
-if one particle starts at state <span
-class="math inline"><em>i</em></span> and the other starts at <span
-class="math inline"><em>j</em></span>. If I would consider only the
-collision probability then <span class="math display">$$ p_n(i,j) =
-\sum_{k=1}^m a_{ik} a_{jk} $$</span> where, again, <span
-class="math inline">(<em>a</em><sub><em>i</em><em>j</em></sub>)</span>
-denote <span class="math inline"><em>P</em><sup><em>n</em></sup></span>
-the entries of the <span class="math inline"><em>n</em></span>-th power
-of the transition matrix. A better way of writing the same equality goes
-through the observation that <span class="math display">$$ p_n(i,j) =
-\sum_{k=1}^m a_{ik} a_{jk} = \sum_{k=1}^m
-a_{ik}a^t_{kj} $$</span> where we use <span
-class="math inline">(<em>a</em><sub><em>i</em><em>j</em></sub><sup><em>t</em></sup>)</span>
-to denote the entries of the transpose <span
-class="math inline">(<em>P</em><sup><em>t</em></sup>)<sup><em>n</em></sup></span>.
-In other words <span
-class="math inline"><em>p</em><sub><em>n</em></sub>(<em>i</em>,<em>j</em>)</span>
-is the <span class="math inline">(<em>i</em>,<em>j</em>)</span>-th entry
-in the matrix <span
-class="math inline"><em>P</em><sup><em>n</em></sup>(<em>P</em><sup><em>t</em></sup>)<sup><em>n</em></sup></span>.
-If the situation calls for checking existence of a collision regardless
-of where each particle starts then we must add all probabilities. Thus
-the total probability <span
-class="math inline"><em>p</em><sub><em>n</em></sub></span> of a
-collision at step <span class="math inline"><em>n</em></span> is the sum
-of all entries of the matrix <span
-class="math inline"><em>P</em><sup><em>n</em></sup>(<em>P</em><sup><em>t</em></sup>)<sup><em>n</em></sup></span>
-divided by <span class="math inline"><em>m</em><sup>2</sup></span>:
-<span class="math display">$$ p_n =
-\frac{1}{m^2}\sum_{i,j,k} a_{ik}a_{ik} $$</span> Division by <span
-class="math inline"><em>m</em><sup>2</sup></span> happens because I
-assume all initial positions are assumed to be equally likely.</p>
-<p>In most cases, <span
-class="math inline"><em>P</em><sup><em>n</em></sup></span> stabilizes as
-<span class="math inline"><em>n</em></span> goes to <span
-class="math inline">∞</span>, and therefore the probability <span
-class="math inline"><em>p</em><sub><em>n</em></sub></span> also
-stabilizes. As <span
-class="math inline"><em>P</em><sup><em>n</em></sup></span> stabilizes,
-the rows of the stabilized matrix become the 1-eigen vector of <span
-class="math inline"><em>P</em></span>. If that vector is $ &lt;
-u_1,,u_m&gt; $ then the stable collision probability is <span
-class="math inline">$\sum_{i=1}^m u_i^2$</span>. This phenomenon will
+<p>Assume we have <span class="math inline">\(m\)</span> possible states
+labelled by <span class="math inline">\(1,\ldots,m\)</span>, and let
+<span class="math inline">\(p_{ij}\)</span> denote the probability of
+jumping from state <span class="math inline">\(i\)</span> to step <span
+class="math inline">\(j\)</span>. If I form the transition matrix <span
+class="math inline">\(P=(p_{ij})\)</span> the entries of <span
+class="math inline">\(P^n = (a_{ij})\)</span> calculate the probability
+of jumping from state <span class="math inline">\(i\)</span> to state
+<span class="math inline">\(j\)</span> in <span
+class="math inline">\(n\)</span>-steps. Then the probability of having a
+collision at step <span class="math inline">\(n\)</span> at a state
+<span class="math inline">\(k\)</span> is <span
+class="math inline">\(a_{ik}a_{jk}\)</span> if one particle starts at
+state <span class="math inline">\(i\)</span> and the other starts at
+<span class="math inline">\(j\)</span>. If I would consider only the
+collision probability then <span class="math display">\[ p_n(i,j) =
+\sum_{k=1}^m a_{ik} a_{jk} \]</span> where, again, <span
+class="math inline">\((a_{ij})\)</span> denote <span
+class="math inline">\(P^n\)</span> the entries of the <span
+class="math inline">\(n\)</span>-th power of the transition matrix. A
+better way of writing the same equality goes through the observation
+that <span class="math display">\[ p_n(i,j) = \sum_{k=1}^m a_{ik} a_{jk}
+= \sum_{k=1}^m
+a_{ik}a^t_{kj} \]</span> where we use <span
+class="math inline">\((a^t_{ij})\)</span> to denote the entries of the
+transpose <span class="math inline">\((P^t)^n\)</span>. In other words
+<span class="math inline">\(p_n(i,j)\)</span> is the <span
+class="math inline">\((i,j)\)</span>-th entry in the matrix <span
+class="math inline">\(P^n (P^t)^n\)</span>. If the situation calls for
+checking existence of a collision regardless of where each particle
+starts then we must add all probabilities. Thus the total probability
+<span class="math inline">\(p_n\)</span> of a collision at step <span
+class="math inline">\(n\)</span> is the sum of all entries of the matrix
+<span class="math inline">\(P^n (P^t)^n\)</span> divided by <span
+class="math inline">\(m^2\)</span>: <span class="math display">\[ p_n =
+\frac{1}{m^2}\sum_{i,j,k} a_{ik}a_{ik} \]</span> Division by <span
+class="math inline">\(m^2\)</span> happens because I assume all initial
+positions are assumed to be equally likely.</p>
+<p>In most cases, <span class="math inline">\(P^n\)</span> stabilizes as
+<span class="math inline">\(n\)</span> goes to <span
+class="math inline">\(\infty\)</span>, and therefore the probability
+<span class="math inline">\(p_n\)</span> also stabilizes. As <span
+class="math inline">\(P^n\)</span> stabilizes, the rows of the
+stabilized matrix become the 1-eigen vector of <span
+class="math inline">\(P\)</span>. If that vector is $ &lt; u_1,,u_m&gt;
+$ then the stable collision probability is <span
+class="math inline">\(\sum_{i=1}^m u_i^2\)</span>. This phenomenon will
 occur below in the examples I will use.</p>
 <h2 id="amoresuitablesolution">A More Suitable Solution</h2>
 <p>The solution I gave above checks if we have a solution at step <span
-class="math inline"><em>n</em></span>, and does not care if we have a
-collision before the step <span class="math inline"><em>n</em></span>.
-If the setup requires that we stop in the event of a collision then I
-must modify the solution.</p>
+class="math inline">\(n\)</span>, and does not care if we have a
+collision before the step <span class="math inline">\(n\)</span>. If the
+setup requires that we stop in the event of a collision then I must
+modify the solution.</p>
 We start with a different problem first: assume we have two subsets of
-vertices <span class="math inline"><em>A</em></span> and <span
-class="math inline"><em>B</em></span> in <span
-class="math inline"><em>V</em></span>, and let us try to find the
-probability of jumping from the combined state <span
-class="math inline"><em>A</em></span> to the combined state <span
-class="math inline"><em>B</em></span>. Recall that <span
-class="math inline"><em>p</em><sub><em>i</em><em>j</em></sub></span> is
-a conditional probability: the probability of jumping to state <span
-class="math inline"><em>j</em></span> given that we are at state <span
-class="math inline"><em>i</em></span>. So, the conditional probability
-of jumping to state <span class="math inline"><em>B</em></span> from
-state <span class="math inline"><em>A</em></span> is <span
-class="math display">$$ \frac{\sum_{i\in A}\sum_{j\in B}
-p(i)p_{ij}}{\sum_{i\in A} p(i)} $$</span> where <span
-class="math inline"><em>p</em>(<em>i</em>)</span> stands for the
-proability of being at state <span
-class="math inline"><em>i</em></span>. If we assume that <span
-class="math inline">$p(i)=\frac{1}{m}$</span>, that is, every state is
-equally likely, then <span class="math display">$$
+vertices <span class="math inline">\(A\)</span> and <span
+class="math inline">\(B\)</span> in <span
+class="math inline">\(V\)</span>, and let us try to find the probability
+of jumping from the combined state <span
+class="math inline">\(A\)</span> to the combined state <span
+class="math inline">\(B\)</span>. Recall that <span
+class="math inline">\(p_{ij}\)</span> is a conditional probability: the
+probability of jumping to state <span class="math inline">\(j\)</span>
+given that we are at state <span class="math inline">\(i\)</span>. So,
+the conditional probability of jumping to state <span
+class="math inline">\(B\)</span> from state <span
+class="math inline">\(A\)</span> is <span class="math display">\[
+\frac{\sum_{i\in A}\sum_{j\in B}
+p(i)p_{ij}}{\sum_{i\in A} p(i)} \]</span> where <span
+class="math inline">\(p(i)\)</span> stands for the proability of being
+at state <span class="math inline">\(i\)</span>. If we assume that <span
+class="math inline">\(p(i)=\frac{1}{m}\)</span>, that is, every state is
+equally likely, then <span class="math display">\[
 p_{AB} = \frac{\frac{1}{m}\sum_{j\in B}\sum_{i\in A}
 p_{ij}}{\frac{\|A\|}{m}} = \frac{1}{\|A\|}\sum_{i\in
-A}\sum_{j\in B} p_{ij} $$</span> Now, observe that for a pair of
+A}\sum_{j\in B} p_{ij} \]</span> Now, observe that for a pair of
 particles, the product <span
-class="math inline"><em>p</em><sub><em>i</em><sub>1</sub><em>j</em><sub>1</sub></sub><em>p</em><sub><em>i</em><sub>2</sub><em>j</em><sub>2</sub></sub></span>
-measures the conditional probability of the pair jumping respectively to
-the states <span class="math inline"><em>i</em><sub>2</sub></span> and
-<span class="math inline"><em>j</em><sub>2</sub></span> from states
-<span class="math inline"><em>i</em><sub>1</sub></span> and <span
-class="math inline"><em>j</em><sub>1</sub></span>. Then the conditional
-probability of jumping into a collision state from a collision state is
-<span class="math display">$$ P(C\|C) =
+class="math inline">\(p_{i_1j_1}p_{i_2j_2}\)</span> measures the
+conditional probability of the pair jumping respectively to the states
+<span class="math inline">\(i_2\)</span> and <span
+class="math inline">\(j_2\)</span> from states <span
+class="math inline">\(i_1\)</span> and <span
+class="math inline">\(j_1\)</span>. Then the conditional probability of
+jumping into a collision state from a collision state is <span
+class="math display">\[ P(C\|C) =
 \frac{1}{m}\sum_{i_1=j_1}\sum_{i_2=j_2} p_{i_1i_2} p_{j_1j_2} =
-\frac{1}{m}\sum_{i,j} p_{ij}^2 $$</span> From a non-collision state to a
+\frac{1}{m}\sum_{i,j} p_{ij}^2 \]</span> From a non-collision state to a
 collision state
 <p>For notational simplicity, I will use <span
-class="math inline"><em>Ψ</em></span> for <span
-class="math inline"><em>P</em>(<em>C</em>∥<em>N</em><em>C</em>)</span>
-and <span class="math inline"><em>Φ</em></span> for <span
-class="math inline"><em>P</em>(<em>C</em>∥<em>C</em>)</span>. Then the
-probability of jumping from a collision state to a non-collision state
-<span
-class="math display"><em>P</em>(<em>N</em><em>C</em>∥<em>C</em>) = 1 − <em>P</em>(<em>C</em>∥<em>C</em>) = 1 − <em>Φ</em></span>
-and finally from a non-collision state to a collision state <span
-class="math display"><em>P</em>(<em>N</em><em>C</em>∥<em>N</em><em>C</em>) = 1 − <em>P</em>(<em>C</em>∥<em>N</em><em>C</em>) = 1 − <em>Ψ</em></span>
-Let <span class="math inline"><em>q</em><sub><em>n</em></sub></span>
-denote the probability of seeing our first collision at step <span
-class="math inline"><em>n</em></span>. Then <span
-class="math display">$$
-q_n = \left(1-\frac{1}{m}\right) (1 - \Psi)^{n-1}\Psi $$</span> Then the
+class="math inline">\(\Psi\)</span> for <span
+class="math inline">\(P(C\|NC)\)</span> and <span
+class="math inline">\(\Phi\)</span> for <span
+class="math inline">\(P(C\|C)\)</span>. Then the probability of jumping
+from a collision state to a non-collision state <span
+class="math display">\[ P(NC\|C) = 1 - P(C\|C) =
+1 - \Phi\]</span> and finally from a non-collision state to a collision
+state <span class="math display">\[ P(NC\|NC) = 1 - P(C\|NC) = 1 - \Psi
+\]</span> Let <span class="math inline">\(q_n\)</span> denote the
+probability of seeing our first collision at step <span
+class="math inline">\(n\)</span>. Then <span class="math display">\[
+q_n = \left(1-\frac{1}{m}\right) (1 - \Psi)^{n-1}\Psi \]</span> Then the
 expected number of steps before we see our first collision is <span
-class="math display">$$
+class="math display">\[
 \sum_{n\geq 1} n q_n = \left(1-\frac{1}{m}\right)\Psi
-\sum_{n\geq 1} n (1 - \Psi)^{n-1} $$</span> The last terms should be
+\sum_{n\geq 1} n (1 - \Psi)^{n-1} \]</span> The last terms should be
 familiar from your calculus classes: it is the derivative of the power
-series <span class="math inline">$\sum_{n=0}x^n = \frac{1}{1-x}$</span>
-evaluated at <span
-class="math inline"><em>x</em> = 1 − <em>Ψ</em></span>. This is <span
-class="math inline">$\frac{1}{\Psi^2}$</span>, and therefore, the
+series <span class="math inline">\(\sum_{n=0}x^n =
+\frac{1}{1-x}\)</span> evaluated at <span
+class="math inline">\(x=1-\Psi\)</span>. This is <span
+class="math inline">\(\frac{1}{\Psi^2}\)</span>, and therefore, the
 expected number of steps for seeing a first collision is <span
-class="math display">$$
-\left(1-\frac{1}{m}\right)\frac{1}{\Psi} $$</span></p>
+class="math display">\[
+\left(1-\frac{1}{m}\right)\frac{1}{\Psi} \]</span></p>
 <h2 id="asmallvariation">A Small Variation</h2>
 <p>What if I would like to calculate the expected number of steps
 between two collisions? That is, I am going to have two particles
 starting at the same position and then wait until they collide again.
 What is the expected number of steps until that happens? I will use
-<span class="math inline"><em>h</em><sub><em>n</em></sub></span> to
-denote probability of that happening at step <span
-class="math inline"><em>n</em></span>. This is the conditional
-probability of seeing the first collision at step <span
-class="math inline"><em>n</em></span> given that we start with a
-collision state. For <span class="math inline"><em>n</em> = 1</span> we
-have <span
-class="math inline"><em>h</em><sub>1</sub> = <em>P</em>(<em>C</em>∥<em>C</em>) = <em>Φ</em></span>.
-And for <span class="math inline"><em>n</em> ≥ 2</span> <span
-class="math display"><em>h</em><sub><em>n</em></sub> = (1−<em>Φ</em>)(1−<em>Ψ</em>)<sup><em>n</em> − 2</sup><em>Ψ</em></span>
-Then the expected number of steps between two collision becomes <span
-class="math display"><em>E</em> = (1−<em>Φ</em>)<em>Ψ</em>∑<sub><em>n</em> ≥ 2</sub>(<em>n</em>−1)(1−<em>Ψ</em>)<sup><em>n</em> − 2</sup> = (1−<em>Φ</em>)<em>Ψ</em>∑<sub><em>n</em> ≥ 1</sub><em>n</em>(1−<em>Ψ</em>)<sup><em>n</em> − 1</sup></span>
-Again the series is the derivative of the function <span
-class="math inline">$\frac{1}{1-x}$</span> evaluated at <span
-class="math inline">1 − <em>Ψ</em></span>. Then <span
-class="math display">$$ E =
-\frac{(1-\Phi)}{\Psi} $$</span></p>
+<span class="math inline">\(h_n\)</span> to denote probability of that
+happening at step <span class="math inline">\(n\)</span>. This is the
+conditional probability of seeing the first collision at step <span
+class="math inline">\(n\)</span> given that we start with a collision
+state. For <span class="math inline">\(n=1\)</span> we have <span
+class="math inline">\(h_1 = P(C\|C) = \Phi\)</span>. And for <span
+class="math inline">\(n\geq 2\)</span> <span class="math display">\[ h_n
+= (1 - \Phi )( 1 -
+\Psi )^{n-2} \Psi \]</span> Then the expected number of steps between
+two collision becomes <span class="math display">\[ E =
+(1-\Phi)\Psi\sum_{n\geq 2} (n-1)
+(1-\Psi)^{n-2} = (1-\Phi)\Psi\sum_{n\geq 1} n (1-\Psi)^{n-1}
+\]</span> Again the series is the derivative of the function <span
+class="math inline">\(\frac{1}{1-x}\)</span> evaluated at <span
+class="math inline">\(1-\Psi\)</span>. Then <span
+class="math display">\[ E =
+\frac{(1-\Phi)}{\Psi} \]</span></p>
 <h2 id="implementation">Implementation</h2>
 <pre><code> import numpy as np
  import math
@@ -324,15 +310,14 @@ data-orig-height="179" data-orig-width="121" />
 </tbody>
 </table>
 <p>The first row lists the probabilities of seeing a collision at step
-<span class="math inline"><em>n</em></span> regardless of seeing
-previous collisions. The second row lists the probabilities of seeing
-our first collisions at step <span
-class="math inline"><em>n</em></span>. The probability of seeing a
-collision within 10 steps is 0.999. The expected number of steps before
-we see our first collision is 1.0 and the expected number of steps
-between two collisions is 1.0.</p>
+<span class="math inline">\(n\)</span> regardless of seeing previous
+collisions. The second row lists the probabilities of seeing our first
+collisions at step <span class="math inline">\(n\)</span>. The
+probability of seeing a collision within 10 steps is 0.999. The expected
+number of steps before we see our first collision is 1.0 and the
+expected number of steps between two collisions is 1.0.</p>
 <p>Now, let me work with a setup in which collisions are impossible
-except at step <span class="math inline"><em>n</em> = 0</span>.</p>
+except at step <span class="math inline">\(n=0\)</span>.</p>
 <figure data-orig-height="59" data-orig-width="205">
 <img
 src="../media/2012-09-28-collisions_in_random_walks_2.png"
@@ -395,8 +380,8 @@ beginning.</p>
                [0.5, 0.0, 0.0, 0.0, 0.5, 0.0],
                [0.5, 0.0, 0.0, 0.0, 0.0, 0.5]])</code></pre>
 <p>Let me calculate the probabilities of a collision from <span
-class="math inline"><em>n</em> = 0</span> to <span
-class="math inline"><em>n</em> = 20</span>.</p>
+class="math inline">\(n=0\)</span> to <span
+class="math inline">\(n=20\)</span>.</p>
 <table>
 <thead>
 <tr class="header">
@@ -473,13 +458,13 @@ class="math inline"><em>n</em> = 20</span>.</p>
 </tbody>
 </table>
 <p>In this situation seeing a collision at step <span
-class="math inline"><em>n</em></span> stabilizes as expected, at 0.1837
-after about 15 steps. On the other hand, the probability of seeing our
-first collision at step <span class="math inline"><em>n</em></span>
-decreases to zero, as it should. And the total probability of seeing a
-collision during the first 20 steps is about 0.9211 . The expected
-number of steps before we see our first collision is 7.1429 and the
-expected number of steps between two collisions is 4.2857.</p>
+class="math inline">\(n\)</span> stabilizes as expected, at 0.1837 after
+about 15 steps. On the other hand, the probability of seeing our first
+collision at step <span class="math inline">\(n\)</span> decreases to
+zero, as it should. And the total probability of seeing a collision
+during the first 20 steps is about 0.9211 . The expected number of steps
+before we see our first collision is 7.1429 and the expected number of
+steps between two collisions is 4.2857.</p>
 <div id="footer">
 <p><span id="timestamp">September 28th, 2012 9:16am</span></p>
 </div>

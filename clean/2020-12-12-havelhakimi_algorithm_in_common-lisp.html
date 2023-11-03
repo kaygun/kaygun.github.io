@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -121,12 +124,10 @@ Common-Lisp</h1>
 <p>A <a
 href="https://mathworld.wolfram.com/DegreeSequence.html#:~:text=Given%20an%20undirected%20graph%2C%20a,closely%20related%20to%20graphical%20partitions.">degree
 sequence</a> is a non-decreasing sequence <span
-class="math inline">(<em>d</em><sub>1</sub>≤⋯≤<em>d</em><sub><em>n</em></sub>)</span>
-of positive integers such that there is a graph whose vertices are
-labelled with <span class="math inline">1, …, <em>n</em></span> with
-<span
-class="math inline">deg (<em>i</em>) = <em>d</em><sub><em>i</em></sub></span>.
-<a
+class="math inline">\((d_1\leq \cdots\leq d_n)\)</span> of positive
+integers such that there is a graph whose vertices are labelled with
+<span class="math inline">\(1,\ldots,n\)</span> with <span
+class="math inline">\(\deg(i) = d_i\)</span>. <a
 href="https://en.wikipedia.org/wiki/Erd%C5%91s%E2%80%93Gallai_theorem">Erdős–Gallai
 theorem</a> gives a necessary and sufficient condition that a given
 non-increasing sequence is a degree sequence. However, there is a very

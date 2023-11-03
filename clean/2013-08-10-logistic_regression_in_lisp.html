@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -63,80 +66,72 @@ Regression</a> using Gradient Descent.</p>
 <h2 id="ordinary-least-square-regression-revisited">Ordinary least
 square regression revisited</h2>
 <p>Let me go over the setup: we have a finite dataset <span
-class="math inline"><em>x</em><sup>(1)</sup>, …, <em>x</em><sup>(<em>n</em>)</sup></span>
-of points coming from a <span
-class="math inline"><em>m</em></span>-dimensional vector space. For each
-of these points we have a numerical response variable <span
-class="math inline"><em>y</em><sup>(<em>i</em>)</sup></span> for <span
-class="math inline"><em>i</em> = 1, …, <em>n</em></span>. We want to
-approximate <span
-class="math inline"><em>y</em><sup>(<em>i</em>)</sup></span> using <span
-class="math inline"><em>x</em><sup>(<em>i</em>)</sup></span> via a
-linear equation of the type <span
-class="math display"><em>y</em><sup>(<em>i</em>)</sup> = <strong>a</strong> ⋅ <em>x</em><sup>(<em>i</em>)</sup> + <em>b</em></span>
-In the ordinary least squares resgression we minimize the total error:
-<span class="math display">$$ LSE({\mathbf
+class="math inline">\(x^{(1)},\ldots,x^{(n)}\)</span> of points coming
+from a <span class="math inline">\(m\)</span>-dimensional vector space.
+For each of these points we have a numerical response variable <span
+class="math inline">\(y^{(i)}\)</span> for <span
+class="math inline">\(i=1,\ldots,n\)</span>. We want to approximate
+<span class="math inline">\(y^{(i)}\)</span> using <span
+class="math inline">\(x^{(i)}\)</span> via a linear equation of the type
+<span class="math display">\[
+y^{(i)} = {\mathbf a}\cdot x^{(i)} + b \]</span> In the ordinary least
+squares resgression we minimize the total error: <span
+class="math display">\[ LSE({\mathbf
 a},b) = \frac{1}{2n}\sum_{i=1}^n \|y^{(i)}-{\mathbf a}\cdot
-x^{(i)}-b\|^2 $$</span> over the parameters <span
-class="math inline"><strong>a</strong></span> and <span
-class="math inline"><em>b</em></span>.</p>
+x^{(i)}-b\|^2 \]</span> over the parameters <span
+class="math inline">\({\mathbf a}\)</span> and <span
+class="math inline">\(b\)</span>.</p>
 <h2 id="logistic-regression">Logistic regression</h2>
-<p>If the responses <span
-class="math inline"><em>y</em><sup>(<em>i</em>)</sup></span> are
+<p>If the responses <span class="math inline">\(y^{(i)}\)</span> are
 discrete, specifically if they take only two values (say 0 and 1), then
 we can use another statistical model called <a
 href="http://en.wikipedia.org/wiki/Logistic_regression">Logistic
 Regression</a>. The biggest difference comes from the fact that this
 problem is not a regression problem, rather a classification problem. We
 must split the vector space (and therefore the dataset) into 2 halves so
-that datapoints with <span
-class="math inline"><em>y</em><sup>(<em>i</em>)</sup> = 0</span> and
-<span class="math inline"><em>y</em><sup>(<em>i</em>)</sup> = 1</span>
-lie on different sides.</p>
-<p>Notice that <span
-class="math display"><strong>a</strong> ⋅ <strong>x</strong> + <em>b</em> = 0</span>
-is an equation of a hyper-plane and each side of the hyper-plane is
-determined by the sign of the auxiliary function <span
-class="math display"><em>f</em>(<strong>x</strong>) = <strong>a</strong> ⋅ <strong>x</strong> + <em>b</em></span>
-Larger the norm <span
-class="math inline">∥<em>f</em>(<strong>x</strong>)∥</span> the more
-confident one has to be that <span
-class="math inline"><strong>x</strong></span> belongs to the correct
-side of the hyper-plane in question. At this stage, the <a
-href="https://en.wikipedia.org/wiki/Logistic_function">Logistic
-Function</a> <span class="math inline">$\frac{1}{1+exp(-x)}$</span>
+that datapoints with <span class="math inline">\(y^{(i)}=0\)</span> and
+<span class="math inline">\(y^{(i)}=1\)</span> lie on different
+sides.</p>
+<p>Notice that <span class="math display">\[ {\mathbf a}\cdot {\mathbf
+x} + b = 0\]</span> is an equation of a hyper-plane and each side of the
+hyper-plane is determined by the sign of the auxiliary function <span
+class="math display">\[ f({\mathbf x}) = {\mathbf
+a}\cdot {\mathbf x} + b \]</span> Larger the norm <span
+class="math inline">\(\|f({\mathbf x})\|\)</span> the more confident one
+has to be that <span class="math inline">\({\mathbf x}\)</span> belongs
+to the correct side of the hyper-plane in question. At this stage, the
+<a href="https://en.wikipedia.org/wiki/Logistic_function">Logistic
+Function</a> <span class="math inline">\(\frac{1}{1+exp(-x)}\)</span>
 comes to our rescue.</p>
 <figure class="tmblr-full" data-orig-height="375" data-orig-width="500" data-orig-src>
 <img src="../media/2013-08-10-logistic_regression_in_lisp_0.png" data-orig-height="375"
 data-orig-width="500" data-orig-src="" alt="image" />
 </figure>
 <p>Let us say that the probability of a point <span
-class="math inline">𝕫</span> being on the positive side of the
-hyper-plane <span
-class="math inline"><strong>a</strong> ⋅ <strong>x</strong> + <em>b</em> = 0</span>
-is <span class="math display">$$ \frac{1}{1+\exp(-{\mathbf a}\cdot
-{\mathbf z} - b)} $$</span> Using this we can write a probability
-function <span
-class="math inline"><em>p</em>(<strong>z</strong>,<em>y</em>)</span>
-<span class="math display">$$ p({\mathbf z},y) =
+class="math inline">\({\mathbb z}\)</span> being on the positive side of
+the hyper-plane <span class="math inline">\({\mathbf a}\cdot {\mathbf
+x}+b=0\)</span> is <span class="math display">\[
+\frac{1}{1+\exp(-{\mathbf a}\cdot {\mathbf z} - b)} \]</span> Using this
+we can write a probability function <span
+class="math inline">\(p({\mathbf z},y)\)</span> <span
+class="math display">\[ p({\mathbf z},y) =
 \left(\frac{1}{1+\exp(-{\mathbf a}\cdot
 {\bf z} - b)}\right)^y \left(\frac{1}{1+\exp({\mathbf a}\cdot
-{\bf z} + b)}\right)^{1-y} $$</span> which measures the probability of
-<span class="math inline">${\bf z}$</span> being on the right side where
-<span class="math inline"><em>y</em></span> takes values 0 or 1. Then
+{\bf z} + b)}\right)^{1-y} \]</span> which measures the probability of
+<span class="math inline">\({\bf z}\)</span> being on the right side
+where <span class="math inline">\(y\)</span> takes values 0 or 1. Then
 the probability that all of the points in our dataset being on the right
-side is <span class="math display">$$ p(D) = \prod_{i=1}^n
-p(x^{(i)},y^{(i)}) $$</span> and therefore we would like to maximize
-<span class="math inline"><em>p</em>(<em>D</em>)</span> depending on the
-unknown parameters <span class="math inline"><strong>a</strong></span>
-and <span class="math inline"><em>b</em></span>. Instead one can
-minimize the following function <span class="math display">$$
-LE({\mathbf a},b) =
+side is <span class="math display">\[ p(D) = \prod_{i=1}^n
+p(x^{(i)},y^{(i)}) \]</span> and therefore we would like to maximize
+<span class="math inline">\(p(D)\)</span> depending on the unknown
+parameters <span class="math inline">\({\mathbf a}\)</span> and <span
+class="math inline">\(b\)</span>. Instead one can minimize the following
+function <span class="math display">\[ LE({\mathbf a},b) =
 -\frac{1}{n}\sum_{i=1}^n y^{(i)}\log(1+\exp(-{\mathbf a}\cdot
 x^{(i)} - b)) + (1-y^{(i)})\log(1+\exp({\mathbf a}\cdot x^{(i)} +
-b)) $$</span> which is just the natural logarithm of <span
-class="math inline"><em>p</em>(<em>D</em>)</span>. This is the part I am
-going to tackle with a new and slightly improved gradient descent.</p>
+b)) \]</span> which is just the natural logarithm of <span
+class="math inline">\(p(D)\)</span>. This is the part I am going to
+tackle with a new and slightly improved gradient descent.</p>
 <h2 id="the-refactored-code">The refactored code</h2>
 <p>Without further ado, here is the new refactored code.</p>
 <p><br />

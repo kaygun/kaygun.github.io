@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -70,12 +73,11 @@ on being concise and informative. Here is my narrative on the algorithm.
 <p>The idea is that we randomly iterate our points using a stochastic
 process. The probability of jumping from one state to the randomly
 chosen next point depends on the ambient temperature. If the cost <span
-class="math inline"><em>ϕ</em>(<em>x</em><sub><em>i</em> + 1</sub>)</span>
-in the next step is smaller than the cost <span
-class="math inline"><em>ϕ</em>(<em>x</em><sub><em>i</em></sub>)</span>
-at the current state then the probability of a jump is</p>
-<p><span class="math display">$$ e^{ \frac{\phi(x_{i+1})-\phi(x_i)}{kT}
-} $$</span></p>
+class="math inline">\(\phi(x_{i+1})\)</span> in the next step is smaller
+than the cost <span class="math inline">\(\phi(x_i)\)</span> at the
+current state then the probability of a jump is</p>
+<p><span class="math display">\[ e^{ \frac{\phi(x_{i+1})-\phi(x_i)}{kT}
+} \]</span></p>
 <p>Otherwise, the probability is set to 1.</p>
 <pre><code>Function SimulatedAnnealing
 Input: cost, a cost function to be optimized
@@ -119,7 +121,7 @@ End</code></pre>
           (if (and trace (zerop (mod i 100)))
              (format t &quot;~4d ~5,2f ~5,2f ~a~%&quot; i temp (funcall cost pos) pos)))))</code></pre>
 <p>In my first example, I will try to minimize the function <span
-class="math inline"><em>s</em><em>i</em><em>n</em>(<em>e</em><em>x</em><em>p</em>(−<em>x</em><sup>2</sup>+<em>x</em>+1))</span></p>
+class="math inline">\(sin(exp(-x^2+x+1))\)</span></p>
 <figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
 <img
 src="../media/2013-08-25-simulated_annealing_in_lisp_0.png"
@@ -146,17 +148,14 @@ multiplicative <code>temp -&gt; temp/1.01</code>.</p>
 <p>Not bad.</p>
 <p>Next up, the <a
 href="http://en.wikipedia.org/wiki/Himmelblau&#39;s_function">Himmelbrau
-function</a>: <span
-class="math display">(<em>x</em><sup>2</sup>+<em>y</em>−11)<sup>2</sup> + (<em>x</em>+<em>y</em><sup>2</sup>−7)<sup>2</sup></span></p>
+function</a>: <span class="math display">\[
+(x^2 + y - 11)^2 + (x + y^2 - 7)^2 \]</span></p>
 <p>Here, the global minima are on the intersection of two parabolas
-<span
-class="math inline"><em>y</em> = 11 − <em>x</em><sup>2</sup></span> and
-<span
-class="math inline"><em>x</em> = 7 − <em>y</em><sup>2</sup></span>.
-After some algebraic manipulation, you should see that the solution to
-the equation <span
-class="math display"><em>y</em><sup>4</sup> − 14<em>y</em><sup>2</sup> + <em>y</em> + 38 = 0</span>
-is what we need. There are 4 solutions:</p>
+<span class="math inline">\(y=11-x^2\)</span> and <span
+class="math inline">\(x= 7 - y^2\)</span>. After some algebraic
+manipulation, you should see that the solution to the equation <span
+class="math display">\[ y^4 - 14y^2 +
+y + 38 = 0 \]</span> is what we need. There are 4 solutions:</p>
 <figure class="tmblr-full" data-orig-height="375" data-orig-width="500">
 <img
 src="../media/2013-08-25-simulated_annealing_in_lisp_1.png"

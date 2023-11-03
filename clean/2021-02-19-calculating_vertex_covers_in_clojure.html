@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -121,20 +124,18 @@ in Clojure</h1>
 <p>Today, I am going to write a clojure function that solves <a
 href="https://en.wikipedia.org/wiki/Vertex_cover">vertex cover
 problem</a> for a given undirected graph.</p>
-<p>Given a graph <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> a vertex
-cover is a subset <span
-class="math inline"><em>C</em> ⊆ <em>V</em></span> such that when we add
-all edges incident to every vertex in <span
-class="math inline"><em>C</em></span> we get all vertices of <span
-class="math inline"><em>G</em></span>. For example, any vertex <span
-class="math inline"><em>v</em></span> in the complete graph <span
-class="math inline"><em>K</em><sub><em>n</em></sub></span> would form a
-cover by itself since every other vertex is connected to <span
-class="math inline"><em>v</em></span>. On the other hand, any graph on
-<span class="math inline"><em>n</em></span> vertices with no edges is on
-the opposite end since one would need all of <span
-class="math inline"><em>V</em></span> to get a cover.</p>
+<p>Given a graph <span class="math inline">\(G = (V,E)\)</span> a vertex
+cover is a subset <span class="math inline">\(C\subseteq V\)</span> such
+that when we add all edges incident to every vertex in <span
+class="math inline">\(C\)</span> we get all vertices of <span
+class="math inline">\(G\)</span>. For example, any vertex <span
+class="math inline">\(v\)</span> in the complete graph <span
+class="math inline">\(K_n\)</span> would form a cover by itself since
+every other vertex is connected to <span
+class="math inline">\(v\)</span>. On the other hand, any graph on <span
+class="math inline">\(n\)</span> vertices with no edges is on the
+opposite end since one would need all of <span
+class="math inline">\(V\)</span> to get a cover.</p>
 <h2 id="an-algorithm">An algorithm</h2>
 <pre><code>Algorithm Cover
 Input: A graph G as a list of neighbors for each vertex.

@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -183,8 +186,8 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a 
 done. Neat, isn’t it?</p>
 <h2 id="a-test">A Test</h2>
 <p>I will use the following function which calculates the number of
-unordered <span class="math inline"><em>k</em></span>-partitions of an
-integer <span class="math inline"><em>n</em></span>:</p>
+unordered <span class="math inline">\(k\)</span>-partitions of an
+integer <span class="math inline">\(n\)</span>:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> par </span>(n k)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">cond</span> ((<span class="op">&lt;</span> n k) <span class="dv">0</span>) </span>

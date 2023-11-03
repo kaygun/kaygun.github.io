@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -97,23 +100,22 @@ which is obtained by composing its arguments.</p>
 <pre><code>(defparameter new (compose (lambda (x) (* x x)) &#39;1+))
 NEW</code></pre>
 <p>This function <code>new</code> is the mathematical function <span
-class="math inline"><em>f</em>(<em>x</em>) = (<em>x</em>+1)<sup>2</sup></span>
-written as a composition of an anonymous function and the standard lisp
-function <code>1+</code>. Let us test if it works as intended:</p>
+class="math inline">\(f(x) = (x + 1)^2\)</span> written as a composition
+of an anonymous function and the standard lisp function <code>1+</code>.
+Let us test if it works as intended:</p>
 <pre><code>(loop for i from 1 to 10 collect (let ((x (random 9))) (cons x (funcall new x))))
 ((4 . 25) (3 . 16) (2 . 9) (5 . 36) (1 . 4) (6 . 49) (5 . 36) (1 . 4)
  (1 . 4) (2 . 9))</code></pre>
 <h2 id="functors">Functors</h2>
 <p>A <strong>functor</strong> is a higher order function which is
 compatible with composition. Mathematically speaking, a higher order
-function <span class="math inline"><em>F</em></span> is a functor when
-for two composable ordinary functions <span
-class="math inline"><em>g</em>: <em>X</em> → <em>Y</em></span> and <span
-class="math inline"><em>f</em>: <em>Y</em> → <em>Z</em></span> one has
-<span
-class="math display"><em>F</em>(<em>f</em>∘<em>g</em>) = <em>F</em>(<em>f</em>) ∘ <em>F</em>(<em>g</em>)</span>
-where <span class="math inline">∘</span> denotes the binary operation of
-composition. I will give a non-example, and then an example.</p>
+function <span class="math inline">\(F\)</span> is a functor when for
+two composable ordinary functions <span class="math inline">\(g\colon
+X\to Y\)</span> and <span class="math inline">\(f\colon Y\to Z\)</span>
+one has <span class="math display">\[ F(f\circ g) = F(f)\circ F(g)
+\]</span> where <span class="math inline">\(\circ\)</span> denotes the
+binary operation of composition. I will give a non-example, and then an
+example.</p>
 <p>Consider the following higher order function</p>
 <pre><code>(defun twice (f) (lambda (x) (* 2 (funcall f x))))
 TWICE</code></pre>
@@ -138,15 +140,13 @@ order function but not a functor.</p>
 <code>vectorize</code></p>
 <pre><code>(defun vectorize (f) (lambda (x) (mapcar f x)))
 VECTORIZE</code></pre>
-<p>which takes a function <span
-class="math inline"><em>f</em> : <em>X</em> → <em>Y</em></span> as an
-argument which operates some type of input <span
-class="math inline"><em>X</em></span> to create an output of type <span
-class="math inline"><em>Y</em></span>, and promotes it to another
-function <code>(vectorize f)</code> which takes a list of objects of
-type <span class="math inline"><em>X</em></span> to create list of
-objects of type <span class="math inline"><em>Y</em></span>. For
-example</p>
+<p>which takes a function <span class="math inline">\(f:X\to Y\)</span>
+as an argument which operates some type of input <span
+class="math inline">\(X\)</span> to create an output of type <span
+class="math inline">\(Y\)</span>, and promotes it to another function
+<code>(vectorize f)</code> which takes a list of objects of type <span
+class="math inline">\(X\)</span> to create list of objects of type <span
+class="math inline">\(Y\)</span>. For example</p>
 <pre><code>(funcall (vectorize &#39;1+) &#39;(0 1 2 3))
 (1 2 3 4)</code></pre>
 <p>This higher order function is compatible with composition of
@@ -188,20 +188,17 @@ signatures of functions</h2>
 functor operates on a function and give you another function, and yes it
 is also compatible with the composition of function. But what about the
 type signatures of the functions? A functor <span
-class="math inline"><em>T</em></span> might transform the type
-signatures of the functions but it should do it without altering the
-composability of the functions. If <span
-class="math inline"><em>f</em>: <em>Y</em> → <em>Z</em></span> and <span
-class="math inline"><em>g</em>: <em>X</em> → <em>Y</em></span> is a
-composable pair of functions with their respective type signatures, then
-the resulting functions <span
-class="math inline"><em>T</em>(<em>f</em>)</span> and <span
-class="math inline"><em>T</em>(<em>g</em>)</span> should have compatible
-type signatures as well. We mathematicians write the resulting type
-signatures as <span
-class="math inline"><em>T</em>(<em>f</em>): <em>T</em>(<em>Y</em>) → <em>T</em>(<em>Z</em>)</span>
-and <span
-class="math inline"><em>T</em>(<em>g</em>): <em>T</em>(<em>X</em>) → <em>T</em>(<em>Y</em>)</span>.</p>
+class="math inline">\(T\)</span> might transform the type signatures of
+the functions but it should do it without altering the composability of
+the functions. If <span class="math inline">\(f\colon Y\to Z\)</span>
+and <span class="math inline">\(g\colon X\to Y\)</span> is a composable
+pair of functions with their respective type signatures, then the
+resulting functions <span class="math inline">\(T(f)\)</span> and <span
+class="math inline">\(T(g)\)</span> should have compatible type
+signatures as well. We mathematicians write the resulting type
+signatures as <span class="math inline">\(T(f)\colon T(Y)\to
+T(Z)\)</span> and <span class="math inline">\(T(g)\colon T(X)\to
+T(Y)\)</span>.</p>
 <p>So, for the <code>vectorize</code> example above if we were to given
 a function of type <code>g:: Int -&gt; Char</code> then the resulting
 function <code>vectorize(g)</code> would have the type signature
@@ -214,25 +211,23 @@ composability of <code>f</code> and <code>g</code>.</p>
 <h2 id="monads">Monads</h2>
 <p>OK, so you know that a monad is a monoid in the category of
 endofunctors. But what does that even mean?</p>
-<p>First of all a monad <span class="math inline"><em>T</em></span> is a
+<p>First of all a monad <span class="math inline">\(T\)</span> is a
 functor. The “endo” part indicates that the type signature of <span
-class="math inline"><em>T</em></span> itself (it is a higher order
-function afterall, and therefore has its own type signature) is special.
-It must be of the form <span
-class="math inline"><em>T</em>: <em>A</em> → <em>A</em></span>. I would
-have a hard time describing this in Haskell. In lisp lingo I would say
-<span class="math inline"><em>T</em></span> sends a lambda expression to
+class="math inline">\(T\)</span> itself (it is a higher order function
+afterall, and therefore has its own type signature) is special. It must
+be of the form <span class="math inline">\(T\colon A\to A\)</span>. I
+would have a hard time describing this in Haskell. In lisp lingo I would
+say <span class="math inline">\(T\)</span> sends a lambda expression to
 another lambda expression. I suppose I can write
 <code>T: lambda -&gt; lambda</code>. As such, one can compose <span
-class="math inline"><em>T</em></span> with itself many times. So, we can
-look at the whole sequence of lambda expressions <span
-class="math inline"><em>T</em><sup><em>n</em></sup>(<em>f</em>)</span>.
-If <span class="math inline"><em>T</em></span> is a monoid (i.e. a
-monad) in this context then we have an extra piece of information to
-tell us how to flatten these iterated objects <span
-class="math inline"><em>T</em><sup><em>n</em></sup>(<em>f</em>)</span>
-consistently to level of <span
-class="math inline"><em>T</em>(<em>f</em>)</span>.</p>
+class="math inline">\(T\)</span> with itself many times. So, we can look
+at the whole sequence of lambda expressions <span
+class="math inline">\(T^n(f)\)</span>. If <span
+class="math inline">\(T\)</span> is a monoid (i.e. a monad) in this
+context then we have an extra piece of information to tell us how to
+flatten these iterated objects <span
+class="math inline">\(T^n(f)\)</span> consistently to level of <span
+class="math inline">\(T(f)\)</span>.</p>
 <p>Let me explain this on the <code>vectorize</code> example I defined
 above. If <code>f</code> is a function of type signature
 <code>f:Int -&gt; Char</code> then <code>(vectorize f)</code> sends
@@ -271,15 +266,14 @@ my-list-of-lists
 <pre><code>(funcall (vectorize &#39;f) (flatten my-list-of-lists))
 (21 3 91 13 13 91 13 133 7 133 3 43 21 43 7 43 31 21 57 3 3 3 57 73 31 133 3 111)</code></pre>
 <p>We call such pairs <code>(vectorize,flatten)</code> as monads. You
-need an endofunctor <span class="math inline"><em>T</em></span> and a
-generic function <span class="math inline"><em>η</em></span> which
-<em>flattens</em> <span
-class="math inline"><em>T</em><sup>2</sup></span> to <span
-class="math inline"><em>T</em></span> in such a way that any sort of
+need an endofunctor <span class="math inline">\(T\)</span> and a generic
+function <span class="math inline">\(\eta\)</span> which
+<em>flattens</em> <span class="math inline">\(T^2\)</span> to <span
+class="math inline">\(T\)</span> in such a way that any sort of
 potentially different flattenings of higher order terms <span
-class="math inline"><em>T</em><sup><em>n</em></sup></span> to <span
-class="math inline"><em>T</em></span> via any use of consecutive <span
-class="math inline"><em>η</em></span>’s produce the same effect.</p>
+class="math inline">\(T^n\)</span> to <span
+class="math inline">\(T\)</span> via any use of consecutive <span
+class="math inline">\(\eta\)</span>’s produce the same effect.</p>
 <div id="footer">
 <p><span id="timestamp">December 16th, 2012 12:25pm</span></p>
 </div>

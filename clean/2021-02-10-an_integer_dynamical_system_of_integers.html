@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -172,19 +175,19 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a 
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ITERATE</span></code></pre></div>
 <p>Let us test it: First for <span
-class="math inline"><em>p</em> = 2</span>.</p>
+class="math inline">\(p=2\)</span>.</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(iterate (reduce-p (<span class="kw">random</span> (<span class="kw">expt</span> <span class="dv">2</span> <span class="dv">12</span>)) <span class="dv">2</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">lambda</span> (n) (symmetrize-p n <span class="dv">2</span>)))</span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">3541</span> <span class="dv">1771</span> <span class="dv">443</span> <span class="dv">111</span> <span class="dv">7</span> <span class="dv">1</span>)</span></code></pre></div>
-<p>Next, for <span class="math inline"><em>p</em> = 3</span>.</p>
+<p>Next, for <span class="math inline">\(p=3\)</span>.</p>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(iterate (reduce-p (<span class="kw">random</span> (<span class="kw">expt</span> <span class="dv">2</span> <span class="dv">20</span>)) <span class="dv">3</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">lambda</span> (n) (symmetrize-p n <span class="dv">3</span>))))</span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">335216</span> <span class="dv">223478</span> <span class="dv">5518</span> <span class="dv">2950</span> <span class="dv">1967</span> <span class="dv">1069</span> <span class="dv">713</span> <span class="dv">395</span> <span class="dv">88</span> <span class="dv">59</span> <span class="dv">31</span> <span class="dv">7</span> <span class="dv">4</span> <span class="dv">1</span>)</span></code></pre></div>
-<p>and finally for <span class="math inline"><em>p</em> = 53</span>.</p>
+<p>and finally for <span class="math inline">\(p=53\)</span>.</p>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(iterate (reduce-p (<span class="kw">random</span> (<span class="kw">expt</span> <span class="dv">2</span> <span class="dv">20</span>)) <span class="dv">53</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">lambda</span> (n) (symmetrize-p n <span class="dv">53</span>)))</span></code></pre></div>

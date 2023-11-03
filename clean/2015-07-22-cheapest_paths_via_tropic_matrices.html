@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -60,28 +63,28 @@ post</a> on the following problem but I have slight improvements. It is
 worth another post.</p>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Assume we have an undirected graph <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> where
-each edge is associated with a cost <span class="math inline">$\omega :E
-\to \[0,\infty)$</span>. Given two vertices <span
-class="math inline"><em>a</em>, <em>b</em> ∈ <em>V</em></span>, our aim
-today is to find the cheapest path between <span
-class="math inline"><em>a</em></span> and <span
-class="math inline"><em>b</em></span>.</p>
+class="math inline">\(G=(V,E)\)</span> where each edge is associated
+with a cost <span class="math inline">\(\omega :E \to
+\[0,\infty)\)</span>. Given two vertices <span
+class="math inline">\(a,b\in V\)</span>, our aim today is to find the
+cheapest path between <span class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span>.</p>
 <h2 id="tropic-matrices">Tropic matrices</h2>
 <p>Consider the symmetric square matrix <span
-class="math inline"><em>Ω</em> = (<em>ω</em>(<em>v</em>,<em>w</em>))<sub><em>v</em><em>w</em></sub></span>
-whose rows and columns are labeled by vertices. Then the minimal costs
-of 1-step paths between vertices is given by <span
-class="math inline"><em>Ω</em></span> itself. If we were to think of the
+class="math inline">\(\Omega = (\omega(v,w))_{vw}\)</span> whose rows
+and columns are labeled by vertices. Then the minimal costs of 1-step
+paths between vertices is given by <span
+class="math inline">\(\Omega\)</span> itself. If we were to think of the
 minimal costs of 2-step paths between vertices then we would need <span
-class="math display"><em>c</em><sub><em>i</em><em>j</em></sub><sup>(2)</sup> = <em>ω</em><sub><em>i</em><em>j</em></sub> ∧ ⋀<sub><em>k</em> ∈ <em>V</em></sub><em>ω</em><sub><em>i</em><em>k</em></sub> + <em>ω</em><sub><em>k</em><em>j</em></sub></span>
-where I use the notation <span
-class="math inline"><em>a</em> ∧ <em>b</em></span> for <span
-class="math inline">min (<em>a</em>,<em>b</em>)</span>. Inductively, the
-costs of cheapest paths of length less or equal to <span
-class="math inline"><em>n</em> + 1</span> are calculated by <span
-class="math display"><em>c</em><sub><em>i</em><em>j</em></sub><sup>(<em>n</em>+1)</sup> = <em>c</em><sub><em>i</em><em>j</em></sub><sup>(<em>n</em>)</sup> ∧ ⋀<sub><em>k</em> ∈ <em>V</em></sub><em>c</em><sub><em>i</em><em>k</em></sub><sup>(<em>n</em>)</sup> + <em>ω</em><sub><em>k</em><em>j</em></sub></span>
-If you have seen my previous post on <a
+class="math display">\[ c^{(2)}_{ij}=ω_{ij} \wedge \bigwedge_{k\in V}
+\omega_{ik} + \omega_{kj}\]</span> where I use the notation <span
+class="math inline">\(a\wedge b\)</span> for <span
+class="math inline">\(\min(a,b)\)</span>. Inductively, the costs of
+cheapest paths of length less or equal to <span
+class="math inline">\(n+1\)</span> are calculated by <span
+class="math display">\[ c^{(n+1)}_{ij}
+= c^{(n)}_{ij}\wedge \bigwedge_{k\in V} c^{(n)}_{ik} +
+\omega_{kj} \]</span> If you have seen my previous post on <a
 href="clean/2015-07-21-hidden_markov_models_via_tropic_matrices.html">Hidden
 Markov Models</a> you will realize that I am doing matrix multiplication
 in the tropic ring over the positive real numbers.</p>

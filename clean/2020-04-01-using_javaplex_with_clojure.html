@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -136,12 +139,12 @@ not do the same thing with collection data points?</p>
 problematic of topological data analysis:</p>
 <blockquote>
 <p>Assume we have an embedded manifold <span
-class="math inline"><em>M</em></span> in <span
-class="math inline">ℝ<sup><em>n</em></sup></span>, and a finite sample
-of points <span class="math inline"><em>X</em></span> taken from from
-<span class="math inline"><em>M</em></span>. Can one calculate
-topological invariants of <span class="math inline"><em>M</em></span>
-from <span class="math inline"><em>X</em></span>.</p>
+class="math inline">\(M\)</span> in <span
+class="math inline">\(\mathbb{R}^n\)</span>, and a finite sample of
+points <span class="math inline">\(X\)</span> taken from from <span
+class="math inline">\(M\)</span>. Can one calculate topological
+invariants of <span class="math inline">\(M\)</span> from <span
+class="math inline">\(X\)</span>.</p>
 </blockquote>
 <p>The topological invariants we are after are called <a
 href="https://en.wikipedia.org/wiki/Betti_number">Betti numbers</a>. For
@@ -163,11 +166,9 @@ href="https://en.wikipedia.org/wiki/Simplicial_complex">simplicial
 complex</a> and then construct its <a
 href="https://en.wikipedia.org/wiki/Singular_homology">singular
 complex</a>. The size of the simplicial complex on <span
-class="math inline"><em>n</em></span> points (in the worst case
-scenario) is <span
-class="math inline"><em>n</em>! ≈ <em>n</em><sup><em>n</em></sup></span>
-(worse than exponential!) which makes calculations tricky to say the
-least.</p>
+class="math inline">\(n\)</span> points (in the worst case scenario) is
+<span class="math inline">\(n!\approx n^n\)</span> (worse than
+exponential!) which makes calculations tricky to say the least.</p>
 <h2 id="barcodes">Barcodes</h2>
 <p>From our cloud of points we first construct a gradually growing
 network of points depending on their proximity. One key point here is
@@ -245,8 +246,8 @@ the error I added to the radius. I must warn: my samples are not
 uniformly distributed. If you plot this for the 2-dimensional sphere,
 you will see accumulation on the poles. But, it will do here.</p>
 <p>Okay, let me sample some points from <span
-class="math inline"><em>S</em><sup>2</sup></span> embedded in <span
-class="math inline">ℝ<sup>3</sup></span>:</p>
+class="math inline">\(S^2\)</span> embedded in <span
+class="math inline">\(\mathbb{R}^3\)</span>:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> S2-clojure </span>(sample-from-Sn <span class="dv">2</span> <span class="dv">60</span> <span class="fl">1.0</span> <span class="fl">0.05</span>))</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>(<span class="kw">into</span> [] S2-clojure)</span></code></pre></div>

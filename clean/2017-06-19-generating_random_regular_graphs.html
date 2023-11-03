@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,26 +58,25 @@
 <h1 id="generating-random-regular-graphs">Generating random regular
 graphs</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>An undirected graph <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> is
-called regular if all of the vertices <span
-class="math inline"><em>v</em> ∈ <em>V</em></span> has the same degree.
-For the purposes of today’s post, I will allow loops on vertices, and
-multiple edges between any pair of vertices.</p>
+<p>An undirected graph <span class="math inline">\(G=(V,E)\)</span> is
+called regular if all of the vertices <span class="math inline">\(v\in
+V\)</span> has the same degree. For the purposes of today’s post, I will
+allow loops on vertices, and multiple edges between any pair of
+vertices.</p>
 <h2 id="a-solution-implementation-in-common-lisp">A solution
 implementation in Common Lisp</h2>
 <p>First, I am going to need a helper function that will generate <span
-class="math inline"><em>k</em></span>-copies of each vertex numbered
-from <span class="math inline">1</span> to <span
-class="math inline"><em>n</em></span>:</p>
+class="math inline">\(k\)</span>-copies of each vertex numbered from
+<span class="math inline">\(1\)</span> to <span
+class="math inline">\(n\)</span>:</p>
 <pre><code>(defun pool (n k)
    (loop for i from 1 to n append
        (loop repeat k collect i)))
 
 POOL</code></pre>
 <p>This is going to needed to generate a random <span
-class="math inline"><em>k</em></span>-regular graph on <span
-class="math inline"><em>n</em></span>-vertices.</p>
+class="math inline">\(k\)</span>-regular graph on <span
+class="math inline">\(n\)</span>-vertices.</p>
 <p>I am also going to need an helper function that takes the difference
 of two lists like <a
 href="http://www.lispworks.com/documentation/HyperSpec/Body/f_set_di.htm"><code>set-difference</code></a>

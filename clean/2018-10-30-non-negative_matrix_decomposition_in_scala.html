@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,17 +58,16 @@
 <h1 id="non-negative-matrix-decomposition-in-scala">Non-negative Matrix
 Decomposition in Scala</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Imagine you have a large <span
-class="math inline"><em>m</em> × <em>n</em></span>-matrix <span
-class="math inline"><em>D</em></span> which consists of nonnegative real
-numbers, and we would like to decompose it as <span
-class="math inline"><em>D</em> = <em>W</em><em>H</em></span> where <span
-class="math inline"><em>W</em></span> is a <span
-class="math inline"><em>m</em> × <em>k</em></span>-matrix and <span
-class="math inline"><em>H</em></span> is <span
-class="math inline"><em>k</em> × <em>n</em></span>-matrix for a
-relatively small <span class="math inline"><em>k</em></span> and both of
-the matrices consist of only nonnegative numbers. This is called <a
+<p>Imagine you have a large <span class="math inline">\(m\times
+n\)</span>-matrix <span class="math inline">\(D\)</span> which consists
+of nonnegative real numbers, and we would like to decompose it as <span
+class="math inline">\(D = W H\)</span> where <span
+class="math inline">\(W\)</span> is a <span
+class="math inline">\(m\times k\)</span>-matrix and <span
+class="math inline">\(H\)</span> is <span class="math inline">\(k\times
+n\)</span>-matrix for a relatively small <span
+class="math inline">\(k\)</span> and both of the matrices consist of
+only nonnegative numbers. This is called <a
 href="https://en.wikipedia.org/wiki/Non-negative_matrix_factorization">non-negative
 matrix decomposition</a>. I am going to use algorithms described in the
 paper <a

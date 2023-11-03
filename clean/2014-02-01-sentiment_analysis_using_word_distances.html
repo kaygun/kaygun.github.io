@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -121,11 +124,11 @@ DIST</code></pre>
 <h2 id="sentimentanalysis">Sentiment analysis</h2>
 <p>Here is a an experiment. There are six basic emotions: anger, fear,
 disgust, sadness, surprise and happiness. Assuming the thesaurus
-distance of a word <span class="math inline"><em>w</em></span> to, say
+distance of a word <span class="math inline">\(w\)</span> to, say
 “fear”, indicates the emotional content of the word <span
-class="math inline"><em>w</em></span> in the fear dimension, can we
-analyze a text using this metric? Below, I will also trow in few extra
-words along with these six basic emotions.</p>
+class="math inline">\(w\)</span> in the fear dimension, can we analyze a
+text using this metric? Below, I will also trow in few extra words along
+with these six basic emotions.</p>
 <pre><code>(defvar categories (list &quot;anger&quot; &quot;fear&quot; &quot;disgust&quot; &quot;sad&quot; 
                          &quot;guilt&quot; &quot;embarrassment&quot; &quot;shame&quot; &quot;pride&quot; 
                          &quot;surprise&quot; &quot;happy&quot;))

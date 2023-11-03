@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -65,14 +68,13 @@ functions. How is that possible?</p>
 of the experiment.</p>
 <p>The long answer is this: Assume we take a uniformly random sequence
 of integers between 0 and N, and then divide them by <span
-class="math inline"><em>N</em></span> to get a sequence <span
-class="math inline"><em>x</em><sub>1</sub>, …, <em>x</em><sub><em>a</em></sub></span>.
-Now, repeat the same experiment with pulling random integers between 0
-and M, and then divide them by <span
-class="math inline"><em>M</em></span> to get another sequence <span
-class="math inline"><em>y</em><sub>1</sub>, …, <em>y</em><sub><em>b</em></sub></span>.
-Now, we got two uniformly random sequences of rational numbers between 0
-and 1. So, these sequences should be similar, right? Wrong!</p>
+class="math inline">\(N\)</span> to get a sequence <span
+class="math inline">\(x_1,\ldots,x_a\)</span>. Now, repeat the same
+experiment with pulling random integers between 0 and M, and then divide
+them by <span class="math inline">\(M\)</span> to get another sequence
+<span class="math inline">\(y_1,\ldots,y_b\)</span>. Now, we got two
+uniformly random sequences of rational numbers between 0 and 1. So,
+these sequences should be similar, right? Wrong!</p>
 <pre><code>(defun test (n m)
    (mapcar (lambda (x) (/ x n)) (loop repeat m collect (random n))))
 TEST

@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -67,15 +70,14 @@ graphs</a> to encode topologies of which discrete lattices are specific
 examples.</p>
 <h2 id="topology">Topology</h2>
 <p>As with any classification problem, we have a dataset <span
-class="math inline"><em>D</em> = {<em>x</em><sup>(1)</sup>, …, <em>x</em><sup>(<em>m</em>)</sup>}</span>
-where this time each <span
-class="math inline"><em>x</em><sup>(<em>i</em>)</sup></span> is a vector
-of dimension <span class="math inline"><em>n</em></span>. We would like
-to develop a classification scheme <span
-class="math display"><em>α</em>: <em>D</em> → {1, …, <em>p</em>}</span>
-where <span class="math inline"><em>p</em></span> is determined
-beforehand. But, instead of assuming that each site <span
-class="math inline">1, …, <em>p</em></span> is an independent discrete
+class="math inline">\(D = \{x^{(1)},\ldots,x^{(m)}\}\)</span> where this
+time each <span class="math inline">\(x^{(i)}\)</span> is a vector of
+dimension <span class="math inline">\(n\)</span>. We would like to
+develop a classification scheme <span class="math display">\[
+\alpha\colon D\to \{1,\ldots,p\} \]</span> where <span
+class="math inline">\(p\)</span> is determined beforehand. But, instead
+of assuming that each site <span
+class="math inline">\(1,\ldots,p\)</span> is an independent discrete
 entity, we will assume that there is <em>topology</em>. That is some
 sites are neighbors, ie. within <em>a vicinity</em> of each other. Since
 we work with finite sets, the best description of such a neighborhood
@@ -100,35 +102,33 @@ classes.</p>
 the classes) in which every vertex (class) is labelled (called
 <em>weights</em>) by a numerical vector of the same dimension as the
 dimensions of the vectors in our dataset <span
-class="math inline"><em>D</em></span>. We will perform iterations on
-this graph. In each iteration, we take a small sample <span
-class="math inline"><em>S</em></span> of points from <span
-class="math inline"><em>D</em></span>. Then for each <span
-class="math inline"><em>v</em> ∈ <em>S</em></span> we find the vertex
-<span class="math inline"><em>α</em></span> whose weight <span
-class="math inline"><em>ω</em>(<em>α</em>)</span> is closest to <span
-class="math inline"><em>v</em></span>, measured by a fixed distance
-function. Then we update the weight vector <span
-class="math inline"><em>ω</em>(<em>α</em>)</span> using <span
-class="math inline"><em>v</em></span>, and every <span
-class="math inline"><em>ω</em>(<em>β</em>)</span> where <span
-class="math inline"><em>β</em></span> runs over all neighbors of <span
-class="math inline"><em>α</em></span>. In order to simplify our
+class="math inline">\(D\)</span>. We will perform iterations on this
+graph. In each iteration, we take a small sample <span
+class="math inline">\(S\)</span> of points from <span
+class="math inline">\(D\)</span>. Then for each <span
+class="math inline">\(v\in S\)</span> we find the vertex <span
+class="math inline">\(\alpha\)</span> whose weight <span
+class="math inline">\(\omega(\alpha)\)</span> is closest to <span
+class="math inline">\(v\)</span>, measured by a fixed distance function.
+Then we update the weight vector <span
+class="math inline">\(\omega(\alpha)\)</span> using <span
+class="math inline">\(v\)</span>, and every <span
+class="math inline">\(\omega(\beta)\)</span> where <span
+class="math inline">\(\beta\)</span> runs over all neighbors of <span
+class="math inline">\(\alpha\)</span>. In order to simplify our
 algorithm, we will assume that every vertex is neighboring itself so
 that when we iterate over the neighbors of a vertex <span
-class="math inline"><em>α</em></span>, we also update the weight <span
-class="math inline"><em>ω</em>(<em>α</em>)</span>. The update procedure
-is described below in detail. We finish the iteration when weights
+class="math inline">\(\alpha\)</span>, we also update the weight <span
+class="math inline">\(\omega(\alpha)\)</span>. The update procedure is
+described below in detail. We finish the iteration when weights
 stabilize.</p>
-<p>The update procedure is of the form <span
-class="math display"><em>w</em> = <em>w</em> + <em>ϕ</em>(<em>w</em>,<em>v</em>)(<em>v</em>−<em>w</em>)</span>
-where <span class="math inline"><em>w</em></span> is the weight of a
-vertex and <span class="math inline"><em>v</em></span> is the data
-point. we would like to have adjustment parameter <span
-class="math inline"><em>ϕ</em>(<em>w</em>,<em>v</em>)</span> depend only
-on the distance <span
-class="math inline"><em>d</em>(<em>w</em>,<em>v</em>)</span>, and
-preferably a fast decreasing one too.</p>
+<p>The update procedure is of the form <span class="math display">\[ w =
+w + \phi(w,v) (v - w) \]</span> where <span
+class="math inline">\(w\)</span> is the weight of a vertex and <span
+class="math inline">\(v\)</span> is the data point. we would like to
+have adjustment parameter <span class="math inline">\(\phi(w,v)\)</span>
+depend only on the distance <span class="math inline">\(d(w,v)\)</span>,
+and preferably a fast decreasing one too.</p>
 <p>We describe our algorithm in pseudo-code as follows:</p>
 <pre><code>Algorithm SelfOrganizingMap
 Input:
@@ -295,8 +295,8 @@ neighbors with 35, 5, 11, 30, 0, 6, 31, 1 and 7.</p>
                    :initial-contents
                    (loop repeat (* 29 29) collect (random 256)))))          </code></pre>
 <p>And we run the SOM code using the <span
-class="math inline"><em>L</em><sup>1</sup></span>-distance, a.k.a.
-<em>taxi-cab</em> distance</p>
+class="math inline">\(L^1\)</span>-distance, a.k.a. <em>taxi-cab</em>
+distance</p>
 <pre><code>(defun taxi-cab (v w) 
    (/ (reduce &#39;+ (map &#39;list 
                       (lambda (i j) (abs (- i j))) 

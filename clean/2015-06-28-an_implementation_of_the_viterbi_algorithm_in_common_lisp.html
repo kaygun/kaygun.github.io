@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -56,64 +59,60 @@
 implementation of the Viterbi algorithm in Common Lisp</h1>
 <h2 id="the-setup">The setup</h2>
 <p>Assume we a discrete sequence of observations <span
-class="math inline"><em>x</em><sub>1</sub>, …, <em>x</em><sub><em>n</em></sub></span>
-where each observation can be assigned a label from a finite set <span
-class="math inline"><em>y</em><sub>1</sub>, …, <em>y</em><sub><em>m</em></sub></span>.
-Assume also that we know the probability distribution for the labels
-<span class="math inline"><em>p</em>(<em>y</em>)</span>, and the
-probability of seeing an observation <span
-class="math inline"><em>x</em></span> under the label <span
-class="math inline"><em>y</em></span> as <span
-class="math inline"><em>p</em>(<em>x</em>∥<em>y</em>)</span>. Finally,
-assume that we also have transition probabilities: seeing label <span
-class="math inline"><em>y</em>′</span> right after seeing a label <span
-class="math inline"><em>y</em></span> as <span
-class="math inline"><em>p</em>(<em>y</em>′∥<em>y</em>)</span>.</p>
+class="math inline">\(x_1,\ldots,x_n\)</span> where each observation can
+be assigned a label from a finite set <span
+class="math inline">\(y_1,\ldots,y_m\)</span>. Assume also that we know
+the probability distribution for the labels <span
+class="math inline">\(p(y)\)</span>, and the probability of seeing an
+observation <span class="math inline">\(x\)</span> under the label <span
+class="math inline">\(y\)</span> as <span
+class="math inline">\(p(x\|y)\)</span>. Finally, assume that we also
+have transition probabilities: seeing label <span
+class="math inline">\(y&#39;\)</span> right after seeing a label <span
+class="math inline">\(y\)</span> as <span
+class="math inline">\(p(y&#39;\|y)\)</span>.</p>
 <h2 id="the-problem">The problem</h2>
-<p>Find an assignment of labels <span
-class="math inline">ℓ: {1, …, <em>n</em>} → {1, …, <em>m</em>}</span>
-such that the sequence <span
-class="math display"><em>y</em><sub>ℓ(1)</sub>, …, <em>y</em><sub>ℓ(<em>n</em>)</sub></span>
-is the most likely among all such sequences.</p>
+<p>Find an assignment of labels <span class="math inline">\(\ell\colon
+\{1,\ldots,n\}\to \{1,\ldots,m\}\)</span> such that the sequence <span
+class="math display">\[
+y_{\ell(1)},\ldots,y_{\ell(n)} \]</span> is the most likely among all
+such sequences.</p>
 <h2 id="the-theoretical-solution">The theoretical solution</h2>
 <p>From <a href="https://en.wikipedia.org/wiki/Bayes%27_theorem">Bayes’
-Theorem</a> we see that <span class="math display">$$ p(y\|x) =
-\frac{p(x\|y)p(y)}{p(x)} $$</span> This means, given a labeling scheme
-<span
-class="math inline">ℓ: {1, …, <em>n</em>} → {1, …, <em>m</em>}</span>,
-the probability of the sequence of labels is <span
-class="math display">$$
+Theorem</a> we see that <span class="math display">\[ p(y\|x) =
+\frac{p(x\|y)p(y)}{p(x)} \]</span> This means, given a labeling scheme
+<span class="math inline">\(\ell\colon \{1,\ldots,n\}\to
+\{1,\ldots,m\}\)</span>, the probability of the sequence of labels is
+<span class="math display">\[
 \pi(\ell) = \prod_{i=1}^n p(y_{\ell(i)}\|x_i)
-p(y_{\ell(i+i)}\|y_{\ell(i)}) $$</span> After using Bayes’ Theorem we
-get <span class="math display">$$ \pi(\ell) = \prod_{i=1}^n
+p(y_{\ell(i+i)}\|y_{\ell(i)}) \]</span> After using Bayes’ Theorem we
+get <span class="math display">\[ \pi(\ell) = \prod_{i=1}^n
 \frac{p(x_i\|y_{\ell(i)})p(y_{\ell(i)})}{p(x_i)}
-\prod_{i=1}^{n-1} p(y_{\ell(i+1)}\|y_{\ell(i)}) $$</span> Since <span
-class="math inline"><em>p</em>(<em>x</em><sub><em>i</em></sub>)</span>
-does not depend on <span class="math inline">ℓ</span> we can remove it
-and we get <span class="math display">$$
+\prod_{i=1}^{n-1} p(y_{\ell(i+1)}\|y_{\ell(i)}) \]</span> Since <span
+class="math inline">\(p(x_i)\)</span> does not depend on <span
+class="math inline">\(\ell\)</span> we can remove it and we get <span
+class="math display">\[
 \pi(\ell) \sim \prod_{i=1}^n p(x_i\|y_{\ell(i)})
-p(y_{\ell(i)}) p(y_{\ell(i)}\|y_{\ell(i-1)}) $$</span> Here, we use the
-convention that <span
-class="math inline"><em>p</em>(<em>y</em><sub>ℓ(1)</sub>∥<em>y</em><sub>ℓ(0)</sub>) = 1</span>.
-Now, we need to maximize this quantity by choosing a suitable <span
-class="math inline">ℓ</span>.</p>
+p(y_{\ell(i)}) p(y_{\ell(i)}\|y_{\ell(i-1)}) \]</span> Here, we use the
+convention that <span class="math inline">\(p(y_{\ell(1)}\|y_{\ell(0)})
+= 1\)</span>. Now, we need to maximize this quantity by choosing a
+suitable <span class="math inline">\(\ell\)</span>.</p>
 <h2 id="recursion-with-no-memory">Recursion with no memory</h2>
 <p>If we consider the problem one step at a time (which does not give
 the correct answer) the problem recursively reduces to:</p>
 <blockquote>
-<p>Given <span class="math inline">ℓ(<em>i</em>−1)</span>, find <span
-class="math inline">ℓ(<em>i</em>) ∈ {1, …, <em>m</em>}</span> such that
-the quantity <span
-class="math display"><em>p</em>(<em>x</em><sub><em>i</em></sub>∥<em>y</em><sub>ℓ(<em>i</em>)</sub>)<em>p</em>(<em>y</em><sub>ℓ(<em>i</em>)</sub>)<em>p</em>(<em>y</em><sub>ℓ(<em>i</em>)</sub>∥<em>y</em><sub>ℓ(<em>i</em>−1)</sub>)</span>
-is maximal.</p>
+<p>Given <span class="math inline">\(\ell(i-1)\)</span>, find <span
+class="math inline">\(\ell(i)\in \{1,\ldots,m\}\)</span> such that the
+quantity <span class="math display">\[ p(x_i\|y_{\ell(i)})
+p(y_{\ell(i)})
+p(y_{\ell(i)}\|y_{\ell(i-1)}) \]</span> is maximal.</p>
 </blockquote>
 <p>For now, let us run with this. The recursive reduction tells us that
-if we define a function <span
-class="math inline"><em>a</em>(<em>k</em>,<em>j</em>,<em>i</em>)</span>
-where <span
-class="math display"><em>a</em>(<em>k</em>,<em>j</em>,<em>i</em>) = <em>p</em>(<em>x</em><sub><em>j</em></sub>∥<em>y</em><sub><em>k</em></sub>)<em>p</em>(<em>y</em><sub><em>k</em></sub>)<em>p</em>(<em>y</em><sub><em>k</em></sub>∥<em>y</em><sub><em>i</em></sub>)</span>
-then <span
-class="math display">ℓ(<em>i</em>) = argmax<sub><em>k</em></sub><em>a</em>(<em>k</em>,<em>i</em>,ℓ(<em>i</em>−1))</span></p>
+if we define a function <span class="math inline">\(a(k,j,i)\)</span>
+where <span class="math display">\[ a(k,j,i) = p(x_j\|y_k)
+p(y_k) p(y_k\|y_i) \]</span> then <span class="math display">\[ \ell(i)
+= \text{argmax}_k
+a(k,i,\ell(i-1)) \]</span></p>
 <h2 id="an-implementation">An implementation</h2>
 <p>I will assume that the probabilities are defined as arrays, with one
 or two indices depending on whether we have ordinary probability

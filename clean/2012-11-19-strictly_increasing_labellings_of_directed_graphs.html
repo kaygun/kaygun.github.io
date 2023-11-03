@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,110 +58,95 @@
 <h1 id="strictly-increasing-labellings-of-directed-graphs">Strictly
 Increasing Labellings of Directed Graphs</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Assume <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> is a
-directed graph with no oriented cycles. Today, I would like to show that
-one can label the vertices of <span
-class="math inline"><em>G</em></span> in such a way <span
-class="math inline"><em>ϕ</em>: <em>V</em> → ℕ</span> that (1) <span
-class="math inline"><em>ϕ</em></span> is one-to-one and (2) on every
-path <span
-class="math inline">(<em>v</em><sub>0</sub>,…,<em>v</em><sub><em>n</em></sub>)</span>
-in <span class="math inline"><em>G</em></span> the labels are stricly
-increasing <span
-class="math inline"><em>ϕ</em>(<em>v</em><sub>0</sub>) &lt; ⋯ &lt; <em>ϕ</em>(<em>v</em><sub><em>n</em></sub>)</span>.</p>
+<p>Assume <span class="math inline">\(G = (V,E)\)</span> is a directed
+graph with no oriented cycles. Today, I would like to show that one can
+label the vertices of <span class="math inline">\(G\)</span> in such a
+way <span class="math inline">\(\phi\colon V\to \mathbb{N}\)</span> that
+(1) <span class="math inline">\(\phi\)</span> is one-to-one and (2) on
+every path <span class="math inline">\((v_0,\ldots,v_n)\)</span> in
+<span class="math inline">\(G\)</span> the labels are stricly increasing
+<span
+class="math inline">\(\phi(v_0)&lt;\cdots&lt;\phi(v_n)\)</span>.</p>
 <h2 id="a-solution">A Solution</h2>
 <p>Before venturing in solving this problem, let me start with a simple
 lemma I am going to need later:</p>
 <blockquote>
-<p>Every cycle-free finite directed graph <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> contains
-at least one source and one sink.</p>
+<p>Every cycle-free finite directed graph <span class="math inline">\(G
+= (V,E)\)</span> contains at least one source and one sink.</p>
 </blockquote>
 <p>I will give a proof for the source case. The proof for the existence
 of a sink is similar. Take an arbitrary vertex <span
-class="math inline"><em>v</em><sub>0</sub> ∈ <em>V</em></span>. If it is
-a source, we are done. If <span
-class="math inline"><em>v</em><sub>0</sub></span> is not a source then
-there is another vertex <span
-class="math inline"><em>v</em><sub>1</sub> ∈ <em>V</em> \ {<em>v</em><sub>0</sub>}</span>
-such that <span
-class="math inline">(<em>v</em><sub>1</sub>,<em>v</em><sub>0</sub>)</span>
-is a directed edge. Proceed inductively and form a sequence <span
-class="math inline"><em>v</em><sub><em>n</em> + 1</sub> ∈ <em>V</em> \ {<em>v</em><sub><em>n</em></sub>}</span>
-such that <span
-class="math inline">(<em>v</em><sub><em>i</em> + 1</sub>,<em>v</em><sub><em>i</em></sub>)</span>
-is a directed edge. Since <span class="math inline"><em>G</em></span> is
-finite, this process can not continue indefinitely. There are two
-possibilities: either we got a source at some step and we stop, or we
-got a repetition: we find <span
-class="math inline"><em>v</em><sub><em>i</em></sub> = <em>v</em><sub><em>j</em></sub></span>
-for some <span class="math inline"><em>i</em> <em>j</em></span>. But the
-latter case is a contradiction as there are no oriented cycles. So, the
-process must end with a source.</p>
+class="math inline">\(v_0\in V\)</span>. If it is a source, we are done.
+If <span class="math inline">\(v_0\)</span> is not a source then there
+is another vertex <span class="math inline">\(v_1\in
+V\setminus\{v_0\}\)</span> such that <span
+class="math inline">\((v_1,v_0)\)</span> is a directed edge. Proceed
+inductively and form a sequence <span class="math inline">\(v_{n+1}\in
+V\setminus \{v_n\}\)</span> such that <span
+class="math inline">\((v_{i+1},v_i)\)</span> is a directed edge. Since
+<span class="math inline">\(G\)</span> is finite, this process can not
+continue indefinitely. There are two possibilities: either we got a
+source at some step and we stop, or we got a repetition: we find <span
+class="math inline">\(v_i=v_j\)</span> for some <span
+class="math inline">\(i\&gt;j\)</span>. But the latter case is a
+contradiction as there are no oriented cycles. So, the process must end
+with a source.</p>
 <p>I will solve the original question using induction on the number of
-vertices. Assume <span class="math inline"><em>G</em></span> has only
-one vertex. The problem is trivial as the only path is the trival path
-of length 0 on the single vertex. So, assume in every cycle-free
-directed graph on <span class="math inline"><em>n</em></span> vertices
-the statement is true. Take a graph on <span
-class="math inline"><em>n</em> + 1</span> vertices. We know because of
-the lemma that there is a source. Take such a source <span
-class="math inline"><em>s</em> ∈ <em>V</em></span> and remove <span
-class="math inline"><em>s</em></span> from the graph together with all
-edges starting at <span class="math inline"><em>s</em></span>. The
-remaining graph <span class="math inline"><em>G</em>′</span> contains
-<span class="math inline"><em>n</em></span> vertices and has no oriented
-cycles like <span class="math inline"><em>G</em></span>. Then because of
-the induction hypothesis we can find a one-to-one labelling <span
-class="math inline"><em>ψ</em>: <em>V</em> \ {<em>s</em>} → ℕ</span>
-such that on every path in <span class="math inline"><em>G</em>′</span>
+vertices. Assume <span class="math inline">\(G\)</span> has only one
+vertex. The problem is trivial as the only path is the trival path of
+length 0 on the single vertex. So, assume in every cycle-free directed
+graph on <span class="math inline">\(n\)</span> vertices the statement
+is true. Take a graph on <span class="math inline">\(n+1\)</span>
+vertices. We know because of the lemma that there is a source. Take such
+a source <span class="math inline">\(s\in V\)</span> and remove <span
+class="math inline">\(s\)</span> from the graph together with all edges
+starting at <span class="math inline">\(s\)</span>. The remaining graph
+<span class="math inline">\(G&#39;\)</span> contains <span
+class="math inline">\(n\)</span> vertices and has no oriented cycles
+like <span class="math inline">\(G\)</span>. Then because of the
+induction hypothesis we can find a one-to-one labelling <span
+class="math inline">\(\psi\colon V\setminus\{s\}\to \mathbb{N}\)</span>
+such that on every path in <span class="math inline">\(G&#39;\)</span>
 the labels are strictly increasing. Now define <span
-class="math inline"><em>ϕ</em>: <em>V</em> → ℕ</span> by letting <span
-class="math inline"><em>ϕ</em>(<em>s</em>) = 1</span> and <span
-class="math inline"><em>ϕ</em>(<em>v</em>) = <em>ψ</em>(<em>v</em>) + 2</span>
-if <span class="math inline"><em>v</em> ≠ <em>s</em></span>.</p>
-<p>Assume <span
-class="math inline"><em>ϕ</em>(<em>v</em>) = <em>ϕ</em>(<em>w</em>)</span>
-for some vertices in <span class="math inline"><em>G</em></span>. There
-are two cases: (1) either one of these vertices is <span
-class="math inline"><em>s</em></span>, or (2) <span
-class="math inline"><em>v</em>, <em>w</em> ∈ <em>V</em> \ {<em>s</em>}</span>.
-In the first case assume without loss of generality that <span
-class="math inline"><em>v</em> = <em>s</em></span> then <span
-class="math inline"><em>ϕ</em>(<em>v</em>) = 1 = <em>ϕ</em>(<em>w</em>)</span>.
-This will yield <span class="math inline"><em>w</em> = <em>s</em></span>
-as well because in this labelling the only vertex with the label <span
-class="math inline">1</span> is <span
-class="math inline"><em>s</em></span>. In the second case <span
-class="math inline"><em>ϕ</em>(<em>v</em>) = <em>ψ</em>(<em>v</em>) + 2 = <em>ψ</em>(<em>w</em>) + 2 = <em>ϕ</em>(<em>w</em>)</span>
+class="math inline">\(\phi\colon V\to \mathbb{N}\)</span> by letting
+<span class="math inline">\(\phi(s) = 1\)</span> and <span
+class="math inline">\(\phi(v) = \psi(v) + 2\)</span> if <span
+class="math inline">\(v\neq s\)</span>.</p>
+<p>Assume <span class="math inline">\(\phi(v)=\phi(w)\)</span> for some
+vertices in <span class="math inline">\(G\)</span>. There are two cases:
+(1) either one of these vertices is <span
+class="math inline">\(s\)</span>, or (2) <span
+class="math inline">\(v,w\in V\setminus\{s\}\)</span>. In the first case
+assume without loss of generality that <span
+class="math inline">\(v=s\)</span> then <span
+class="math inline">\(\phi(v)=1=\phi(w)\)</span>. This will yield <span
+class="math inline">\(w=s\)</span> as well because in this labelling the
+only vertex with the label <span class="math inline">\(1\)</span> is
+<span class="math inline">\(s\)</span>. In the second case <span
+class="math inline">\(\phi(v) = \psi(v)+2 = \psi(w)+2 = \phi(w)\)</span>
 since neither elements are the source <span
-class="math inline"><em>s</em></span>. Then we get <span
-class="math inline"><em>v</em> = <em>w</em></span> as <span
-class="math inline"><em>ψ</em></span> was one-to-one. This finishes the
-proof that <span class="math inline"><em>ϕ</em></span> is
-one-to-one.</p>
+class="math inline">\(s\)</span>. Then we get <span
+class="math inline">\(v=w\)</span> as <span
+class="math inline">\(\psi\)</span> was one-to-one. This finishes the
+proof that <span class="math inline">\(\phi\)</span> is one-to-one.</p>
 <p>As for the fact that labels are stricly increasing on every path,
 take an arbitrary path <span
-class="math inline">(<em>v</em><sub>0</sub>,…,<em>v</em><sub><em>n</em></sub>)</span>
-in <span class="math inline"><em>G</em></span>. There are two cases: (1)
-<span class="math inline"><em>v</em><sub>0</sub> = <em>s</em></span> and
-(2) <span
-class="math inline"><em>v</em><sub>0</sub> ≠ <em>s</em></span>. In the
-first case <span
-class="math inline"><em>v</em><sub>0</sub> = <em>s</em></span> and <span
-class="math inline"><em>ϕ</em>(<em>v</em><sub><em>i</em></sub>) = <em>ψ</em>(<em>v</em><sub><em>i</em></sub>) + 2</span>
-for all <span class="math inline"><em>i</em> = 1, …, <em>n</em></span>
-and since <span class="math inline"><em>ψ</em></span> is strictly
-increasing on every path in <span
-class="math inline"><em>G</em>′</span>, we must have <span
-class="math display">1 = <em>ϕ</em>(<em>v</em><sub>0</sub>) &lt; <em>ψ</em>(<em>v</em><sub>1</sub>) + 2 &lt; ⋯ &lt; <em>ψ</em>(<em>v</em><sub><em>n</em></sub>) + 2</span>
-In the second case <span
-class="math inline"><em>ϕ</em>(<em>v</em><sub><em>i</em></sub>) = <em>ψ</em>(<em>v</em><sub><em>i</em></sub>) + 2</span>
-for all <span class="math inline"><em>i</em> = 0, …, <em>n</em></span>
-and therefore <span
-class="math display"><em>ϕ</em>(<em>v</em><sub>1</sub>) = <em>ψ</em>(<em>v</em><sub>1</sub>) + 2 &lt; <em>ψ</em>(<em>v</em><sub>2</sub>) + 2 &lt; ⋯ &lt; <em>ψ</em>(<em>v</em><sub><em>n</em></sub>) + 2</span>
-This finishes the proof.</p>
+class="math inline">\((v_0,\ldots,v_n)\)</span> in <span
+class="math inline">\(G\)</span>. There are two cases: (1) <span
+class="math inline">\(v_0=s\)</span> and (2) <span
+class="math inline">\(v_0\neq s\)</span>. In the first case <span
+class="math inline">\(v_0 = s\)</span> and <span
+class="math inline">\(\phi(v_i)=\psi(v_i)+2\)</span> for all <span
+class="math inline">\(i=1,\ldots,n\)</span> and since <span
+class="math inline">\(\psi\)</span> is strictly increasing on every path
+in <span class="math inline">\(G&#39;\)</span>, we must have <span
+class="math display">\[ 1 =
+\phi(v_0)&lt;\psi(v_1)+2&lt;\cdots&lt;\psi(v_n)+2 \]</span> In the
+second case <span class="math inline">\(\phi(v_i)=\psi(v_i)+2\)</span>
+for all <span class="math inline">\(i=0,\ldots,n\)</span> and therefore
+<span class="math display">\[ \phi(v_1) = \psi(v_1) + 2 &lt; \psi(v_2) +
+2 &lt;\cdots&lt;
+\psi(v_n) + 2 \]</span> This finishes the proof.</p>
 <div id="footer">
 <p><span id="timestamp">November 19th, 2012 2:46pm</span></p>
 </div>

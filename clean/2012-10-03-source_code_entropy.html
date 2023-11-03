@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -63,19 +66,17 @@ the more random the signal is the more information it contains.</p>
 code from various languages.</p>
 <h2 id="calculation">Calculation</h2>
 <p>The entropy of a text which uses an alphabet of <span
-class="math inline"><em>n</em></span> symbols is <span
-class="math display">$$
-\sum_{i=1}^n - p_i \log(p_i) $$</span> where <span
-class="math inline"><em>p</em><sub><em>i</em></sub></span> is the
-probability of seeing <span class="math inline"><em>i</em></span>-th
-letter in the text, assuming we order our alphabet <span
-class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>n</em></sub></span>.
+class="math inline">\(n\)</span> symbols is <span
+class="math display">\[
+\sum_{i=1}^n - p_i \log(p_i) \]</span> where <span
+class="math inline">\(p_i\)</span> is the probability of seeing <span
+class="math inline">\(i\)</span>-th letter in the text, assuming we
+order our alphabet <span class="math inline">\(a_1,\ldots,a_n\)</span>.
 Thus if we had all of our letters appearing equally likely, the entropy
-would have been <span class="math display">$$
-n\cdot\left(\frac{1}{n}\log(n)\right) = \log(n) $$</span> In our case we
+would have been <span class="math display">\[
+n\cdot\left(\frac{1}{n}\log(n)\right) = \log(n) \]</span> In our case we
 consider the letters 33 to 126 in the ASCII table. This is a total of 94
-letters giving <span
-class="math inline"><em>l</em><em>o</em><em>g</em>(94) = 4.543</span>.</p>
+letters giving <span class="math inline">\(log(94) = 4.543\)</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>For the purposes I set up, I need to calculate the entropy of a given
 text. This could be a news article, or source code or a text of a web

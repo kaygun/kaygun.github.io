@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -138,11 +141,10 @@ uniformly random sequences of letters “a”, “t”, “g” and “c”.</p>
 
 RANDOM-NGRAMS</code></pre>
 <p>Now, I will get the entropy for n-grams from <span
-class="math inline"><em>n</em> = 1</span> to <span
-class="math inline"><em>n</em> = 20</span> as did before and since the
-genome data contains <span
-class="math inline">4.6 × 10<sup>6</sup></span> characters I will create
-a uniformly random data in equal size</p>
+class="math inline">\(n=1\)</span> to <span
+class="math inline">\(n=20\)</span> as did before and since the genome
+data contains <span class="math inline">\(4.6\times 10^6\)</span>
+characters I will create a uniformly random data in equal size</p>
 <pre><code>(let* ((gene (analyze &quot;../data/gene.txt&quot; 20 1.0))
        (temp (loop for i from 1 to 20 collect 
                  (entropy (random-ngrams i 47538))))

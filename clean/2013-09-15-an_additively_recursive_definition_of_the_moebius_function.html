@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -62,40 +65,40 @@ has been the subject of few recent conjectures: see <a
 href="http://gilkalai.wordpress.com/2011/02/21/the-ac0-prime-number-conjecture/">here</a>
 and <a
 href="http://terrytao.wordpress.com/2012/10/14/the-chowla-conjecture-and-the-sarnak-conjecture/">here</a>.</p>
-<p>It is defined as <span class="math display">$$ \mu(n) = \begin{cases}
+<p>It is defined as <span class="math display">\[ \mu(n) = \begin{cases}
 1 &amp; \text{ if } n=1\\
-(-1)^k &amp; \text{ if $n=p_1\cdots p_k$ where $p_i$'s are distinct
-primes}\\ 0 &amp; \text{ otherwise} \end{cases} $$</span></p>
+(-1)^k &amp; \text{ if $n=p_1\cdots p_k$ where $p_i$&#39;s are distinct
+primes}\\ 0 &amp; \text{ otherwise} \end{cases} \]</span></p>
 <p>Today, I will give a recursive definition of <span
-class="math inline"><em>μ</em></span> which does not require you to
-factor <span class="math inline"><em>n</em></span>, or use a variation
-of <a href="http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Sieve of
+class="math inline">\(\mu\)</span> which does not require you to factor
+<span class="math inline">\(n\)</span>, or use a variation of <a
+href="http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Sieve of
 Eratosthenes</a>. In fact, the only thing you have to know is <span
-class="math inline"><em>μ</em>(1)</span>.</p>
+class="math inline">\(\mu(1)\)</span>.</p>
 <h2 id="solution">Solution</h2>
-The key fact I am going to use is <span class="math display">$$
+The key fact I am going to use is <span class="math display">\[
 \sum_{q\|n}\mu(q) =
 \begin{cases} 1&amp; \text{ if } n=1\\ 0&amp; \text{ otherwise}
-\end{cases} $$</span> Then <span class="math display">$$ 1 =
+\end{cases} \]</span> Then <span class="math display">\[ 1 =
 \sum_{m=1}^n\sum_{q\|m} \mu(q)
-$$</span> Let me define <span class="math display">$$ \nu(m,q) =
+\]</span> Let me define <span class="math display">\[ \nu(m,q) =
 \begin{cases} 1 &amp; \text{ if }
-q\|m\\ 0 &amp; \text{ otherwise} \end{cases} $$</span> Then
-<p>Since the inner sum <span class="math inline">$\sum_{m=q}^n\nu(m,q) =
-\left\lfloor\frac{n}{q}\right\rfloor$</span> we get <span
-class="math display">$$ 1 =
-\sum_{q=1}^n\mu(q)\left\lfloor\frac{n}{q}\right\rfloor $$</span> By
-re-arranging the terms we get <span class="math display">$$ \mu(n) = 1 -
-\sum_{q=1}^{n-1}\left\lfloor\frac{n}{q}\right\rfloor\mu(q) $$</span> We
-know that <span class="math inline"><em>μ</em>(1) = 1</span>. See if we
-can get <span class="math inline"><em>μ</em>(<em>i</em>)</span>
-correctly for <span class="math inline"><em>i</em> = 2, 3, 4</span>:</p>
-<p><span
-class="math display"><em>μ</em>(2) = 1 − 2<em>μ</em>(1) =  − 1</span></p>
-<p><span
-class="math display"><em>μ</em>(3) = 1 − 3<em>μ</em>(1) − <em>μ</em>(2) = 1 − 3 + 1 =  − 1</span></p>
-<p><span
-class="math display"><em>μ</em>(4) = 1 − 4<em>μ</em>(1) − 2<em>μ</em>(2) − <em>μ</em>(3) = 1 − 4 + 2 + 1 = 0</span></p>
+q\|m\\ 0 &amp; \text{ otherwise} \end{cases} \]</span> Then
+<p>Since the inner sum <span class="math inline">\(\sum_{m=q}^n\nu(m,q)
+= \left\lfloor\frac{n}{q}\right\rfloor\)</span> we get <span
+class="math display">\[ 1 =
+\sum_{q=1}^n\mu(q)\left\lfloor\frac{n}{q}\right\rfloor \]</span> By
+re-arranging the terms we get <span class="math display">\[ \mu(n) = 1 -
+\sum_{q=1}^{n-1}\left\lfloor\frac{n}{q}\right\rfloor\mu(q) \]</span> We
+know that <span class="math inline">\(\mu(1)=1\)</span>. See if we can
+get <span class="math inline">\(\mu(i)\)</span> correctly for <span
+class="math inline">\(i=2,3,4\)</span>:</p>
+<p><span class="math display">\[ \mu(2) = 1 - 2\mu(1) = -1 \]</span></p>
+<p><span class="math display">\[ \mu(3) = 1 - 3\mu(1) - \mu(2) = 1 - 3 +
+1 = -1 \]</span></p>
+<p><span class="math display">\[ \mu(4) = 1 - 4\mu(1) - 2\mu(2) - \mu(3)
+= 1 - 4 + 2 + 1 = 0
+\]</span></p>
 <h2 id="an-implementation-in-c">An implementation in C</h2>
 <pre><code> #include&lt;stdio.h&gt;
  #include&lt;math.h&gt;
@@ -150,13 +153,12 @@ class="math display"><em>μ</em>(4) = 1 − 4<em>μ</em>(1) − 2<em
  }</code></pre>
 <h2 id="discussion">Discussion</h2>
 <p>I was not aware of such an additively recursive definition of <span
-class="math inline"><em>μ</em>(<em>n</em>)</span>. The time complexity
-of the implementation is slightly worse than <span
-class="math inline">𝒪(<em>n</em><sup>2</sup>)</span>. Since I am using
-only the four basic arithmetic operations, if-then conditionals, and
-bounded for loops in the algorithm with recursive calls, it is easy to
-see that <span class="math inline"><em>μ</em>(<em>n</em>)</span> must be
-<a
+class="math inline">\(\mu(n)\)</span>. The time complexity of the
+implementation is slightly worse than <span
+class="math inline">\(\mathcal{O}(n^2)\)</span>. Since I am using only
+the four basic arithmetic operations, if-then conditionals, and bounded
+for loops in the algorithm with recursive calls, it is easy to see that
+<span class="math inline">\(\mu(n)\)</span> must be <a
 href="http://en.wikipedia.org/wiki/Primitive_recursive_function">primitive
 recursive</a>.</p>
 <div id="footer">

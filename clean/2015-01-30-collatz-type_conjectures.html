@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -54,25 +57,22 @@
 <body>
 <h1 id="collatz-type-conjectures">Collatz-type Conjectures</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
-<p>Assume <span class="math inline"><em>p</em> 1</span> is an integer.
-For any natural number <span class="math inline"><em>n</em> ∈ ℕ</span>
-define two functions <span class="math display">$$ f_p(n) =
-\begin{cases}
+<p>Assume <span class="math inline">\(p\&gt;1\)</span> is an integer.
+For any natural number <span
+class="math inline">\(n\in\mathbb{N}\)</span> define two functions <span
+class="math display">\[ f_p(n) = \begin{cases}
 f_p(n/p) &amp; \text{if } n\text{ mod } p = 0 \\ n &amp;
 \text{otherwise}
-\end{cases}$$</span></p>
-<p>and <span class="math display">$$ g_p(n) = \begin{cases} 1 &amp;
+\end{cases}\]</span></p>
+<p>and <span class="math display">\[ g_p(n) = \begin{cases} 1 &amp;
 \text{if } n=1\\ f_p(n) &amp;
 \text{if $n\&gt;1$ and $n$ mod $p = 0$} \\ f_p(np + n + p -
-(n\text{ mod } p)) &amp; \text{otherwise} \end{cases} $$</span></p>
+(n\text{ mod } p)) &amp; \text{otherwise} \end{cases} \]</span></p>
 <p>So, the question is given the recursive sequence <span
-class="math inline"><em>a</em><sub><em>n</em> + 1</sub> = <em>g</em><sub><em>p</em></sub>(<em>a</em><sub><em>n</em></sub>)</span>
-with an initial <span
-class="math inline"><em>a</em><sub>0</sub> ∈ ℕ</span>, is it true that
-<span class="math inline"><em>a</em><sub><em>n</em></sub></span> always
-stabilizes at 1?</p>
-<p>The case <span class="math inline"><em>p</em> = 2</span> is the
-famous <a
+class="math inline">\(a_{n+1} = g_p(a_n)\)</span> with an initial <span
+class="math inline">\(a_0\in\mathbb{N}\)</span>, is it true that <span
+class="math inline">\(a_n\)</span> always stabilizes at 1?</p>
+<p>The case <span class="math inline">\(p=2\)</span> is the famous <a
 href="http://mathworld.wolfram.com/CollatzProblem.html">Collatz
 Conjecture</a>.</p>
 <h2 id="someexperiments">Some experiments</h2>
@@ -92,11 +92,10 @@ G</code></pre>
 <p>Now, a function which calculates the lengths of the recursive
 sequences for a given initial value. Here, the function terminates if
 <code>g</code> hits 1 or the recursive sequence <span
-class="math inline"><em>a</em><sub><em>k</em> + 1</sub> = <em>g</em>(<em>a</em><sub><em>k</em></sub>)</span>
-contains a cycle. A cycle is a subsequence of elements <span
-class="math inline">(<em>a</em><sub><em>k</em></sub>,<em>a</em><sub><em>k</em> + 1</sub>,…,<em>a</em><sub><em>k</em> + <em>m</em></sub>)</span>
-such that <span
-class="math inline"><em>a</em><sub><em>k</em></sub> = <em>a</em><sub><em>k</em> + <em>m</em></sub></span>.</p>
+class="math inline">\(a_{k+1} = g(a_k)\)</span> contains a cycle. A
+cycle is a subsequence of elements <span
+class="math inline">\((a_k,a_{k+1}, \ldots,a_{k+m})\)</span> such that
+<span class="math inline">\(a_k = a_{k+m}\)</span>.</p>
 <pre><code>(defun collatz-length (n p &amp;optional (m 1) (tail nil))
    (let ((res (g n p)))
      (if (or (= res 1) (member res tail))
@@ -130,11 +129,10 @@ EXPERIMENT
  3566 1470 3565 1469 3564 1468 3563 1467 3562 1466 3561 1465 3560 1464 3559
  1463 3558 1462 3557 1461 3556 1460 3555 1459 3554)</code></pre>
 <p>So, the conjecture is for every <span
-class="math inline"><em>p</em> 1</span> and for every <span
-class="math inline"><em>a</em><sub>0</sub></span> initial value, the
-recursive sequence <span
-class="math inline"><em>a</em><sub><em>k</em> + 1</sub> = <em>g</em><sub><em>p</em></sub>(<em>a</em><sub><em>k</em></sub>)</span>
-either contains a cycle or stabilizes at 1.</p>
+class="math inline">\(p\&gt;1\)</span> and for every <span
+class="math inline">\(a_0\)</span> initial value, the recursive sequence
+<span class="math inline">\(a_{k+1} = g_p(a_k)\)</span> either contains
+a cycle or stabilizes at 1.</p>
 <div id="footer">
 <p><span id="timestamp">January 30th, 2015 10:31am</span></p>
 </div>

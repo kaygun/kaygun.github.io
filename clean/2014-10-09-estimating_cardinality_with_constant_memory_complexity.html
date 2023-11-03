@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -78,30 +81,29 @@ hashing the inputs and counting initial segments of these generated hash
 data.</p>
 <p>Today, I am going to describe a much more simplified single pass
 algorithm whose memory complexity is constant.</p>
-<p>Assume <span
-class="math inline">(<em>a</em><sub><em>n</em></sub>)<sub><em>n</em> ∈ ℕ</sub></span>
-is a very long sequence of integers, and assume you have seen an item
-<span class="math inline"><em>x</em></span> in the stream. What is the
-expected number of items you are going to see after <span
-class="math inline"><em>x</em></span> until you see <span
-class="math inline"><em>x</em></span> again? It is a simple statistics
-question. We have <span class="math inline"><em>m</em></span> distinct
-items and each item appears in the stream with a probability of <span
-class="math inline">$\frac{1}{m}$</span>. Thus the number we need is
-given by an infinite series <span class="math display">$$
+<p>Assume <span class="math inline">\((a_n)_{n\in\mathbb{N}}\)</span> is
+a very long sequence of integers, and assume you have seen an item <span
+class="math inline">\(x\)</span> in the stream. What is the expected
+number of items you are going to see after <span
+class="math inline">\(x\)</span> until you see <span
+class="math inline">\(x\)</span> again? It is a simple statistics
+question. We have <span class="math inline">\(m\)</span> distinct items
+and each item appears in the stream with a probability of <span
+class="math inline">\(\frac{1}{m}\)</span>. Thus the number we need is
+given by an infinite series <span class="math display">\[
 \sum_{k=1}^\infty
 \left(1-\frac{1}{m}\right)^{k-1}\frac{k}{m} =
 \frac{1}{m}\frac{d}{dx}
 \left\|_{1-\frac{1}{m}}\left(\frac{1}{1-x}\right)\right. =
 \frac{1}{m}\left.\frac{1}{(1-x)^2}\right\|_{1-\frac{1}{m}} = m
-$$</span> This means, if we get a good statistical estimate for this
+\]</span> This means, if we get a good statistical estimate for this
 number then we can estimate the number of distinct items in out
 stream.</p>
 <h2 id="thecode">The code</h2>
 <p>For the purposes of fixing the terminology, an interval is a
 subsequence of integers appearing in our stream which start and end with
-the same object <span class="math inline"><em>x</em></span> without
-appearing in the middle. We want to find the average lengths of such
+the same object <span class="math inline">\(x\)</span> without appearing
+in the middle. We want to find the average lengths of such
 intervals.</p>
 <p>Without further ado, here is the code:</p>
 <pre><code>(defun estimate (stream m &amp;optional x j n c)
@@ -160,14 +162,13 @@ EXPERIMENT</code></pre>
 (9995.04 497.4946415791833 0.04974946415791833)</code></pre>
 <p>You need to pay attention to the last number: the relative error. I
 played with the number of items to pull from the stream. The optimal
-choice for <span class="math inline"><em>N</em></span> seems to be about
-500 times <span class="math inline"><em>m</em></span> (the number of
-distinct items) to keep the relative error about 5%. My numerical
-experiments indicate that the relative error grows like <span
-class="math inline"><em>o</em>(<em>m</em>/<em>N</em>)</span> where <span
-class="math inline"><em>m</em></span> is the number of distinct items
-and <span class="math inline"><em>N</em></span> is the size of the
-sample.</p>
+choice for <span class="math inline">\(N\)</span> seems to be about 500
+times <span class="math inline">\(m\)</span> (the number of distinct
+items) to keep the relative error about 5%. My numerical experiments
+indicate that the relative error grows like <span
+class="math inline">\(o(m/N)\)</span> where <span
+class="math inline">\(m\)</span> is the number of distinct items and
+<span class="math inline">\(N\)</span> is the size of the sample.</p>
 <h2 id="animperativeversionoftheestimationfunction">An Imperative
 Version of the Estimation Function</h2>
 <p>For those who would prefer a more imperative version of the

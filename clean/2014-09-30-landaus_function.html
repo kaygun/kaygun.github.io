@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -60,16 +63,16 @@ href="http://en.wikipedia.org/wiki/Landau%27s_function">Landau</a>. I
 recommend an <a
 href="http://www.ams.org/mathscinet/search/publdoc.html?arg3=&amp;co4=AND&amp;co5=AND&amp;co6=AND&amp;co7=AND&amp;dr=all&amp;pg4=AUCN&amp;pg5=TI&amp;pg6=PC&amp;pg7=ALLF&amp;pg8=ET&amp;r=1&amp;review_format=html&amp;s4=Miller&amp;s5=The%20maximum%20order%20of%20an%20element%20of%20a%20finite%20symmetric%20group&amp;s6=&amp;s7=&amp;s8=All&amp;vfpref=html&amp;yearRangeFirst=&amp;yearRangeSecond=&amp;yrop=eq">excellent
 article</a> on the subject written by W. Miller.</p>
-<p>If we use <span class="math inline"><em>g</em>(<em>n</em>)</span> the
-denote the maximum order of an element in <span
-class="math inline"><em>Σ</em><sub><em>n</em></sub></span> the symmetric
-group on <span class="math inline"><em>n</em></span>-letters, <a
+<p>If we use <span class="math inline">\(g(n)\)</span> the denote the
+maximum order of an element in <span
+class="math inline">\(\Sigma_n\)</span> the symmetric group on <span
+class="math inline">\(n\)</span>-letters, <a
 href="https://oeis.org/A000793">the sequence</a> is already recorded at
 the <a href="https://oeis.org/">On-Line Encyclopedia of Integer
 Sequences</a>.</p>
 <p>There are different implementations calculating <span
-class="math inline"><em>g</em>(<em>n</em>)</span>. I recommend J.-L.
-Nicolas’ <a href="http://arxiv.org/abs/1312.2569">recent paper</a> at <a
+class="math inline">\(g(n)\)</span>. I recommend J.-L. Nicolas’ <a
+href="http://arxiv.org/abs/1312.2569">recent paper</a> at <a
 href="http://arxiv.org/">arXiv</a> for a more recent overview and
 references.</p>
 <p>There are really fast and efficient implementations out there. There

@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,51 +58,51 @@
 <h1 id="collatz-type-conjectures-continued">Collatz-type Conjectures
 (Continued)</h1>
 <p>After the last two posts, I think I need to explain the reason why I
-chose the functions<span class="math display">$$f_p(n)
+chose the functions<span class="math display">\[f_p(n)
 =\begin{cases}f_p(n/p) &amp; \text{ if $p$
-divides $n$ }\\n &amp; \text{otherwise}\end{cases} $$</span> and <span
-class="math display">$$
+divides $n$ }\\n &amp; \text{otherwise}\end{cases} \]</span> and <span
+class="math display">\[
 g_p(n) = \begin{cases} g_p( f_p (n) ) &amp; \text{ if $p$ divides $n$
 }\\ f_p( np + n + p - (n \text{ mod } p) ) &amp; \text{ otherwise }
-\end{cases} $$</span> as the proper generalization of the function <span
-class="math inline">3<em>n</em> + 1</span> of the Collatz Conjecture.
-For that we need to go back to the original conjecture.</p>
+\end{cases} \]</span> as the proper generalization of the function <span
+class="math inline">\(3n+1\)</span> of the Collatz Conjecture. For that
+we need to go back to the original conjecture.</p>
 <h2 id="a-look-at-the-original-conjecture-in-the-binary">A look at the
 original conjecture in the binary</h2>
 <p>Consider the functions in the original conjecture in the binary. We
-have two functions <span class="math display">$$ f(n) = \begin{cases}
+have two functions <span class="math display">\[ f(n) = \begin{cases}
 n/2 &amp; \text{ if $n$ is even
-}\\ n &amp; \text{otherwise} \end{cases} $$</span> and <span
-class="math display">$$ g(n) =
+}\\ n &amp; \text{otherwise} \end{cases} \]</span> and <span
+class="math display">\[ g(n) =
 \begin{cases} f(n) &amp; \text{ if $n$ is even }\\ f(3n+1) &amp; \text{
-otherwise} \end{cases} $$</span> The first function deletes one trailing
-0 in the binary description of <span
-class="math inline"><em>n</em></span> while the other does</p>
+otherwise} \end{cases} \]</span> The first function deletes one trailing
+0 in the binary description of <span class="math inline">\(n\)</span>
+while the other does</p>
 <ol type="1">
-<li>Takes <span class="math inline"><em>n</em></span> and shifts it to
-left by one digit.</li>
-<li>Adds the original <span class="math inline"><em>n</em></span> to the
+<li>Takes <span class="math inline">\(n\)</span> and shifts it to left
+by one digit.</li>
+<li>Adds the original <span class="math inline">\(n\)</span> to the
 result.</li>
 <li>Adds one to the result.</li>
 </ol>
-<p>For example: if <span class="math inline"><em>n</em></span> were
-<span class="math inline">10001</span> in binary then <span
-class="math display">100010 + 10001 + 1 = 110011 + 1 = 1100100</span>
-And after deleting the trailing 0’s we get <span
-class="math inline">11001</span>. The cycle we would like our all
-recursive sequences to end with is <span
-class="math display">1 → 11 + 1 = 100 → 10 → 1</span> I don’t know you
-but this behaves like a 1-D version of a <a
+<p>For example: if <span class="math inline">\(n\)</span> were <span
+class="math inline">\(10001\)</span> in binary then <span
+class="math display">\[ 100010 +
+10001 + 1 = 110011 + 1 = 1100100 \]</span> And after deleting the
+trailing 0’s we get <span class="math inline">\(11001\)</span>. The
+cycle we would like our all recursive sequences to end with is <span
+class="math display">\[ 1 \rightarrow 11 + 1 = 100 \rightarrow
+10 \rightarrow 1 \]</span> I don’t know you but this behaves like a 1-D
+version of a <a
 href="http://en.wikipedia.org/wiki/Conway&#39;s_Game_of_Life">Conway’s
 Game of Life</a>, or more generally, a <a
 href="http://en.wikipedia.org/wiki/Cellular_automaton">Cellular
 Automaton</a>.</p>
 <p>So, I thought wouldn’t it be neat if one defined a similar game for
 representations of natural numbers in base <span
-class="math inline"><em>p</em></span>. Hence I defined <span
-class="math inline"><em>f</em><sub><em>p</em></sub>(<em>n</em>)</span>
-and <span
-class="math inline"><em>g</em><sub><em>p</em></sub>(<em>n</em>)</span>.</p>
+class="math inline">\(p\)</span>. Hence I defined <span
+class="math inline">\(f_p(n)\)</span> and <span
+class="math inline">\(g_p(n)\)</span>.</p>
 <div id="footer">
 <p><span id="timestamp">February 4th, 2015 5:37pm</span></p>
 </div>

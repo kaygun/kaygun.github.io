@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -119,29 +122,29 @@
 id="document-summarization-via-nonnegative-matrix-factorization">Document
 Summarization via Nonnegative Matrix Factorization</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Assume we have a matrix <span class="math inline"><em>A</em></span>
-of size <span class="math inline"><em>n</em> × <em>m</em></span> which
-consists of nonnegative entries. We want to write <span
-class="math inline"><em>A</em></span> as a product <span
-class="math inline"><em>A</em> = <em>B</em><em>C</em></span> where <span
-class="math inline"><em>B</em></span> has size <span
-class="math inline"><em>n</em> × <em>k</em></span> and <span
-class="math inline"><em>C</em></span> has size <span
-class="math inline"><em>k</em> × <em>m</em></span> where <span
-class="math inline"><em>k</em></span> is much smaller than both <span
-class="math inline"><em>n</em></span> and <span
-class="math inline"><em>m</em></span>. We also want <span
-class="math inline"><em>B</em></span> and <span
-class="math inline"><em>C</em></span> to consist nonnegative entries.
-This problem is called <a
+<p>Assume we have a matrix <span class="math inline">\(A\)</span> of
+size <span class="math inline">\(n\times m\)</span> which consists of
+nonnegative entries. We want to write <span
+class="math inline">\(A\)</span> as a product <span
+class="math inline">\(A = BC\)</span> where <span
+class="math inline">\(B\)</span> has size <span
+class="math inline">\(n\times k\)</span> and <span
+class="math inline">\(C\)</span> has size <span
+class="math inline">\(k\times m\)</span> where <span
+class="math inline">\(k\)</span> is much smaller than both <span
+class="math inline">\(n\)</span> and <span
+class="math inline">\(m\)</span>. We also want <span
+class="math inline">\(B\)</span> and <span
+class="math inline">\(C\)</span> to consist nonnegative entries. This
+problem is called <a
 href="https://en.wikipedia.org/wiki/Non-negative_matrix_factorization">nonnegative
 matrix factorization</a>.</p>
 <p>We can think of this problem as an optimization problem where the
-error function is <span
-class="math display"><em>e</em><em>r</em><em>r</em>(<em>B</em>,<em>C</em>) = ∑<sub><em>i</em>, <em>j</em>, ℓ</sub>∥<em>a</em><sub><em>i</em><em>j</em></sub> − <em>b</em><sub><em>i</em>ℓ</sub><em>c</em><sub>ℓ<em>j</em></sub>∥</span>
-with a postivity constraint on the entries of <span
-class="math inline"><em>B</em></span> and <span
-class="math inline"><em>C</em></span>. I wrote about this before <a
+error function is <span class="math display">\[ err(B,C) =
+\sum_{i,j,\ell}
+\|a_{ij}-b_{i\ell}c_{\ell j}\| \]</span> with a postivity constraint on
+the entries of <span class="math inline">\(B\)</span> and <span
+class="math inline">\(C\)</span>. I wrote about this before <a
 href="clean/2018-10-30-non-negative_matrix_decomposition_in_scala.html">here</a>
 and <a
 href="clean/2018-10-31-nonnegative_matrix_decomposition_in_clojure.html">here</a>.
@@ -151,7 +154,7 @@ language processing.</p>
 id="nonnegative-matrix-decomposition-and-document-summarization">Nonnegative
 Matrix Decomposition and Document Summarization</h2>
 <p>Assume we have a text, and we write a matrix <span
-class="math inline"><em>A</em></span> whose rows are labeled with the
+class="math inline">\(A\)</span> whose rows are labeled with the
 sentences appearing in the text and whose columns are labeled with the
 words appearing in the text. For a (sentence,word)-pair the
 corresponding entry in the matrix is 1 if the word appears in the
@@ -161,16 +164,16 @@ distribution: in the new matrix for a (sentence,word)-pair the
 corresponding entry is the probability that that word appears in that
 sentence.</p>
 <p>If we apply the nonnegative matrix factorization to this matrix we
-get two matrices <span class="math inline"><em>B</em></span> and <span
-class="math inline"><em>C</em></span> with nonnegative entries such that
-<span class="math inline"><em>A</em> = <em>B</em><em>C</em></span>. Now,
-I will use the following hypothesis: a <em>topic</em> is a specific
-probability distribution over the set of all words appearing in a text.
-Thus such a decomposition tries to identify k-many topics that one can
-associate with the text at hand. While <span
-class="math inline"><em>B</em></span> measures how much of each sentence
-belongs to a topic, <span class="math inline"><em>C</em></span> measures
-the same thing for each word.</p>
+get two matrices <span class="math inline">\(B\)</span> and <span
+class="math inline">\(C\)</span> with nonnegative entries such that
+<span class="math inline">\(A = BC\)</span>. Now, I will use the
+following hypothesis: a <em>topic</em> is a specific probability
+distribution over the set of all words appearing in a text. Thus such a
+decomposition tries to identify k-many topics that one can associate
+with the text at hand. While <span class="math inline">\(B\)</span>
+measures how much of each sentence belongs to a topic, <span
+class="math inline">\(C\)</span> measures the same thing for each
+word.</p>
 <h2 id="an-implementation">An Implementation</h2>
 <p>I am going to re-cycle the code I wrote in my earlier posts: one for
 <a
@@ -194,7 +197,7 @@ class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb1-1"><a 
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode clojure"><code class="sourceCode clojure"></code></pre></div>
 <p>Now, let us write the functions that create the matrix <span
-class="math inline"><em>A</em></span> from a given document:</p>
+class="math inline">\(A\)</span> from a given document:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode clojure"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> bag-of-words </span>[sentence stemmer stop-words]</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   {sentence (<span class="kw">as-&gt;</span> sentence $ </span>

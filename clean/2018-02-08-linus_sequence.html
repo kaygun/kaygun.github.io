@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -117,26 +120,22 @@
 <body>
 <h1 id="linus-sequence">Linus Sequence</h1>
 <h2 id="description-of-the-problem">Description of the problem:</h2>
-<p>Given a finite sequence <span
-class="math inline">(<em>a</em><sub><em>n</em></sub>)</span> of letters
-1 and 2, let us call <em>the repeated tail</em> as the longest
-contiguous subsequence <span
-class="math inline">(<em>b</em><sub><em>n</em></sub>)</span> of <span
-class="math inline">(<em>a</em><sub><em>n</em></sub>)</span> with the
-property that one can write <span
-class="math inline">(<em>a</em><sub><em>n</em></sub>)</span> as <span
-class="math display">(<em>a</em><sub><em>n</em></sub>) = (<em>c</em><sub><em>n</em></sub>)(<em>b</em><sub><em>n</em></sub>)(<em>b</em><sub><em>n</em></sub>)</span>
-The product on the right hand side is the concatenation.</p>
+<p>Given a finite sequence <span class="math inline">\((a_n)\)</span> of
+letters 1 and 2, let us call <em>the repeated tail</em> as the longest
+contiguous subsequence <span class="math inline">\((b_n)\)</span> of
+<span class="math inline">\((a_n)\)</span> with the property that one
+can write <span class="math inline">\((a_n)\)</span> as <span
+class="math display">\[ (a_n) =
+(c_n) (b_n) (b_n) \]</span> The product on the right hand side is the
+concatenation.</p>
 <p>Now, a <a
 href="http://mathworld.wolfram.com/LinusSequence.html"><em>linus
 sequence</em></a> is a recursively defined sequence of 1’s and 2’s.
-Given <span
-class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>k</em></sub></span>,
-we choose <span
-class="math inline"><em>a</em><sub><em>k</em> + 1</sub></span> in such a
-way that the repeated tail of the new augmented sequence <span
-class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>k</em> + 1</sub></span>
-is the shortest among all possible choices.</p>
+Given <span class="math inline">\(a_1,\ldots,a_k\)</span>, we choose
+<span class="math inline">\(a_{k+1}\)</span> in such a way that the
+repeated tail of the new augmented sequence <span
+class="math inline">\(a_1,\ldots,a_{k+1}\)</span> is the shortest among
+all possible choices.</p>
 <p>This is the sequence <a href="http://oeis.org/A006345">A006345</a> in
 <a href="http://oeis.org/">The Encyclopedia of Integer
 Sequences</a>.</p>

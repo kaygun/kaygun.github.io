@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -56,15 +59,14 @@
 Clojure</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Assume we have a simple undirected graph <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span>. Then a
-subset <span class="math inline"><em>C</em></span> of the set of
-vertices <span class="math inline"><em>V</em></span> is called a <a
+class="math inline">\(G=(V,E)\)</span>. Then a subset <span
+class="math inline">\(C\)</span> of the set of vertices <span
+class="math inline">\(V\)</span> is called a <a
 href="https://en.wikipedia.org/wiki/Clique_(graph_theory)">clique</a> if
-for every pair of distinct elements <span
-class="math inline"><em>a</em>, <em>b</em> ∈ <em>C</em></span> the pair
-<span class="math inline">{<em>a</em>, <em>b</em>}</span> is an edge in
-<span class="math inline"><em>G</em></span>. The set of all cliques of a
-graph is partially ordered under set inclusion. A clique is called
+for every pair of distinct elements <span class="math inline">\(a,b\in
+C\)</span> the pair <span class="math inline">\(\{a,b\}\)</span> is an
+edge in <span class="math inline">\(G\)</span>. The set of all cliques
+of a graph is partially ordered under set inclusion. A clique is called
 <em>maximal</em> if it is a maximal element in this poset. Today, I am
 going to implement a version of the <a
 href="https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm">Bron-Kerbosch

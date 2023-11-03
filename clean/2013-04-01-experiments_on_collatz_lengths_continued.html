@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -57,36 +60,33 @@ Lengths (Continued)</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I will continue on my experiments on Collatz sequences. Here
 is the setup: I have the following function <span
-class="math display">$$ f(n) = \begin{cases} 1 &amp;
+class="math display">\[ f(n) = \begin{cases} 1 &amp;
 \text{ if } n=1\\ f(n/2) &amp; \text{ if $n$ is even }\\ 3n+1 &amp;
-\text{ otherwise} \end{cases} $$</span> I am primarily interested in the
-behaviour of the recursive sequence <span
-class="math inline"><em>a</em><sub><em>n</em> + 1</sub> = <em>f</em>(<em>a</em><sub><em>n</em></sub>)</span>
-for different initial values <span
-class="math inline"><em>a</em><sub>0</sub></span>. The conjecture is
-that this sequence stabilizes at 1 for every initial value <span
-class="math inline"><em>a</em><sub>0</sub></span>. One of the numbers I
-am interested in is the length of the recursive sequence before it hits
-1. <span
-class="math display"><em>l</em><em>e</em><em>n</em>(<em>a</em>) = min {<em>n</em>∥ <em>a</em><sub><em>n</em></sub> = 1
-when <em>a</em><sub>0</sub> = <em>a</em>}</span> Now, I would like to
-add another function to the mix. Let me define a new function <span
-class="math display">$$ \ell(n) = \begin{cases} \ell(n/2) &amp; \text{
-if $n$ is even
+\text{ otherwise} \end{cases} \]</span> I am primarily interested in the
+behaviour of the recursive sequence <span class="math inline">\(a_{n+1}
+= f(a_n)\)</span> for different initial values <span
+class="math inline">\(a_0\)</span>. The conjecture is that this sequence
+stabilizes at 1 for every initial value <span
+class="math inline">\(a_0\)</span>. One of the numbers I am interested
+in is the length of the recursive sequence before it hits 1. <span
+class="math display">\[ len(a)
+= \min\{n\|\ a_n = 1 \text{ when } a_0 = a \} \]</span> Now, I would
+like to add another function to the mix. Let me define a new function
+<span class="math display">\[ \ell(n) = \begin{cases} \ell(n/2) &amp;
+\text{ if $n$ is even
 }\\ 1+\lfloor \log_2(n) \rfloor &amp; \text{ if $n$ is odd}\\
-\end{cases} $$</span> Notice that the fact that our recursive sequence
+\end{cases} \]</span> Notice that the fact that our recursive sequence
 stabilizes at 1 is equivalent to the fact that <span
-class="math inline">ℓ(<em>a</em><sub><em>n</em></sub>)</span> is
-eventually 1.</p>
+class="math inline">\(\ell(a_n)\)</span> is eventually 1.</p>
 <p>Today, I would like to look at the distribution of <span
-class="math inline"><em>l</em><em>e</em><em>n</em>(<em>a</em>)/ℓ(<em>a</em>)</span>.</p>
+class="math inline">\(len(a)/\ell(a)\)</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>First, I will need the base function.</p>
 <pre><code>(defun f(n)
    (cond ((equal n 1) 1)
          ((evenp n) (f (/ n 2)))
          (t (1+ (* 3 n)))))</code></pre>
-<p>Now, the <span class="math inline">ℓ</span> function</p>
+<p>Now, the <span class="math inline">\(\ell\)</span> function</p>
 <pre><code>(defun ell (n)
    (cond ((equal n 1) 1)
          ((evenp n) (ell (/ n 2)))
@@ -107,8 +107,8 @@ memoization</p>
        (or (iter-lookup n)
            (iter-push n (1+ (iter (f n)))))))</code></pre>
 <p>Let me display the results between 1 and <span
-class="math inline">2<sup>22</sup> = 4194304</span>. I used the
-following helper code to generate the sequence:</p>
+class="math inline">\(2^{22} = 4194304\)</span>. I used the following
+helper code to generate the sequence:</p>
 <pre><code> (with-open-file (results &quot;collatz4.csv&quot;
                           :direction :output
                           :if-exists :supersede

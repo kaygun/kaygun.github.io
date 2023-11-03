@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -60,15 +63,15 @@ href="https://en.wikipedia.org/wiki/Newton%27s_method">Newton-Raphson
 method</a>. It is so fundamental in fact that we teach it in calculus
 classes.</p>
 <p>The main question is to find the set of solutions for an equation of
-the type <span class="math display"><em>f</em>(<em>x</em>) = 0</span>
-where <span class="math inline"><em>f</em>(<em>x</em>)</span> is a nice
-(<em>nice</em> in this context means <em>differentiable</em>) function.
-The Newton-Raphson algorithm tells us that the recursively defined
-sequence <span class="math display">$$ x_{n+1} = x_n -
-\frac{f(x_n)}{f'(x_n)} $$</span> with an initial <em>guess</em> <span
-class="math inline"><em>x</em><sub>0</sub></span> for the solution will
-converge to one of the solutions provided that your initial guess was
-close enough.</p>
+the type <span class="math display">\[ f(x) = 0 \]</span> where <span
+class="math inline">\(f(x)\)</span> is a nice (<em>nice</em> in this
+context means <em>differentiable</em>) function. The Newton-Raphson
+algorithm tells us that the recursively defined sequence <span
+class="math display">\[ x_{n+1} = x_n -
+\frac{f(x_n)}{f&#39;(x_n)} \]</span> with an initial <em>guess</em>
+<span class="math inline">\(x_0\)</span> for the solution will converge
+to one of the solutions provided that your initial guess was close
+enough.</p>
 <p>I am not going to explain the mathematical reasoning behind the
 algorithm. This is an interesting question on its own, but I am here to
 write some lisp code.</p>
@@ -84,8 +87,8 @@ which is the derivative of a function at a point (which is all I need)
 but I like this better.</p>
 <p>Now, let me test if this works as intended. First, I will create a
 random list of real numbers and then apply the derivative of <span
-class="math inline">sin (<em>x</em>)</span> (which is <span
-class="math inline">cos (<em>x</em>)</span>) to this random list.</p>
+class="math inline">\(\sin(x)\)</span> (which is <span
+class="math inline">\(\cos(x)\)</span>) to this random list.</p>
 <pre><code>(defvar random-list 
         (loop for i from 0 to 9 collect (random 1.7)))
 
@@ -117,7 +120,7 @@ tolerance.</p>
          (y (nr-iterate f x) (nr-iterate f y)))
       ((&lt; (abs (- x y)) tolerance) y)))</code></pre>
 <p>Let me test it: I will try to find a solution to the equation <span
-class="math inline"><em>e</em><sup>−<em>x</em><sup>2</sup></sup> − ln (<em>x</em><sup>2</sup>+<em>x</em>+1) − <em>x</em> = 0</span></p>
+class="math inline">\(e^{-x^2}-\ln(x^2+x+1)-x = 0\)</span></p>
 <pre><code>(setf fn (lambda (x) (- (exp (- (* x x))) (log (+ (* x x) x 1)) x)))
 
 (defvar solution (newton-raphson fn 1.0d0))

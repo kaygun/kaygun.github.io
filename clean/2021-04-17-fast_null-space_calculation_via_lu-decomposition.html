@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -119,10 +122,10 @@
 Null-Space Calculation via LU-Decomposition</h1>
 <h2 id="description-of-the-problem">Description of the Problem</h2>
 <p>Today, I am going to work on a linear algebra problem. Let us assume
-we have a matrix <span class="math inline"><em>A</em></span>, and I
-would like to calculate the null space of <span
-class="math inline"><em>A</em></span> (<em>kernel</em> of <span
-class="math inline"><em>A</em></span> for those mathematicians in the
+we have a matrix <span class="math inline">\(A\)</span>, and I would
+like to calculate the null space of <span
+class="math inline">\(A\)</span> (<em>kernel</em> of <span
+class="math inline">\(A\)</span> for those mathematicians in the
 audience). I found this <a
 href="https://mathoverflow.net/questions/253995/how-can-one-construct-a-sparse-null-space-basis-using-recursive-lu-decomposition">neat
 trick</a> from MathOverflow with the <a
@@ -130,15 +133,13 @@ href="https://de.mathworks.com/matlabcentral/fileexchange/11120-null-space-of-a-
 code</a> that goes with it.</p>
 <h2 id="some-theory">Some Theory</h2>
 <p>The <a href="https://en.wikipedia.org/wiki/LU_decomposition">LU</a>
-decomposition splits a matrix as <span
-class="math display"><em>A</em> = <em>P</em><em>L</em><em>U</em></span>
-where <span class="math inline"><em>L</em></span> is an invertible lower
-triangular square matrix, <span class="math inline"><em>U</em></span> is
-an upper triangular matrix and <span
-class="math inline"><em>P</em></span> is a permutation matrix. Thus the
-rank of <span class="math inline"><em>U</em></span> determines the
-dimension of the null space, and the image <span
-class="math inline"><em>L</em><sup>−1</sup><em>P</em><sup>−1</sup></span>
+decomposition splits a matrix as <span class="math display">\[ A = PLU
+\]</span> where <span class="math inline">\(L\)</span> is an invertible
+lower triangular square matrix, <span class="math inline">\(U\)</span>
+is an upper triangular matrix and <span class="math inline">\(P\)</span>
+is a permutation matrix. Thus the rank of <span
+class="math inline">\(U\)</span> determines the dimension of the null
+space, and the image <span class="math inline">\(L^{-1}P^{-1}\)</span>
 determines the null space.</p>
 <h2 id="an-implementation-in-clojure">An Implementation in Clojure</h2>
 <p>I am going to use <a href="http://jblas.org/">JBlas</a> to implement

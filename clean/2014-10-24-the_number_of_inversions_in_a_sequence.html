@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,19 +58,16 @@
 <h1 id="the-number-of-inversions-in-a-sequence">The Number of Inversions
 in a Sequence</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
-<p>Assume <span
-class="math inline">(<em>a</em><sub><em>n</em></sub>)</span> is a
-sequence of integers. An <em>inversion</em> in <span
-class="math inline">(<em>a</em><sub><em>n</em></sub>)</span> is a pair
-of integers <span
-class="math inline"><em>a</em><sub><em>i</em></sub></span> and <span
-class="math inline"><em>a</em><sub><em>j</em></sub></span> appearing in
-<span class="math inline">(<em>a</em><sub><em>n</em></sub>)</span> such
-that <span class="math inline"><em>i</em> &lt; <em>j</em></span> but
-<span
-class="math inline"><em>a</em><sub><em>i</em></sub> <em>a</em><sub><em>j</em></sub></span>.
-Today, I will describe an algorithm which will give us the number of
-inversions in a finite sequence of integers.</p>
+<p>Assume <span class="math inline">\((a_n)\)</span> is a sequence of
+integers. An <em>inversion</em> in <span
+class="math inline">\((a_n)\)</span> is a pair of integers <span
+class="math inline">\(a_i\)</span> and <span
+class="math inline">\(a_j\)</span> appearing in <span
+class="math inline">\((a_n)\)</span> such that <span
+class="math inline">\(i &lt; j\)</span> but <span
+class="math inline">\(a_i \&gt; a_j\)</span>. Today, I will describe an
+algorithm which will give us the number of inversions in a finite
+sequence of integers.</p>
 <h2 id="algorithm">Algorithm</h2>
 <p>Out algorithm is going to be recursive:</p>
 <pre><code>Algorithm Inversions:

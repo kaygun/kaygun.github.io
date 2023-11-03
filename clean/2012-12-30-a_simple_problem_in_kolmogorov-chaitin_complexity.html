@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -64,164 +67,143 @@ Math</a> by <a href="https://twitter.com/MarkCC">Mark Chu-Carroll</a>.
 It is just that I am a mathematician, and I need to dot all the i’s and
 cross all the t’s. Besides, I learn better when I write things.</p>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Let <span class="math inline">𝒜</span> be a finite set (hereby called
-<em>an alphabet</em>) and consider the set <span
-class="math inline">𝒲</span> of all finite sequences of elements of
-<span class="math inline">𝒜</span> (hereby called <em>words</em>). I
-will use <span
-class="math inline"><em>l</em><em>e</em><em>n</em>(<em>w</em>)</span> to
-denote the length of a word <span
-class="math inline"><em>w</em> ∈ 𝒲</span>.</p>
+<p>Let <span class="math inline">\(\mathcal{A}\)</span> be a finite set
+(hereby called <em>an alphabet</em>) and consider the set <span
+class="math inline">\(\mathcal{W}\)</span> of all finite sequences of
+elements of <span class="math inline">\(\mathcal{A}\)</span> (hereby
+called <em>words</em>). I will use <span
+class="math inline">\(len(w)\)</span> to denote the length of a word
+<span class="math inline">\(w\in \mathcal{W}\)</span>.</p>
 <p>I will call any partial function of the form <span
-class="math inline"><em>P</em>: 𝒲 → 𝒲</span> as a <em>finite abstract
-computer</em>, and I will call the domain <span
-class="math inline">𝒟(<em>P</em>)</span> of a finite abstract computer
-as <em>the set of all admissible programs in <span
-class="math inline"><em>P</em></span></em>. In this context a word <span
-class="math inline"><em>w</em> ∈ 𝒲</span> is computable via <span
-class="math inline"><em>P</em></span> if <span
-class="math inline"><em>w</em></span> is in the range of <span
-class="math inline"><em>P</em></span>.</p>
+class="math inline">\(P\colon \mathcal{W}\to \mathcal{W}\)</span> as a
+<em>finite abstract computer</em>, and I will call the domain <span
+class="math inline">\(\mathcal{D}(P)\)</span> of a finite abstract
+computer as <em>the set of all admissible programs in <span
+class="math inline">\(P\)</span></em>. In this context a word <span
+class="math inline">\(w\in \mathcal{W}\)</span> is computable via <span
+class="math inline">\(P\)</span> if <span
+class="math inline">\(w\)</span> is in the range of <span
+class="math inline">\(P\)</span>.</p>
 <p>I will say that a finite abstract computer <span
-class="math inline"><em>P</em></span> emulates another finite abstract
-computer <span class="math inline"><em>Q</em></span> if there is a fixed
-admissible program <span
-class="math inline"><em>w</em><sub><em>Q</em></sub></span> in <span
-class="math inline"><em>P</em></span> such that for every admissible
-program <span class="math inline"><em>a</em></span> in <span
-class="math inline"><em>Q</em></span> the word <span
-class="math inline"><em>w</em><sub><em>Q</em></sub><em>a</em></span> is
-an admissible program in <span class="math inline"><em>P</em></span> and
-we get <span
-class="math display"><em>Q</em>(<em>a</em>) = <em>P</em>(<em>w</em><sub><em>Q</em></sub><em>a</em>)</span>
-Here the concatenation of word <span
-class="math inline"><em>w</em><sub><em>Q</em></sub></span> and <span
-class="math inline"><em>a</em></span> is denoted by <span
-class="math inline"><em>w</em><sub><em>Q</em></sub><em>a</em></span>.</p>
-<p>The relative complexity of a word <span
-class="math inline"><em>w</em> ∈ 𝒲</span> with respect to a finite
-abstract computer <span class="math inline"><em>P</em></span> is defined
-as <span
-class="math display"><em>r</em><em>e</em><em>l</em>(<em>w</em>,<em>P</em>) := min {<em>l</em><em>e</em><em>n</em>(<em>v</em>)∥ <em>v</em> ∈ 𝒟(<em>P</em>)
-and <em>P</em>(<em>v</em>) = <em>w</em>}</span> In other words, the
-relative complexity of a word <span
-class="math inline"><em>w</em></span> is the length of a shortest
-admissible program in <span class="math inline"><em>P</em></span> which
-generates <span class="math inline"><em>w</em></span>. If there is no
-such word then <span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>w</em>,<em>P</em>)</span>
-is defined to be <span class="math inline"> − 1</span>.</p>
+class="math inline">\(P\)</span> emulates another finite abstract
+computer <span class="math inline">\(Q\)</span> if there is a fixed
+admissible program <span class="math inline">\(w_Q\)</span> in <span
+class="math inline">\(P\)</span> such that for every admissible program
+<span class="math inline">\(a\)</span> in <span
+class="math inline">\(Q\)</span> the word <span
+class="math inline">\(w_Q a\)</span> is an admissible program in <span
+class="math inline">\(P\)</span> and we get <span
+class="math display">\[ Q(a) = P(w_Q
+a) \]</span> Here the concatenation of word <span
+class="math inline">\(w_Q\)</span> and <span
+class="math inline">\(a\)</span> is denoted by <span
+class="math inline">\(w_Qa\)</span>.</p>
+<p>The relative complexity of a word <span class="math inline">\(w\in
+\mathcal{W}\)</span> with respect to a finite abstract computer <span
+class="math inline">\(P\)</span> is defined as <span
+class="math display">\[ rel(w,P) :=
+\min\{len(v)\|\ v\in\mathcal{D}(P)\text{ and }P(v) = w\} \]</span> In
+other words, the relative complexity of a word <span
+class="math inline">\(w\)</span> is the length of a shortest admissible
+program in <span class="math inline">\(P\)</span> which generates <span
+class="math inline">\(w\)</span>. If there is no such word then <span
+class="math inline">\(rel(w,P)\)</span> is defined to be <span
+class="math inline">\(-1\)</span>.</p>
 <p>Now, take two finite abstract computers <span
-class="math inline"><em>P</em></span> and <span
-class="math inline"><em>Q</em></span>. Today, I would like to show that
-if <span class="math inline"><em>P</em></span> and <span
-class="math inline"><em>Q</em></span> emulate each other then there
-exists a constant <span class="math inline"><em>c</em></span> such that
-<span
-class="math display">sup<sub><em>w</em> ∈ 𝒲</sub>∥<em>r</em><em>e</em><em>l</em>(<em>w</em>,<em>P</em>) − <em>r</em><em>e</em><em>l</em>(<em>w</em>,<em>Q</em>)∥ ≤ <em>c</em></span>
-Now, if we define the distance between two finite abstract computers as
-<span
-class="math display"><em>d</em>(<em>P</em>,<em>Q</em>) = sup<sub><em>w</em> ∈ 𝒲</sub>∥<em>r</em><em>e</em><em>l</em>(<em>w</em>,<em>P</em>) − <em>r</em><em>e</em><em>l</em>(<em>w</em>,<em>Q</em>)∥</span>
-we see that the statement above can be rephrased as follows:</p>
+class="math inline">\(P\)</span> and <span
+class="math inline">\(Q\)</span>. Today, I would like to show that if
+<span class="math inline">\(P\)</span> and <span
+class="math inline">\(Q\)</span> emulate each other then there exists a
+constant <span class="math inline">\(c\)</span> such that <span
+class="math display">\[ \sup_{w\in \mathcal{W}}
+\|rel(w,P)-rel(w,Q)\| \leq c \]</span> Now, if we define the distance
+between two finite abstract computers as <span class="math display">\[
+d(P,Q) =
+\sup_{w\in\mathcal{W}} \|rel(w,P)-rel(w,Q)\| \]</span> we see that the
+statement above can be rephrased as follows:</p>
 <blockquote>
-<p>If <span class="math inline"><em>P</em></span> and <span
-class="math inline"><em>Q</em></span> can emulate each other then the
-distance <span
-class="math inline"><em>d</em>(<em>P</em>,<em>Q</em>)</span> is
-finite.</p>
+<p>If <span class="math inline">\(P\)</span> and <span
+class="math inline">\(Q\)</span> can emulate each other then the
+distance <span class="math inline">\(d(P,Q)\)</span> is finite.</p>
 </blockquote>
 <p>Or, equivalently</p>
 <blockquote>
 <p>If the distance between two finite abstract computers is infinite
 then one of these machines can not emulate the other.</p>
 </blockquote>
-<p>Though, I have to say that <span
-class="math inline"><em>d</em></span> is <strong>not</strong> really a
-distance in the sense of <a
+<p>Though, I have to say that <span class="math inline">\(d\)</span> is
+<strong>not</strong> really a distance in the sense of <a
 href="http://mathworld.wolfram.com/MetricSpace.html">a metric space</a>
 as I will mention at the end.</p>
 <h2 id="a-proof-of-the-statement">A proof of the statement</h2>
-<p>Assume <span class="math inline"><em>P</em></span> and <span
-class="math inline"><em>Q</em></span> emulate each other, and
-respectively let <span
-class="math inline"><em>w</em><sub><em>Q</em></sub> ∈ 𝒟(<em>P</em>)</span>
-and <span
-class="math inline"><em>w</em><sub><em>P</em></sub> ∈ 𝒟(<em>Q</em>)</span>
-be the admissible programs emulating <span
-class="math inline"><em>Q</em></span> in <span
-class="math inline"><em>P</em></span> and <span
-class="math inline"><em>P</em></span> in <span
-class="math inline"><em>Q</em></span>. Take a word <span
-class="math inline"><em>v</em></span> which is computable via both <span
-class="math inline"><em>P</em></span> and <span
-class="math inline"><em>Q</em></span>. Then we can easily see that <span
-class="math display"><em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>Q</em>) ≤ <em>l</em><em>e</em><em>n</em>(<em>w</em><sub><em>Q</em></sub>) + <em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>P</em>)  
-and
-  <em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>P</em>) ≤ <em>l</em><em>e</em><em>n</em>(<em>w</em><sub><em>P</em></sub>) + <em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>Q</em>)</span>
-We get the inequality for <span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>Q</em>)</span>
-because for any admissible program <span
-class="math inline"><em>a</em></span> in <span
-class="math inline"><em>P</em></span> with the property that <span
-class="math inline"><em>v</em> = <em>P</em>(<em>a</em>)</span> (recall
-that <span class="math inline"><em>v</em></span> is computable via <span
-class="math inline"><em>P</em></span>) then we have <span
-class="math inline"><em>v</em> = <em>Q</em>(<em>w</em><sub><em>P</em></sub><em>a</em>)</span>.
-Conversely, since <span class="math inline"><em>v</em></span> is also
-computable via <span class="math inline"><em>Q</em></span> we have the
-similar inequality for <span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>P</em>)</span>.
-Note that the inequalities hold even when <span
-class="math inline"><em>v</em></span> is not computable via <span
-class="math inline"><em>P</em></span> or via <span
-class="math inline"><em>Q</em></span>. This easily leads to the
-inequality <span
-class="math display">∥<em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>P</em>) − <em>r</em><em>e</em><em>l</em>(<em>v</em>,<em>Q</em>)∥ ≤ max {<em>l</em><em>e</em><em>n</em>(<em>w</em><sub><em>P</em></sub>), <em>l</em><em>e</em><em>n</em>(<em>w</em><sub><em>Q</em></sub>)}</span>
-for every <span class="math inline"><em>v</em> ∈ 𝒲</span>. Then we
+<p>Assume <span class="math inline">\(P\)</span> and <span
+class="math inline">\(Q\)</span> emulate each other, and respectively
+let <span class="math inline">\(w_Q\in \mathcal{D}(P)\)</span> and <span
+class="math inline">\(w_P\in\mathcal{D}(Q)\)</span> be the admissible
+programs emulating <span class="math inline">\(Q\)</span> in <span
+class="math inline">\(P\)</span> and <span
+class="math inline">\(P\)</span> in <span
+class="math inline">\(Q\)</span>. Take a word <span
+class="math inline">\(v\)</span> which is computable via both <span
+class="math inline">\(P\)</span> and <span
+class="math inline">\(Q\)</span>. Then we can easily see that <span
+class="math display">\[ rel(v,Q) \leq len(w_Q) + rel(v,P) \quad\text{
+and }\quad rel(v,P) \leq len(w_P) + rel(v,Q) \]</span> We get the
+inequality for <span class="math inline">\(rel(v,Q)\)</span> because for
+any admissible program <span class="math inline">\(a\)</span> in <span
+class="math inline">\(P\)</span> with the property that <span
+class="math inline">\(v=P(a)\)</span> (recall that <span
+class="math inline">\(v\)</span> is computable via <span
+class="math inline">\(P\)</span>) then we have <span
+class="math inline">\(v=Q(w_P a)\)</span>. Conversely, since <span
+class="math inline">\(v\)</span> is also computable via <span
+class="math inline">\(Q\)</span> we have the similar inequality for
+<span class="math inline">\(rel(v,P)\)</span>. Note that the
+inequalities hold even when <span class="math inline">\(v\)</span> is
+not computable via <span class="math inline">\(P\)</span> or via <span
+class="math inline">\(Q\)</span>. This easily leads to the inequality
+<span class="math display">\[
+\|rel(v,P) - rel(v,Q)\| \leq \max\{len(w_P),len(w_Q)\} \]</span> for
+every <span class="math inline">\(v\in \mathcal{W}\)</span>. Then we
 preserve the inequality when we take the supremum over all <span
-class="math inline"><em>w</em> ∈ 𝒲</span>.</p>
+class="math inline">\(w\in\mathcal{W}\)</span>.</p>
 <h2 id="an-example">An example</h2>
-<p>Let <span class="math inline">𝒜</span> contain a single letter <span
-class="math inline">1</span>. So, the set of words in <span
-class="math inline">𝒜</span> is naturally isomorphic to the set of
-natural numbers. Now, I will define <span
-class="math inline"><em>P</em>(<em>n</em>) = 2<em>n</em></span> and
-<span class="math inline"><em>Q</em>(<em>n</em>) = 3<em>n</em></span>
-for every <span class="math inline"><em>n</em> ∈ ℕ</span>. Notice that
-<span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>n</em>,<em>P</em>) =  − 1</span>
-if <span class="math inline"><em>n</em></span> is not even, and <span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>n</em>,<em>P</em>) = (<em>n</em>/2)</span>
-when <span class="math inline"><em>n</em></span> is even. Similarly,
-<span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>n</em>,<em>Q</em>) =  − 1</span>
-when <span class="math inline"><em>n</em></span> is not divisible by 3,
-and <span
-class="math inline"><em>r</em><em>e</em><em>l</em>(<em>n</em>,<em>Q</em>) = (<em>n</em>/3)</span>
-if <span class="math inline"><em>n</em></span> is divisible by 3. It is
-easy to see that <span
-class="math display">sup<sub><em>n</em> ∈ ℕ</sub>∥<em>r</em><em>e</em><em>l</em>(<em>n</em>,<em>P</em>) − <em>r</em><em>e</em><em>l</em>(<em>n</em>,<em>Q</em>)∥ = ∞</span>
-Thus one of these finite abstract computers can not emulate the
-other.</p>
+<p>Let <span class="math inline">\(\mathcal{A}\)</span> contain a single
+letter <span class="math inline">\(1\)</span>. So, the set of words in
+<span class="math inline">\(\mathcal{A}\)</span> is naturally isomorphic
+to the set of natural numbers. Now, I will define <span
+class="math inline">\(P(n) = 2n\)</span> and <span
+class="math inline">\(Q(n) = 3n\)</span> for every <span
+class="math inline">\(n\in\mathbb{N}\)</span>. Notice that <span
+class="math inline">\(rel(n,P)=-1\)</span> if <span
+class="math inline">\(n\)</span> is not even, and <span
+class="math inline">\(rel(n,P)=(n/2)\)</span> when <span
+class="math inline">\(n\)</span> is even. Similarly, <span
+class="math inline">\(rel(n,Q)=-1\)</span> when <span
+class="math inline">\(n\)</span> is not divisible by 3, and <span
+class="math inline">\(rel(n,Q)=(n/3)\)</span> if <span
+class="math inline">\(n\)</span> is divisible by 3. It is easy to see
+that <span class="math display">\[ \sup_{n\in\mathbb{N}}
+\|rel(n,P)-rel(n,Q)\| = \infty \]</span> Thus one of these finite
+abstract computers can not emulate the other.</p>
 <h2 id="a-counter-example-for-the-converse">A counter-example for the
 converse</h2>
-<p>Let <span class="math inline">𝒜</span> be as before and define <span
-class="math inline"><em>P</em>(2<sup><em>n</em></sup>) = 1</span>
-whenever <span class="math inline"><em>n</em></span> is a prime and
-define <span
-class="math inline"><em>Q</em>(3<sup><em>n</em></sup>) = 1</span>
-whevever <span class="math inline"><em>n</em></span> is a prime.
-Clearly, <span class="math inline"><em>P</em></span> and <span
-class="math inline"><em>Q</em></span> are both partial functions. It
-takes a little work (some number theory) to show that <span
-class="math inline"><em>P</em></span> can not emulate <span
-class="math inline"><em>Q</em></span> and vice versa. On the other and
-<span class="math inline"><em>d</em>(<em>P</em>,<em>Q</em>) = 0</span>
-which is finite. Also notice that the distance is 0 while <span
-class="math inline"><em>P</em> ≠ <em>Q</em></span>. That is the function
-<span class="math inline"><em>d</em></span> defined above is not really
-a <a href="http://mathworld.wolfram.com/MetricSpace.html">metric</a> in
-the strict mathematical sense.</p>
+<p>Let <span class="math inline">\(\mathcal{A}\)</span> be as before and
+define <span class="math inline">\(P(2^n)=1\)</span> whenever <span
+class="math inline">\(n\)</span> is a prime and define <span
+class="math inline">\(Q(3^n)=1\)</span> whevever <span
+class="math inline">\(n\)</span> is a prime. Clearly, <span
+class="math inline">\(P\)</span> and <span
+class="math inline">\(Q\)</span> are both partial functions. It takes a
+little work (some number theory) to show that <span
+class="math inline">\(P\)</span> can not emulate <span
+class="math inline">\(Q\)</span> and vice versa. On the other and <span
+class="math inline">\(d(P,Q)=0\)</span> which is finite. Also notice
+that the distance is 0 while <span class="math inline">\(P\neq
+Q\)</span>. That is the function <span class="math inline">\(d\)</span>
+defined above is not really a <a
+href="http://mathworld.wolfram.com/MetricSpace.html">metric</a> in the
+strict mathematical sense.</p>
 <div id="footer">
 <p><span id="timestamp">December 30th, 2012 3:33pm</span></p>
 </div>

@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,41 +58,35 @@
 <h1 id="listingpartitions">Listing partitions</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Given a natural number N, an ordered k-partition of N is a sequence
-<span
-class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>k</em></sub></span>
-of natural numbers such that <span
-class="math inline"><em>N</em> = <em>a</em><sub>1</sub> + ⋯ + <em>a</em><sub><em>k</em></sub></span>.
+<span class="math inline">\(a_1,\ldots,a_k\)</span> of natural numbers
+such that <span class="math inline">\(N = a_1 + \cdots + a_k\)</span>.
 For the purposes of this note, we assume <span
-class="math inline"><em>a</em><sub><em>i</em></sub> ≥ 0</span>. In this
-decomposition, we may assume that the sequence is ordered, that is, we
-are not allowed to alter the order of the terms <span
-class="math inline"><em>a</em><sub><em>i</em></sub></span>. Then the
-partition is called an <em>ordered</em> k-partition of N. If we want a
-decomposition which is oblivious to the ordering of the numbers
+class="math inline">\(a_i\geq 0\)</span>. In this decomposition, we may
+assume that the sequence is ordered, that is, we are not allowed to
+alter the order of the terms <span class="math inline">\(a_i\)</span>.
+Then the partition is called an <em>ordered</em> k-partition of N. If we
+want a decomposition which is oblivious to the ordering of the numbers
 appearing in the decomposition of N, then the partition is called an
 <em>unordered</em> k-partition of N. In that case, we can assume without
-loss of generality that <span
-class="math inline"><em>a</em><sub>1</sub> ≤ <em>a</em><sub>2</sub> ≤ ⋯ ≤ <em>a</em><sub><em>k</em></sub></span>.</p>
+loss of generality that <span class="math inline">\(a_1\leq a_2\leq
+\cdots\leq a_k\)</span>.</p>
 <p>In this note, I would like to describe a recursive algorithm which
 gives the ordered and unordered k-partitition of a natural number N
 together with the python code which implements the algorithm.</p>
 <h2 id="orderedpartitions.">Ordered partitions.</h2>
 <p>The case of ordered partitions is slightly easier that the unordered
 partition using recursion. Notice that if we have a k-partition of N of
-the form <span
-class="math display"><em>N</em> = <em>a</em><sub>1</sub> + ⋯ + <em>a</em><sub><em>k</em></sub></span>
-then we have a <span class="math inline">(<em>k</em>−1)</span>-partition
-of <span class="math inline"><em>N</em> − <em>a</em><sub>1</sub></span>
-<span
-class="math display"><em>N</em> − <em>a</em><sub>1</sub> = <em>a</em><sub>2</sub> + ⋯ + <em>a</em><sub><em>k</em></sub></span>
-The smallest value for <span
-class="math inline"><em>a</em><sub>1</sub></span> is 1, and the largest
-value we can chose for <span
-class="math inline"><em>a</em><sub>1</sub></span> is such that <span
-class="math inline"><em>N</em> − <em>a</em><sub>1</sub> = (<em>k</em>−1)</span>.
-Then means <span class="math inline"><em>a</em><sub>1</sub></span> can
-be at most <span class="math inline"><em>N</em> − <em>k</em> + 1</span>.
-Thus we can write our function</p>
+the form <span class="math display">\[ N = a_1 + \cdots + a_k \]</span>
+then we have a <span class="math inline">\((k-1)\)</span>-partition of
+<span class="math inline">\(N - a_1\)</span> <span
+class="math display">\[ N - a_1 = a_2 + \cdots + a_k
+\]</span> The smallest value for <span
+class="math inline">\(a_1\)</span> is 1, and the largest value we can
+chose for <span class="math inline">\(a_1\)</span> is such that <span
+class="math inline">\(N - a_1 = (k-1)\)</span>. Then means <span
+class="math inline">\(a_1\)</span> can be at most <span
+class="math inline">\(N - k + 1\)</span>. Thus we can write our
+function</p>
 <pre><code> def OrdPart(N,k):
 
      if N&lt;0 or k&lt;1 or N&lt;k:
@@ -151,10 +148,10 @@ of the function. Here is the same function with memoization:</p>
      return(Ret)</code></pre>
 <p>I have a basic checking at the beginning to make sure that the
 arguments of the function are kosher. The special cases <span
-class="math inline"><em>k</em> = 1</span>, <span
-class="math inline"><em>k</em> = 2</span> and <span
-class="math inline"><em>N</em> = <em>k</em></span> are needed for the
-recursion to terminate.</p>
+class="math inline">\(k=1\)</span>, <span
+class="math inline">\(k=2\)</span> and <span
+class="math inline">\(N=k\)</span> are needed for the recursion to
+terminate.</p>
 <p>Let us see if the code works. I’ll start with the special cases</p>
 <pre><code> print OrdPart(7,1)
  [[7]]
@@ -164,8 +161,8 @@ recursion to terminate.</p>
 
  print OrdPart(5,2)
  [[1, 4], [2, 3], [3, 2], [4, 1]]</code></pre>
-<p>Now a small <span class="math inline"><em>N</em></span> with a small
-<span class="math inline"><em>k</em></span></p>
+<p>Now a small <span class="math inline">\(N\)</span> with a small <span
+class="math inline">\(k\)</span></p>
 <pre><code> print OrdPart(6,4)
  [[1, 1, 1, 3], [1, 1, 2, 2], [1, 1, 3, 1], [1, 2, 1, 2], [1, 2, 2,
 1], [1, 3, 1, 1], [2, 1, 1, 2], [2, 1, 2, 1], [2, 2, 1, 1], [3, 1, 1,
@@ -189,29 +186,25 @@ to its length</p>
 <h2 id="unorderedpartitions">Unordered partitions</h2>
 <p>The situation is more complicated with the unordered partitions but
 it is not too bad. Remember that we require <span
-class="math inline"><em>N</em> = <em>a</em><sub>1</sub> + ⋯ + <em>a</em><sub><em>k</em></sub></span>
-and <span
-class="math inline"><em>a</em><sub>1</sub> ≤ <em>a</em><sub>2</sub> ≤ ⋯ ≤ <em>a</em><sub><em>k</em></sub></span>.
-So, if we re-write <span
-class="math display"><em>N</em> − <em>a</em><sub>1</sub> = <em>a</em><sub>2</sub> + ⋯ + <em>a</em><sub><em>k</em></sub></span>
-this really does not give us a <span
-class="math inline">(<em>k</em>−1)</span>-partition of <span
-class="math inline"><em>N</em> − <em>a</em><sub>1</sub></span> because
-<span class="math inline"><em>a</em><sub>2</sub></span> must be greater
-than or equal to <span
-class="math inline"><em>a</em><sub>1</sub></span>. Instead we write
-<span
-class="math display">(<em>a</em><sub>2</sub>−<em>a</em><sub>1</sub>+1) + ⋯ + (<em>a</em><sub><em>k</em></sub>−<em>a</em><sub>1</sub>+1) = <em>N</em> − <em>a</em><sub>1</sub> − (<em>k</em>−1)(<em>a</em><sub>1</sub>−1) = <em>N</em> + <em>k</em> − 1 − <em>k</em><em>a</em><sub>1</sub></span>
+class="math inline">\(N = a_1 + \cdots + a_k\)</span> and <span
+class="math inline">\(a_1 \leq a_2 \leq \cdots \leq a_k\)</span>. So, if
+we re-write <span class="math display">\[ N -
+a_1 = a_2 + \cdots + a_k \]</span> this really does not give us a <span
+class="math inline">\((k-1)\)</span>-partition of <span
+class="math inline">\(N - a_1\)</span> because <span
+class="math inline">\(a_2\)</span> must be greater than or equal to
+<span class="math inline">\(a_1\)</span>. Instead we write <span
+class="math display">\[ (a_2 - a_1 + 1) + \cdots +
+(a_k - a_1 + 1) = N - a_ 1 - (k-1) (a_1-1) = N + k - 1 - k a_1 \]</span>
 In other words, reducing the parameter <span
-class="math inline"><em>k</em></span> by 1 forces us to change <span
-class="math inline"><em>N</em></span> to <span
-class="math inline"><em>N</em> + <em>k</em> − 1 − <em>k</em><em>a</em><sub>1</sub></span>.
-Also, this equation also tells us the upper bound for <span
-class="math inline"><em>a</em><sub>1</sub></span>: <span
-class="math display"><em>N</em> + <em>k</em> − 1 − <em>k</em><em>a</em><sub>1</sub> ≥ <em>k</em> − 1  ⇒  <em>N</em> ≥ <em>k</em><em>a</em><sub>1</sub></span>
-Hence, the upper bound for <span
-class="math inline"><em>a</em><sub>1</sub></span> is <span
-class="math inline">⌋<em>N</em>/<em>k</em>⌊</span>.</p>
+class="math inline">\(k\)</span> by 1 forces us to change <span
+class="math inline">\(N\)</span> to <span class="math inline">\(N + k -
+1 - k a_1\)</span>. Also, this equation also tells us the upper bound
+for <span class="math inline">\(a_1\)</span>: <span
+class="math display">\[ N + k - 1 - k a_1 \geq k-1
+\quad\Rightarrow\quad N \geq k a_1 \]</span> Hence, the upper bound for
+<span class="math inline">\(a_1\)</span> is <span
+class="math inline">\(\rfloor N/k\lfloor\)</span>.</p>
 <p>So, let us write the code. I will write the implementation with
 memoization:</p>
 <pre><code> UnOrdPartStack = {}
@@ -244,26 +237,25 @@ memoization:</p>
      return(Ret)</code></pre>
 <p>The recursion looks different from the previous case. The reason is
 that when we get the list of <span
-class="math inline">(<em>k</em>−1)</span>-partitions of <span
-class="math inline"><em>N</em> + <em>k</em> − 1 − <em>k</em> ⋅ <em>a</em><sub>1</sub></span>
-we must shift each of the terms by <span
-class="math inline">(<em>a</em><sub>1</sub>−1)</span> to get an
+class="math inline">\((k-1)\)</span>-partitions of <span
+class="math inline">\(N + k - 1 - k\cdot a_1\)</span> we must shift each
+of the terms by <span class="math inline">\((a_1-1)\)</span> to get an
 admissible partition. This is reflected in the code.</p>
 <p>Let me test the code: the special case with an odd <span
-class="math inline"><em>N</em></span></p>
+class="math inline">\(N\)</span></p>
 <pre><code> print UnOrdPart(5,2)
  [[1, 4], [2, 3]]</code></pre>
 <p>The special case with an even <span
-class="math inline"><em>N</em></span></p>
+class="math inline">\(N\)</span></p>
 <pre><code> print UnOrdPart(8,2)
  [[1, 7], [2, 6], [3, 5], [4, 4]]</code></pre>
-<p>A smalll <span class="math inline"><em>N</em></span> and a small
-<span class="math inline"><em>k</em></span></p>
+<p>A smalll <span class="math inline">\(N\)</span> and a small <span
+class="math inline">\(k\)</span></p>
 <pre><code> print UnOrdPart(9,4)
  [[1, 1, 1, 6], [1, 1, 2, 5], [1, 1, 3, 4], [1, 2, 2, 4], [1, 2, 3,
 3], [2, 2, 2, 3]]</code></pre>
-<p>and a large <span class="math inline"><em>N</em></span> with a
-largish <span class="math inline"><em>k</em></span></p>
+<p>and a large <span class="math inline">\(N\)</span> with a largish
+<span class="math inline">\(k\)</span></p>
 <pre><code> A = UnOrdPart(32,8)
  for x in A:
      if len(x)!=8 and sum(x)!=32:

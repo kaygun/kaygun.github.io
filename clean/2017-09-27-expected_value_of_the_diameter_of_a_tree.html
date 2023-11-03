@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,12 +61,11 @@ Diameter of a Tree</h1>
 <p><a href="https://gilkalai.wordpress.com/">Gil Kalai</a> <a
 href="https://gilkalai.wordpress.com/2017/09/05/test-your-intuition-29-diameter-of-various-random-trees/">asks</a>
 the following problem: given a random tree on <span
-class="math inline"><em>n</em></span> vertices, what is the expected
-value of its diameter?</p>
+class="math inline">\(n\)</span> vertices, what is the expected value of
+its diameter?</p>
 <p>According to Kalai, the expected value of the diameter of a random
-tree on <span class="math inline"><em>n</em></span> vertices
-asymptotically behaves like <span
-class="math inline">$\sqrt{n}$</span>.<br />
+tree on <span class="math inline">\(n\)</span> vertices asymptotically
+behaves like <span class="math inline">\(\sqrt{n}\)</span>.<br />
 </p>
 <p>We can certainly devise an experiment to see that this is the
 case.</p>
@@ -115,9 +117,9 @@ VERTICES
 ECCENTRICITY
 DIAMETER-RADIUS</code></pre>
 <p>Here is a function to measure the expected value of diameter of a
-random tree on <span class="math inline"><em>n</em></span> vertices by
-generating <span class="math inline"><em>n</em><sup>3/2</sup></span>
-such graphs and measuring the average diameter.</p>
+random tree on <span class="math inline">\(n\)</span> vertices by
+generating <span class="math inline">\(n^{3/2}\)</span> such graphs and
+measuring the average diameter.</p>
 <pre><code>(defun test (n)
   (let* ((m (floor (expt n 1.5)))
      (bag (loop repeat m collect (diameter-radius (random-tree n)))))
@@ -126,8 +128,8 @@ such graphs and measuring the average diameter.</p>
 
 TEST</code></pre>
 <p>Here is a graph of the results for <span
-class="math inline"><em>n</em> = 2</span> to <span
-class="math inline"><em>n</em> = 60</span>.</p>
+class="math inline">\(n=2\)</span> to <span
+class="math inline">\(n=60\)</span>.</p>
 <figure class="tmblr-full" data-orig-width="640" data-orig-height="480">
 <img src="../media/2017-09-27-expected_value_of_the_diameter_of_a_tree_0.png" data-orig-width="640"
 data-orig-height="480" alt="image" />

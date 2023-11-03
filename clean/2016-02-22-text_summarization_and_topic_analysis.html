@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -125,27 +128,23 @@ can infer both of these measures, and more, easily.</p>
 <h2 id="another-representation-of-a-document">Another representation of
 a document</h2>
 <p>Now, consider a document which contains <span
-class="math inline"><em>n</em></span> sentences and <span
-class="math inline"><em>m</em></span> unique (stemmed) words. Consider
-an <span class="math inline"><em>n</em> × <em>m</em></span> matrix <span
-class="math inline"><em>A</em></span>. Label the rows with sentences,
-say ordered in the natural order they appear within the document, and
-label the columns with words, say ordered in lexicographical ordering.
-We let <span
-class="math inline"><em>a</em><sub><em>i</em><em>j</em></sub></span> to
-be the number of occurences of the word <span
-class="math inline"><em>w</em><sub><em>j</em></sub></span> within the
-sentence <span
-class="math inline"><em>s</em><sub><em>i</em></sub></span>.</p>
+class="math inline">\(n\)</span> sentences and <span
+class="math inline">\(m\)</span> unique (stemmed) words. Consider an
+<span class="math inline">\(n\times m\)</span> matrix <span
+class="math inline">\(A\)</span>. Label the rows with sentences, say
+ordered in the natural order they appear within the document, and label
+the columns with words, say ordered in lexicographical ordering. We let
+<span class="math inline">\(a_{ij}\)</span> to be the number of
+occurences of the word <span class="math inline">\(w_j\)</span> within
+the sentence <span class="math inline">\(s_i\)</span>.</p>
 <p>The best thing about this matrix is that <span
-class="math inline"><em>A</em><em>A</em><sup><em>t</em></sup></span> is
-the <span class="math inline"><em>n</em> × <em>n</em></span> matrix that
-gives us the matrix of measuring common words between sentences. On the
-other hand, <span
-class="math inline"><em>A</em><sup><em>t</em></sup><em>A</em></span> is
-the <span class="math inline"><em>m</em> × <em>m</em></span> matrix
-whose entries marked by pairs of words that gives us the number of
-sentences that pair of words cooccur.</p>
+class="math inline">\(A A^t\)</span> is the <span
+class="math inline">\(n\times n\)</span> matrix that gives us the matrix
+of measuring common words between sentences. On the other hand, <span
+class="math inline">\(A^t A\)</span> is the <span
+class="math inline">\(m\times m\)</span> matrix whose entries marked by
+pairs of words that gives us the number of sentences that pair of words
+cooccur.</p>
 <p><a
 href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular
 Value Decomposition</a> of this matrix analyzes these matrices,
@@ -198,14 +197,10 @@ PROCESS</code></pre>
 <p>I added a small bit about removing the stop words. The rest is
 shuffling terms around. SVD returns 3 items:</p>
 <ol type="1">
-<li>Eigenvectors for <span
-class="math inline"><em>A</em><em>A</em><sup><em>t</em></sup></span></li>
-<li>Eigenvalues for both <span
-class="math inline"><em>A</em><sup><em>t</em></sup><em>A</em></span> and
-<span
-class="math inline"><em>A</em><em>A</em><sup><em>t</em></sup></span></li>
-<li>Eigenvectors for <span
-class="math inline"><em>A</em><sup><em>t</em></sup><em>A</em></span></li>
+<li>Eigenvectors for <span class="math inline">\(AA^t\)</span></li>
+<li>Eigenvalues for both <span class="math inline">\(A^tA\)</span> and
+<span class="math inline">\(AA^t\)</span></li>
+<li>Eigenvectors for <span class="math inline">\(A^tA\)</span></li>
 </ol>
 <p>Eigenvalues are ordered from largest to smallest and eigenvectors are
 in the right order. I am going to need the vectors corresponding to the

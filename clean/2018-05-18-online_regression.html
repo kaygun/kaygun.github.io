@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -119,58 +122,60 @@
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Assume that we have a functional relation between two variables of
 the form</p>
-<p><span
-class="math display"><em>y</em> ∼ <em>f</em>(<em>α</em>⋅<em>x</em>+<em>β</em>) + <em>ϵ</em></span></p>
-<p>where <span class="math inline"><em>ϵ</em></span> is our error term,
-<span class="math inline"><em>f</em></span> is a known function, and
-<span class="math inline"><em>x</em></span> is a numerical vector. The
-parameters <span class="math inline"><em>α</em></span> and <span
-class="math inline"><em>β</em></span> are unknown. Classical numerical
+<p><span class="math display">\[ y \sim f(\alpha\cdot x + \beta) +
+\epsilon \]</span></p>
+<p>where <span class="math inline">\(\epsilon\)</span> is our error
+term, <span class="math inline">\(f\)</span> is a known function, and
+<span class="math inline">\(x\)</span> is a numerical vector. The
+parameters <span class="math inline">\(\alpha\)</span> and <span
+class="math inline">\(\beta\)</span> are unknown. Classical numerical
 multivariate regression uses <span
-class="math inline"><em>f</em>(<em>x</em>) = <em>x</em></span>. If we
-have a collection of data points <span
-class="math inline">(<em>y</em><sup>(<em>i</em>)</sup>,<em>x</em><sup>(<em>i</em>)</sup>)<sub><em>i</em> ∈ <em>I</em></sub></span>,
-can we find the best approximating <span
-class="math inline"><em>α</em></span> and <span
-class="math inline"><em>β</em></span>?</p>
+class="math inline">\(f(x)=x\)</span>. If we have a collection of data
+points <span class="math inline">\({(y^{(i)},x^{(i)})}_{i\in
+I}\)</span>, can we find the best approximating <span
+class="math inline">\(\alpha\)</span> and <span
+class="math inline">\(\beta\)</span>?</p>
 <p>Let me add another constraint: assume we do not have access to the
 whole data set, and we are allowed to make only one pass. Can we design
 an <em>online</em> algorithm to solve this problem?</p>
 <h2 id="a-stochastic-solution">A stochastic solution</h2>
 <p>Assume we have a data point <span
-class="math inline">(<em>y</em><sup>(<em>i</em>)</sup>,<em>x</em><sup>(<em>i</em>)</sup>)</span>,
-and let us assume we already have an estimate <span
-class="math inline">(<em>α</em><sup>(<em>i</em>)</sup>,<em>β</em><sup>(<em>i</em>)</sup>)</span>.
-The error in our computation is</p>
-<p><span
-class="math display"><em>Δ</em><em>y</em><sup>(<em>i</em>)</sup> = <em>y</em><sup>(<em>i</em>)</sup> − <em>f</em>(<em>α</em><sup>(<em>i</em>)</sup>⋅<em>x</em><sup>(<em>i</em>)</sup>+<em>β</em><sup>(<em>i</em>)</sup>)</span></p>
+class="math inline">\((y^{(i)},x^{(i)})\)</span>, and let us assume we
+already have an estimate <span
+class="math inline">\((\alpha^{(i)},\beta^{(i)})\)</span>. The error in
+our computation is</p>
+<p><span class="math display">\[ \Delta y^{(i)} = y^{(i)} -
+f(\alpha^{(i)}\cdot x^{(i)} +
+\beta^{(i)}) \]</span></p>
 <p>so that we have</p>
-<p><span
-class="math display"><em>y</em><sup>(<em>i</em>)</sup> − <em>Δ</em><em>y</em><sup>(<em>i</em>)</sup> = <em>f</em>(<em>α</em><sup>(<em>i</em>)</sup>⋅<em>x</em><sup>(<em>i</em>)</sup>+<em>β</em><sup>(<em>i</em>)</sup>)</span></p>
-<p>Assume for now that <span class="math inline"><em>f</em></span> is
-invertible with an inverse <span
-class="math inline"><em>g</em>(<em>x</em>)</span>. Then</p>
-<p><span
-class="math display"><em>g</em>(<em>y</em><sup>(<em>i</em>)</sup>−<em>Δ</em><em>y</em><sup>(<em>i</em>)</sup>) ≈ <em>α</em><sup>(<em>i</em>)</sup> ⋅ <em>x</em><sup>(<em>i</em>)</sup> + <em>β</em><sup>(<em>i</em>)</sup> − <em>g</em>′(<em>y</em><sup>(<em>i</em>)</sup>)<em>Δ</em><em>y</em><sup>(<em>i</em>)</sup></span></p>
+<p><span class="math display">\[ y^{(i)} - \Delta y^{(i)} =
+f(\alpha^{(i)}\cdot x^{(i)}
++\beta^{(i)}) \]</span></p>
+<p>Assume for now that <span class="math inline">\(f\)</span> is
+invertible with an inverse <span class="math inline">\(g(x)\)</span>.
+Then</p>
+<p><span class="math display">\[ g(y^{(i)} - \Delta y^{(i)}) \approx
+\alpha^{(i)}\cdot
+x^{(i)} + \beta^{(i)} - g&#39;(y^{(i)})\Delta y^{(i)} \]</span></p>
 <p>On the other hand, the derivative of the inverse function <span
-class="math inline"><em>g</em>(<em>x</em>)</span> can be calculated from
-<span class="math inline"><em>f</em>(<em>x</em>)</span></p>
-<p><span class="math display">$$ = \alpha^{(i)}\cdot x^{(i)}
+class="math inline">\(g(x)\)</span> can be calculated from <span
+class="math inline">\(f(x)\)</span></p>
+<p><span class="math display">\[ = \alpha^{(i)}\cdot x^{(i)}
 +\beta^{(i)} - \frac{\Delta
-y^{(i)}}{f'(\alpha^{(i)}\cdot x^{(i)} + \beta^{(i)})} =
-\alpha^{(i+1)}\cdot x^{(i)} + \beta^{(i+1)} $$</span></p>
+y^{(i)}}{f&#39;(\alpha^{(i)}\cdot x^{(i)} + \beta^{(i)})} =
+\alpha^{(i+1)}\cdot x^{(i)} + \beta^{(i+1)} \]</span></p>
 <p>This means we get update rules of the form</p>
-<p><span class="math display">$$ \beta^{(i+1)} \leftarrow \beta^{(i)} -
+<p><span class="math display">\[ \beta^{(i+1)} \leftarrow \beta^{(i)} -
 \frac{\eta\Delta
-y^{(i)}}{f'(\alpha^{(i)}\cdot x^{(i)} + \beta^{(i)})} $$</span></p>
+y^{(i)}}{f&#39;(\alpha^{(i)}\cdot x^{(i)} + \beta^{(i)})} \]</span></p>
 <p>and</p>
-<p><span class="math display">$$ \alpha^{(i+1)} \leftarrow \alpha^{(i)}
+<p><span class="math display">\[ \alpha^{(i+1)} \leftarrow \alpha^{(i)}
 - \frac{\eta \Delta
-y^{(i)}}{f'(\alpha^{(i)}\cdot x^{(i)} + \beta^{(i)})} x^{(i)}
-$$</span></p>
-<p>where <span class="math inline"><em>η</em></span> is the learning
-rate. Since this is an iterative solution, we can use this method to
-process the whole data without keeping the whole dataset in memory.</p>
+y^{(i)}}{f&#39;(\alpha^{(i)}\cdot x^{(i)} + \beta^{(i)})} x^{(i)}
+\]</span></p>
+<p>where <span class="math inline">\(\eta\)</span> is the learning rate.
+Since this is an iterative solution, we can use this method to process
+the whole data without keeping the whole dataset in memory.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>Fist I am going to need two utility functions: the first is an
 implementation of the ordinary dot product of two vectors, the second is
@@ -217,14 +222,13 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb5-
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">push</span> (<span class="kw">cons</span> y x) res)))))</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>GENERATE-DATA</span></code></pre></div>
-<p>Here <span class="math inline"><em>n</em></span> stands for the
-number of points created, <span class="math inline"><em>m</em></span>
-stands for number of features, <span
-class="math inline"><em>a</em></span> and <span
-class="math inline"><em>b</em></span> are the bounds for the features,
-<span class="math inline"><em>f</em><em>n</em></span> is our function,
-and <span class="math inline"><em>δ</em></span> is for (uniform) error
-term. However, the dataset is a list. We must turn this list into a
+<p>Here <span class="math inline">\(n\)</span> stands for the number of
+points created, <span class="math inline">\(m\)</span> stands for number
+of features, <span class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span> are the bounds for the features, <span
+class="math inline">\(fn\)</span> is our function, and <span
+class="math inline">\(\delta\)</span> is for (uniform) error term.
+However, the dataset is a list. We must turn this list into a
 stream:</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> streamify </span>(data)</span>

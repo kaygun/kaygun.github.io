@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -63,27 +66,28 @@ the search function as I enter their grades. I want to be able to find
 the student for whom I am going to enter the grade with fewest possible
 keystrokes. What should I do?</p>
 <h3 id="the-formal-description">The formal description</h3>
-<p>I have a dataset <span
-class="math inline"><strong>x</strong><sup>(1)</sup>, …, <strong>x</strong><sup>(<em>N</em>)</sup></span>
-each of which is a word <span
-class="math inline"><strong>x</strong><sup>(<em>i</em>)</sup> = (<em>x</em><sub>1</sub><sup>(<em>i</em>)</sup>⋯<em>x</em><sub><em>m</em></sub><sup>(<em>i</em>)</sup>)</span>
-of length <span class="math inline"><em>m</em></span> where <span
-class="math inline"><em>m</em></span> is the same for every data point,
-and each letter <span
-class="math inline"><em>x</em><sub><em>j</em></sub><sup>(<em>i</em>)</sup></span>
-comes from a fixed alphabet <span class="math inline">𝒜</span>. How do I
-find an <em>interval</em> <span
-class="math inline"><em>j</em>, <em>j</em> + 1, …, <em>j</em> + ℓ</span>
-in <span class="math inline">{1, …, <em>m</em>}</span> such that <span
-class="math display"><em>f</em>(<strong>x</strong><sup>(<em>i</em>)</sup>) = (<em>x</em><sub><em>j</em></sub><sup>(<em>i</em>)</sup><em>x</em><sub><em>j</em> + 1</sub><sup>(<em>i</em>)</sup>⋯<em>x</em><sub><em>j</em> + ℓ</sub><sup>(<em>i</em>)</sup>)</span>
-is one-to-one, or close to being one-to-one.</p>
+<p>I have a dataset <span class="math inline">\({\mathbf
+x}^{(1)},\ldots,{\mathbf x}^{(N)}\)</span> each of which is a word <span
+class="math inline">\({\mathbf x}^{(i)} = (x^{(i)}_1\cdots
+x^{(i)}_m)\)</span> of length <span class="math inline">\(m\)</span>
+where <span class="math inline">\(m\)</span> is the same for every data
+point, and each letter <span class="math inline">\(x^{(i)}_j\)</span>
+comes from a fixed alphabet <span
+class="math inline">\(\mathcal{A}\)</span>. How do I find an
+<em>interval</em> <span
+class="math inline">\(j,j+1,\ldots,j+\ell\)</span> in <span
+class="math inline">\(\{1,\ldots,m\}\)</span> such that <span
+class="math display">\[ f({\mathbf x}^{(i)}) =
+(x^{(i)}_jx^{(i)}_{j+1}\cdots x^{(i)}_{j+\ell}) \]</span> is one-to-one,
+or close to being one-to-one.</p>
 <p>Here I choose to ask for an interval as the search function will
 require that I enter letter/digits in sequence. The more general
 question may require that I ask for a subsequence of indices <span
-class="math inline"><em>j</em><sub>1</sub>, …, <em>j</em><sub>ℓ</sub></span>
-from <span class="math inline">{1, …, <em>m</em>}</span> such that <span
-class="math display"><em>f</em>(<strong>x</strong><sup>(<em>i</em>)</sup>) = (<em>x</em><sub><em>j</em><sub>1</sub></sub><sup>(<em>i</em>)</sup><em>x</em><sub><em>j</em><sub>2</sub></sub><sup>(<em>i</em>)</sup>⋯<em>x</em><sub><em>j</em><sub>ℓ</sub></sub><sup>(<em>i</em>)</sup>)</span>
-is one-to-one, or close to being one-to-one.</p>
+class="math inline">\(j_1,\ldots,j_\ell\)</span> from <span
+class="math inline">\(\{1,\ldots,m\}\)</span> such that <span
+class="math display">\[ f({\mathbf x}^{(i)}) =
+(x^{(i)}_{j_1} x^{(i)}_{j_2} \cdots x^{(i)}_{j_\ell}) \]</span> is
+one-to-one, or close to being one-to-one.</p>
 <h2 id="the-entropy">The entropy</h2>
 <p>Entering the first few digits of the student id number is usually a
 bad idea as the beginning of these numbers designate their admission
@@ -97,48 +101,46 @@ href="http://en.wikipedia.org/wiki/Entropy_(information_theory)">entropy</a></em
 taking my class: 20 from Computer Science and 80 from Electrical
 Engineering. Assuming the digits I enter are the department codes, I
 will get two groups: CS and EE. The entropy (the measure of randomness)
-is <span
-class="math display"> − 0.2log<sub>2</sub>(0.2) − 0.8log<sub>2</sub>(0.8) ≈ .722</span>
-Here I have two groups: CS students (in the group their total measure is
-20%) and EE students (they comprise of 80% of the group). On the other
-hand if I found the right interval of digits to enter I would have
-gotten each individual student (all 100 of them) in its own separate
-group. In that case the randomness measure would have been <span
-class="math display">$$
+is <span class="math display">\[ - 0.2 \log_2(0.2) - 0.8 \log_2(0.8)
+\approx .722 \]</span> Here I have two groups: CS students (in the group
+their total measure is 20%) and EE students (they comprise of 80% of the
+group). On the other hand if I found the right interval of digits to
+enter I would have gotten each individual student (all 100 of them) in
+its own separate group. In that case the randomness measure would have
+been <span class="math display">\[
 \sum_{i=1}^{100} -0.01 \log_2(0.01) = -\log_2(0.01) = \log_2(100)
-\approx 6.644 $$</span></p>
+\approx 6.644 \]</span></p>
 <p>This means, I will have to find the interval <span
-class="math inline"><em>j</em>, <em>j</em> + 1, …, <em>j</em> + ℓ</span>
-such that the entropy of the probability distribution on the projected
-set <span
-class="math display"><em>π</em>(<strong>x</strong><sup>(<em>i</em>)</sup>) = (<em>x</em><sub><em>j</em></sub><sup>(<em>i</em>)</sup>⋯<em>x</em><sub><em>j</em> + ℓ</sub><sup>(<em>i</em>)</sup>)</span>
-is close to <span class="math display">$$ -N\cdot
-\frac{1}{N}\log_2(1/N) = \log_2(N) $$</span></p>
+class="math inline">\(j,j+1,\ldots,j+\ell\)</span> such that the entropy
+of the probability distribution on the projected set <span
+class="math display">\[ \pi({\mathbf x}^{(i)}) = (x^{(i)}_{j}\cdots
+x^{(i)}_{j+\ell}) \]</span> is close to <span class="math display">\[
+-N\cdot
+\frac{1}{N}\log_2(1/N) = \log_2(N) \]</span></p>
 <p><em>What is the entropy of the probability distribution on the
 projected set?</em> you might ask. Imagine you have a finite set <span
-class="math inline"><em>X</em></span> and a labeling function <span
-class="math inline"><em>f</em>: <em>X</em> → 𝒜 = {<em>a</em><sub>1</sub>, …, <em>a</em><sub><em>t</em></sub>}</span>.
-Let <span class="math inline"><em>n</em><sub><em>i</em></sub></span> be
-the number of elements in <span class="math inline"><em>X</em></span>
-labeled by <span
-class="math inline"><em>a</em><sub><em>i</em></sub> ∈ {<em>a</em><sub>1</sub>, …, <em>a</em><sub><em>t</em></sub>}</span>
-via <span class="math inline"><em>f</em></span>. In other words, <span
-class="math display"><em>n</em><sub><em>i</em></sub> = ∥{<em>x</em> ∈ <em>X</em>∥ <em>f</em>(<em>x</em>) = <em>a</em><sub><em>i</em></sub>}∥</span>
-Then the probability of seeing the label <span
-class="math inline"><em>a</em><sub><em>i</em></sub></span> on the
-dataset is <span
-class="math inline"><em>n</em><sub><em>i</em></sub>/<em>N</em></span>
-where <span class="math inline"><em>N</em></span> is the number of
-elements in <span class="math inline"><em>X</em></span>. Hence, the
-entropy is <span class="math display">$$ \sum_{i=1}^t
+class="math inline">\(X\)</span> and a labeling function <span
+class="math inline">\(f\colon X\to \mathcal{A} =
+\{a_1,\ldots,a_t\}\)</span>. Let <span
+class="math inline">\(n_i\)</span> be the number of elements in <span
+class="math inline">\(X\)</span> labeled by <span
+class="math inline">\(a_i\in\{a_1,\ldots,a_t\}\)</span> via <span
+class="math inline">\(f\)</span>. In other words, <span
+class="math display">\[ n_i =
+\|\{x\in X\|\ f(x) = a_i\}\| \]</span> Then the probability of seeing
+the label <span class="math inline">\(a_i\)</span> on the dataset is
+<span class="math inline">\(n_i/N\)</span> where <span
+class="math inline">\(N\)</span> is the number of elements in <span
+class="math inline">\(X\)</span>. Hence, the entropy is <span
+class="math display">\[ \sum_{i=1}^t
 -\frac{n_i}{N}\log_2(n_i/N) = \log_2(N) - \frac{1}{N}\sum_{i=1}^t
-n_i \log_2(n_i) $$</span> In case <span class="math inline">𝒜</span> is
-our alphabet and <span class="math inline"><em>f</em></span> is
-projection on <span class="math inline"><em>i</em></span>-th letter then
-we would like this value to be as close to <span
-class="math inline">log<sub>2</sub>(<em>N</em>)</span> as possible. This
-means we could instead minimize the sum <span class="math display">$$
-\sum_{i=1}^t n_i\log_2(n_i) $$</span></p>
+n_i \log_2(n_i) \]</span> In case <span
+class="math inline">\(\mathcal{A}\)</span> is our alphabet and <span
+class="math inline">\(f\)</span> is projection on <span
+class="math inline">\(i\)</span>-th letter then we would like this value
+to be as close to <span class="math inline">\(\log_2(N)\)</span> as
+possible. This means we could instead minimize the sum <span
+class="math display">\[ \sum_{i=1}^t n_i\log_2(n_i) \]</span></p>
 <h2 id="implementation-and-test">Implementation and test</h2>
 <p>I will assume that the dataset is given as a lisp list of strings of
 length 7 consisting of decimal digits only. My dataset consists of 266

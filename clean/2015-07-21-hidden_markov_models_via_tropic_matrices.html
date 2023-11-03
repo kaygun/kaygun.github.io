@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -59,94 +62,85 @@ href="clean/2015-06-28-an_implementation_of_the_viterbi_algorithm_in_common_lisp
 previous post</a>, but let me repeat it anyway.</p>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>We have an ordered sequence of observations <span
-class="math inline"><em>x</em><sub>1</sub>, <em>x</em><sub>2</sub>, …, <em>x</em><sub><em>N</em></sub></span>
-where each observation is labeled from a finite set of classes <span
-class="math inline"><em>Y</em></span>. The probability that an
-observation <span class="math inline"><em>x</em></span> is labeled as
-<span class="math inline"><em>y</em> ∈ <em>Y</em></span> is given by
-<span class="math inline"><em>p</em>(<em>y</em>∥<em>x</em>)</span>. We
-assume that we know the probability distributions for the observations
-<span class="math inline"><em>p</em>(<em>x</em>)</span> and classes
-<span class="math inline"><em>p</em>(<em>y</em>)</span>, and the
-probability <span
-class="math inline"><em>p</em>(<em>x</em>∥<em>y</em>)</span> of seeing
-the observation <span class="math inline"><em>x</em></span> under the
-label <span class="math inline"><em>y</em></span>. Assume also that we
-have transition probabilities <span
-class="math inline"><em>p</em>(<em>y</em>′∥<em>y</em>)</span> telling us
-the probability of seeing class label <span
-class="math inline"><em>y</em>′ ∈ <em>Y</em></span> right after
-observing <span class="math inline"><em>y</em> ∈ <em>Y</em></span>.</p>
+class="math inline">\(x_1,x_2,\ldots,x_N\)</span> where each observation
+is labeled from a finite set of classes <span
+class="math inline">\(Y\)</span>. The probability that an observation
+<span class="math inline">\(x\)</span> is labeled as <span
+class="math inline">\(y\in Y\)</span> is given by <span
+class="math inline">\(p(y\|x)\)</span>. We assume that we know the
+probability distributions for the observations <span
+class="math inline">\(p(x)\)</span> and classes <span
+class="math inline">\(p(y)\)</span>, and the probability <span
+class="math inline">\(p(x\|y)\)</span> of seeing the observation <span
+class="math inline">\(x\)</span> under the label <span
+class="math inline">\(y\)</span>. Assume also that we have transition
+probabilities <span class="math inline">\(p(y&#39;\|y)\)</span> telling
+us the probability of seeing class label <span
+class="math inline">\(y&#39;\in Y\)</span> right after observing <span
+class="math inline">\(y\in Y\)</span>.</p>
 <p>Our task is to find the labeling scheme <span
-class="math inline">ℓ: {<em>x</em><sub>1</sub>, …, <em>x</em><sub><em>N</em></sub>} → <em>Y</em></span>
-of the observations with the maximum likelihood. In other words, we need
-to maximize <span class="math display">$$ \pi(\ell) =
-\prod_{i=1}^N p(\ell(x_i)\|x_i)p(\ell(x_{i+1})\|\ell(x_i)) $$</span> We
-set <span
-class="math inline"><em>p</em>(ℓ(<em>x</em><sub><em>N</em> + 1</sub>)∥ℓ(<em>x</em><sub><em>N</em></sub>)) = 1</span>
+class="math inline">\(\ell\colon \{x_1,\ldots,x_N\}\to Y\)</span> of the
+observations with the maximum likelihood. In other words, we need to
+maximize <span class="math display">\[ \pi(\ell) =
+\prod_{i=1}^N p(\ell(x_i)\|x_i)p(\ell(x_{i+1})\|\ell(x_i)) \]</span> We
+set <span class="math inline">\(p(\ell(x_{N+1})\|\ell(x_N))=1\)</span>
 to make the product meaningful.</p>
 <h2 id="a-reduction">A reduction</h2>
 <p>Taking the logarithms and expanding we get <span
-class="math display">$$ \log\pi(\ell) =
+class="math display">\[ \log\pi(\ell) =
 \sum_{i=1}^N \log p(\ell(x_i)\| x_i) + \sum_{i=1}^{N-1} \log
-p(\ell(x_{i+1})\|\ell(x_i)) $$</span> which then can be simplified as
-<span class="math display">$$
+p(\ell(x_{i+1})\|\ell(x_i)) \]</span> which then can be simplified as
+<span class="math display">\[
 = \sum_{i=1}^N \log p(\ell(x_{i+1})\|\ell(x_i)) + \sum_{i=1}^N
-\log p(x_i\|\ell(x_i)) + \log p(\ell(x_i)) - \log p(x_i) $$</span>
-Notice that we can drop <span
-class="math inline">log <em>p</em>(<em>x</em><sub><em>i</em></sub>)</span>
-terms since they do not depend on <span class="math inline">ℓ</span>.
-Since logarithms of probabilities lie in <span
-class="math inline">$(-\infty,0\]$</span>, we need to minimize the
-quantity below: <span class="math display">$$
+\log p(x_i\|\ell(x_i)) + \log p(\ell(x_i)) - \log p(x_i) \]</span>
+Notice that we can drop <span class="math inline">\(\log p(x_i)\)</span>
+terms since they do not depend on <span
+class="math inline">\(\ell\)</span>. Since logarithms of probabilities
+lie in <span class="math inline">\((-\infty,0\]\)</span>, we need to
+minimize the quantity below: <span class="math display">\[
 -\log\pi(\ell) \sim \tau(\ell) := \sum_{i=1}^N -\log
 p(\ell(x_{i+1})\|\ell(x_i)) + \sum_{i=1}^N -\log
-p(x_i\|\ell(x_i)) + \sum_{i=1}^N -\log p(\ell(x_i)) $$</span> Let us
-rearrange the terms a bit: <span class="math display">$$ \tau(\ell) = -
+p(x_i\|\ell(x_i)) + \sum_{i=1}^N -\log p(\ell(x_i)) \]</span> Let us
+rearrange the terms a bit: <span class="math display">\[ \tau(\ell) = -
 \sum_{i=1}^N \log
 p(x_i\|\ell(x_i)) + \log p(\ell(x_i)) + \log
-p(\ell(x_i)\|\ell(x_{i-1})) $$</span> by letting <span
-class="math inline"><em>p</em>(ℓ(<em>x</em><sub>1</sub>)∥ℓ(<em>x</em><sub>0</sub>)) = 1</span>
-in the equation.</p>
+p(\ell(x_i)\|\ell(x_{i-1})) \]</span> by letting <span
+class="math inline">\(p(\ell(x_1)\|\ell(x_0))=1\)</span> in the
+equation.</p>
 <h2 id="tropic-semiring">Tropic semiring</h2>
 <p>We consider the set of non-negative real numbers <span
-class="math inline">$\mathbb{R}_+ := \[0,\infty)$</span> together with
-the operations <span class="math inline">min </span> (which we denote as
-<span
-class="math inline">min (<em>x</em>,<em>y</em>) = <em>x</em> ∧ <em>y</em></span>)
-and ordinary product. Notice that <span
-class="math display"><em>x</em> + (<em>y</em>∧<em>z</em>) = (<em>x</em>+<em>y</em>) ∧ (<em>x</em>+<em>z</em>)</span>
-However, <span class="math inline">∧</span> does not have a unit and
-<span
-class="math inline">0 ∧ <em>x</em> = <em>x</em> ∧ 0 = 0</span>.</p>
+class="math inline">\(\mathbb{R}_+ := \[0,\infty)\)</span> together with
+the operations <span class="math inline">\(\min\)</span> (which we
+denote as <span class="math inline">\(\min(x,y) = x\wedge y\)</span>)
+and ordinary product. Notice that <span class="math display">\[
+x + (y\wedge z) = (x+y)\wedge(x+z) \]</span> However, <span
+class="math inline">\(\wedge\)</span> does not have a unit and <span
+class="math inline">\(0\wedge x = x\wedge 0 = 0\)</span>.</p>
 <p>One can form matrices in the tropic semi-rng. Assume we have two such
-tropic matrices <span
-class="math inline"><em>A</em><sub><em>n</em> × <em>m</em></sub> = (<em>a</em><sub><em>i</em><em>j</em></sub>)</span>
-and <span
-class="math inline"><em>B</em><sub><em>m</em> × ℓ</sub> = (<em>b</em><sub><em>i</em><em>j</em></sub>)</span>
-then the product <span
-class="math inline"><em>C</em><sub><em>n</em> × ℓ</sub> = <em>A</em> * <em>B</em></span>
-has the entries <span class="math display">$$ c_{ij} = \bigwedge_{k=1}^m
-(a_{ik} + b_{kj}) $$</span></p>
+tropic matrices <span class="math inline">\(A_{n\times m} =
+(a_{ij})\)</span> and <span class="math inline">\(B_{m\times\ell} =
+(b_{ij})\)</span> then the product <span
+class="math inline">\(C_{n\times\ell} = A\ast B\)</span> has the entries
+<span class="math display">\[ c_{ij} = \bigwedge_{k=1}^m (a_{ik} +
+b_{kj}) \]</span></p>
 <h2 id="re-imagining-our-problem-in-tropic-terms">Re-imagining our
 problem in tropic terms</h2>
-<p>Let us define matrices <span
-class="math inline"><em>ω</em><sub><em>i</em></sub></span> for <span
-class="math inline"><em>i</em> = 1, …, <em>n</em></span> as <span
-class="math display"><em>ω</em><sub><em>j</em><em>k</em></sub>(<em>i</em>) =  − log <em>p</em>(<em>x</em><sub><em>i</em></sub>∥<em>y</em><sub><em>j</em></sub>) − log <em>p</em>(<em>y</em><sub><em>j</em></sub>) − log <em>p</em>(<em>y</em><sub><em>j</em></sub>∥<em>y</em><sub><em>k</em></sub>)</span>
-Now, the problem we stated above reduces to calculating the entries of
-<span class="math display"><em>ω</em>(1)⋯<em>ω</em>(<em>n</em>)</span>
-and finding the minimal entry together with the path that produced that
-entry.</p>
+<p>Let us define matrices <span class="math inline">\(\omega_i\)</span>
+for <span class="math inline">\(i=1,\ldots,n\)</span> as <span
+class="math display">\[
+\omega_{jk}(i) = - \log p(x_i\|y_j) - \log p(y_j) - \log
+p(y_j\|y_k) \]</span> Now, the problem we stated above reduces to
+calculating the entries of <span class="math display">\[
+\omega(1)\cdots\omega(n) \]</span> and finding the minimal entry
+together with the path that produced that entry.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>Let us start with tropic multiplication of matrices. Our matrices
 have entries as pairs <code>(path . -log(prob))</code>. Each path at the
 entry <code>(i j)</code> is a sequence of indices that starts at <span
-class="math inline"><em>i</em></span> and ends at <span
-class="math inline"><em>j</em></span>. We are going to concatenate
-paths, and tropic multiply entries coming from negative log terms. The
-following function takes two matrices of this form and returns their
-product.</p>
+class="math inline">\(i\)</span> and ends at <span
+class="math inline">\(j\)</span>. We are going to concatenate paths, and
+tropic multiply entries coming from negative log terms. The following
+function takes two matrices of this form and returns their product.</p>
 <pre><code>(defun tropic-mult (a b)
    (let ((n (array-dimension a 0))
          (m (array-dimension b 1))
@@ -190,23 +184,18 @@ sequence of matrices we going going to multiply. The following function
 takes 3 inputs:</p>
 <ol type="1">
 <li>A matrix <code>a</code> of the conditional probabilities <span
-class="math inline"><em>p</em>(<em>x</em><sub><em>i</em></sub>∥<em>y</em><sub><em>j</em></sub>)</span>
-of seeing a state <span
-class="math inline"><em>x</em><sub><em>i</em></sub></span> given the
-label <span
-class="math inline"><em>y</em><sub><em>j</em></sub></span>.</li>
+class="math inline">\(p(x_i\|y_j)\)</span> of seeing a state <span
+class="math inline">\(x_i\)</span> given the label <span
+class="math inline">\(y_j\)</span>.</li>
 <li>A matrix <code>b</code> of the probability distribution of the
-labels <span
-class="math inline"><em>y</em><sub><em>j</em></sub></span>’s</li>
+labels <span class="math inline">\(y_j\)</span>’s</li>
 <li>A matrix <code>c</code> of transition probabilities <span
-class="math inline"><em>p</em>(<em>y</em><sub><em>j</em></sub>∥<em>y</em><sub><em>i</em></sub>)</span>
-from a label <span
-class="math inline"><em>y</em><sub><em>i</em></sub></span> to another
-label <span
-class="math inline"><em>y</em><sub><em>j</em></sub></span>.</li>
+class="math inline">\(p(y_j\|y_i)\)</span> from a label <span
+class="math inline">\(y_i\)</span> to another label <span
+class="math inline">\(y_j\)</span>.</li>
 </ol>
 <p>and it returns a list of matrices <span
-class="math inline">(<em>ω</em>(1),…,<em>ω</em>(<em>m</em>))</span>.</p>
+class="math inline">\((\omega(1),\ldots,\omega(m))\)</span>.</p>
 <pre><code>(defun matrix (a b c)
    (let* ((m (array-dimension a 1))
           (n (array-dimension a 0)))

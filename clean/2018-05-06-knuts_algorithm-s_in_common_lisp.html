@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -120,7 +123,7 @@ Lisp</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Knut’s <a
 href="http://rosettacode.org/wiki/Knuth%27s_algorithm_S">Algorithm S</a>
-is an algorithm for taking <span class="math inline"><em>k</em></span>
+is an algorithm for taking <span class="math inline">\(k\)</span>
 samples uniformly randomly from a list. At Rosetta Code there is a
 Common Lisp implementation, but I wrote my own.</p>
 <div class="sourceCode" id="cb1"><pre
@@ -137,12 +140,12 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a 
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>SAMPLER</span></code></pre></div>
 <p>This function for a sample size <span
-class="math inline"><em>k</em></span> returns a function. Each time one
-calls this function with an item, we get a pool of objects of size <span
-class="math inline"><em>k</em></span>. At the end of calling this
-function <span class="math inline"><em>N</em></span>-times, the pool
-contains samples chosen uniformly randomly from the collective list of
-objects fed into the function.</p>
+class="math inline">\(k\)</span> returns a function. Each time one calls
+this function with an item, we get a pool of objects of size <span
+class="math inline">\(k\)</span>. At the end of calling this function
+<span class="math inline">\(N\)</span>-times, the pool contains samples
+chosen uniformly randomly from the collective list of objects fed into
+the function.</p>
 <p>Let us test if the sampling is uniformly random:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((res (<span class="kw">make-list</span> <span class="dv">10</span> <span class="bu">:initial-element</span> <span class="dv">0</span>))</span>

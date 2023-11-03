@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -110,6 +109,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -122,16 +125,13 @@ href="http://oeis.org/"><em>The On-Line Encyclopedia of Integer
 Sequences</em></a> is <a href="http://oeis.org/A181391">Van Eck’s
 sequence</a>. Here is how it is defined:</p>
 <p>Given the initial part of the sequence <span
-class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>n</em></sub></span>
-if <span class="math inline"><em>a</em><sub><em>n</em></sub></span>
-appears for the first time in the sequence, we set <span
-class="math inline"><em>a</em><sub><em>n</em> + 1</sub></span> to 0.
-Otherwise, we set <span
-class="math inline"><em>a</em><sub><em>n</em> + 1</sub></span> to <span
-class="math inline"><em>n</em> − <em>m</em></span> where <span
-class="math inline"><em>a</em><sub><em>m</em></sub></span> is the first
-time <span class="math inline"><em>a</em><sub><em>n</em></sub></span>
-appears in the sequence.</p>
+class="math inline">\(a_1,\ldots,a_n\)</span> if <span
+class="math inline">\(a_n\)</span> appears for the first time in the
+sequence, we set <span class="math inline">\(a_{n+1}\)</span> to 0.
+Otherwise, we set <span class="math inline">\(a_{n+1}\)</span> to <span
+class="math inline">\(n-m\)</span> where <span
+class="math inline">\(a_m\)</span> is the first time <span
+class="math inline">\(a_n\)</span> appears in the sequence.</p>
 <h2 id="an-implementation-in-common-lisp">An implementation in common
 lisp</h2>
 <p>It is easier to grow lists in common lisp at the head. So, we are

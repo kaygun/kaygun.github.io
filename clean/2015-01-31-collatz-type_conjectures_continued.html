@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -56,7 +59,7 @@
 (Continued)</h1>
 <p>Today’s post is going to be short. I would like to show collatz
 lengths of natural numbers with different values of <span
-class="math inline"><em>p</em></span>.</p>
+class="math inline">\(p\)</span>.</p>
 <p>Let us recall: we have two functions</p>
 <pre><code>(defun f (n p)
    (if (zerop (mod n p))
@@ -70,14 +73,12 @@ F
       (f (+ (* n p) n p (- (mod n p))) p)))
 G</code></pre>
 <p>From this we calculate lengths of the recursive sequence <span
-class="math inline"><em>a</em><sub><em>n</em> + 1</sub> = <em>g</em><sub><em>p</em></sub>(<em>a</em><sub><em>n</em></sub>)</span>.
-We are going to terminate the recursive sequence when <span
-class="math inline"><em>a</em><sub><em>n</em></sub></span> hits 1, or if
-the sequence contains a cycle <span
-class="math inline">(<em>a</em><sub><em>k</em></sub>,…,<em>a</em><sub><em>m</em> + <em>k</em></sub>)</span>
-where <span
-class="math inline"><em>a</em><sub><em>k</em></sub> = <em>a</em><sub><em>k</em> + <em>m</em></sub></span>.
-My implementation of the length in lisp is as follows:</p>
+class="math inline">\(a_{n+1} = g_p(a_n)\)</span>. We are going to
+terminate the recursive sequence when <span
+class="math inline">\(a_n\)</span> hits 1, or if the sequence contains a
+cycle <span class="math inline">\((a_k,\ldots,a_{m+k})\)</span> where
+<span class="math inline">\(a_k = a_{k+m}\)</span>. My implementation of
+the length in lisp is as follows:</p>
 <pre><code>(defun run (n p &amp;optional (m 0) (tail nil))
    (let ((res (g n p)))
       (if (or (= n 1) (member res tail))
@@ -85,11 +86,10 @@ My implementation of the length in lisp is as follows:</p>
          (run res p (1+ m) (cons res tail)))))
 RUN</code></pre>
 <p>I’ll show you several plots: for <span
-class="math inline"><em>p</em> = 2</span> (the original Collatz
-Conjecture case), and for <span
-class="math inline"><em>p</em> = 3, 5, 7</span> and one for a large
-<span class="math inline"><em>p</em></span> where <span
-class="math inline"><em>p</em> = 103</span>.</p>
+class="math inline">\(p=2\)</span> (the original Collatz Conjecture
+case), and for <span class="math inline">\(p=3,5,7\)</span> and one for
+a large <span class="math inline">\(p\)</span> where <span
+class="math inline">\(p=103\)</span>.</p>
 <figure data-orig-height="375" data-orig-width="500" data-orig-src>
 <img src="../media/2015-01-31-collatz-type_conjectures_continued_0.png" data-orig-height="375"
 data-orig-width="500" data-orig-src="" />

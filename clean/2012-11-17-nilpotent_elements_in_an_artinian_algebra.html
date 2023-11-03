@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -56,96 +59,87 @@
 an artinian algebra</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>For today’s discussion, I will fix a ground field <span
-class="math inline"><em>k</em></span>, and assume <span
-class="math inline"><em>A</em></span> is an artinian <span
-class="math inline"><em>k</em></span>-algebra. That is <span
-class="math inline"><em>A</em></span> is a vector space over <span
-class="math inline"><em>k</em></span>, and I have an unital associative
-binary operation <span
-class="math inline">(<em>x</em>,<em>y</em>) ↦ <em>x</em><em>y</em></span>
-on <span class="math inline"><em>A</em></span> which is <span
-class="math inline"><em>k</em></span>-linear in both variables.</p>
+class="math inline">\(k\)</span>, and assume <span
+class="math inline">\(A\)</span> is an artinian <span
+class="math inline">\(k\)</span>-algebra. That is <span
+class="math inline">\(A\)</span> is a vector space over <span
+class="math inline">\(k\)</span>, and I have an unital associative
+binary operation <span class="math inline">\((x,y)\mapsto xy\)</span> on
+<span class="math inline">\(A\)</span> which is <span
+class="math inline">\(k\)</span>-linear in both variables.</p>
 <p>I will need the following definitions to formulate today’s
 problem:</p>
 <ol type="1">
-<li><p>The radical of a subset <span
-class="math inline"><em>I</em></span> of <span
-class="math inline"><em>A</em></span> is the set <span
-class="math inline">$\sqrt{I} := \{a\in A\|\ \exists n\in\mathbb{N},\
-a^n\in I\}$</span>.</p></li>
+<li><p>The radical of a subset <span class="math inline">\(I\)</span> of
+<span class="math inline">\(A\)</span> is the set <span
+class="math inline">\(\sqrt{I} := \{a\in A\|\ \exists n\in\mathbb{N},\
+a^n\in I\}\)</span>.</p></li>
 <li><p>The <em>nil radical</em> <span
-class="math inline"><em>N</em><em>i</em><em>l</em>(<em>A</em>)</span> of
-an <span class="math inline"><em>k</em></span>-algebra <span
-class="math inline"><em>A</em></span> is the intersection of all of its
-prime ideals.</p></li>
+class="math inline">\(Nil(A)\)</span> of an <span
+class="math inline">\(k\)</span>-algebra <span
+class="math inline">\(A\)</span> is the intersection of all of its prime
+ideals.</p></li>
 </ol>
 <p>Today I want to prove the following result: If <span
-class="math inline"><em>A</em></span> is artinian then <span
-class="math inline">$Nil(A) = \sqrt{(0)}$</span>.</p>
+class="math inline">\(A\)</span> is artinian then <span
+class="math inline">\(Nil(A) = \sqrt{(0)}\)</span>.</p>
 <p><strong>A note of warning:</strong> I <strong>do not</strong> make
 any assumptions on the commutativity of <span
-class="math inline"><em>A</em></span>. The proof of this fact when <span
-class="math inline"><em>A</em></span> is commutative is relatively
-easy.</p>
+class="math inline">\(A\)</span>. The proof of this fact when <span
+class="math inline">\(A\)</span> is commutative is relatively easy.</p>
 <h2 id="solution">Solution</h2>
-<p>An element <span class="math inline"><em>x</em> ∈ <em>A</em></span>
-is called <em>nilpotent</em> there exists <span
-class="math inline"><em>n</em> ∈ ℕ</span> such that <span
-class="math inline"><em>x</em><sup><em>n</em></sup> = 0</span>. In other
-words <span class="math inline">$\sqrt{(0)}$</span> is exactly the set
-of nilpotent elements.</p>
-<p>Assume <span class="math inline"><em>x</em></span> is nilpotent. Then
+<p>An element <span class="math inline">\(x\in A\)</span> is called
+<em>nilpotent</em> there exists <span
+class="math inline">\(n\in\mathbb{N}\)</span> such that <span
+class="math inline">\(x^n=0\)</span>. In other words <span
+class="math inline">\(\sqrt{(0)}\)</span> is exactly the set of
+nilpotent elements.</p>
+<p>Assume <span class="math inline">\(x\)</span> is nilpotent. Then
 there is a natural number <span
-class="math inline"><em>n</em> ∈ ℕ</span> such that <span
-class="math inline"><em>x</em><sup><em>n</em></sup> = 0</span>, and
-since every prime ideal contains <span class="math inline">0</span> we
-can conclude that <span
-class="math inline"><em>x</em><sup><em>n</em></sup> ∈ <em>P</em></span>
-for every prime ideal <span class="math inline"><em>P</em></span>. Since
-prime ideals are special in that <span
-class="math inline"><em>x</em><em>y</em> ∈ <em>P</em></span> implies
-<span class="math inline"><em>x</em> ∈ <em>P</em></span> or <span
-class="math inline"><em>y</em> ∈ <em>P</em></span>, we conclude from
-<span
-class="math inline"><em>x</em><sup><em>n</em></sup> ∈ <em>P</em></span>
-that <span class="math inline"><em>x</em> ∈ <em>P</em></span> for every
-<span class="math inline"><em>P</em></span>. Thus <span
-class="math inline"><em>x</em></span> is in the nil radical.</p>
-<p>Assume now that <span class="math inline"><em>x</em></span> is in the
-nil radical. Since every maximal ideal is also a prime ideal, we can
-conclude that <span class="math inline"><em>x</em></span> is in the
+class="math inline">\(n\in\mathbb{N}\)</span> such that <span
+class="math inline">\(x^n=0\)</span>, and since every prime ideal
+contains <span class="math inline">\(0\)</span> we can conclude that
+<span class="math inline">\(x^n\in P\)</span> for every prime ideal
+<span class="math inline">\(P\)</span>. Since prime ideals are special
+in that <span class="math inline">\(xy\in P\)</span> implies <span
+class="math inline">\(x\in P\)</span> or <span
+class="math inline">\(y\in P\)</span>, we conclude from <span
+class="math inline">\(x^n\in P\)</span> that <span
+class="math inline">\(x\in P\)</span> for every <span
+class="math inline">\(P\)</span>. Thus <span
+class="math inline">\(x\)</span> is in the nil radical.</p>
+<p>Assume now that <span class="math inline">\(x\)</span> is in the nil
+radical. Since every maximal ideal is also a prime ideal, we can
+conclude that <span class="math inline">\(x\)</span> is in the
 intersection of all maximal ideals. This intersection is called the
-Jacobson radical of <span class="math inline"><em>A</em></span>
-(Notation: <span class="math inline"><em>J</em>(<em>A</em>)</span>) and
-has this nice property that</p>
+Jacobson radical of <span class="math inline">\(A\)</span> (Notation:
+<span class="math inline">\(J(A)\)</span>) and has this nice property
+that</p>
 <blockquote>
-<p>For every <span
-class="math inline"><em>x</em> ∈ <em>J</em>(<em>A</em>)</span>, the
-element <span class="math inline">1 + <em>x</em></span> is invertible
-when <span class="math inline"><em>A</em></span> is artinian.</p>
+<p>For every <span class="math inline">\(x\in J(A)\)</span>, the element
+<span class="math inline">\(1+x\)</span> is invertible when <span
+class="math inline">\(A\)</span> is artinian.</p>
 </blockquote>
 <p>We also have a descending chain of left ideals <span
-class="math display"><em>A</em><em>x</em> ⊇ <em>A</em><em>x</em><sup>2</sup> ⊆ <em>A</em><em>x</em><sup>3</sup> ⊇ ⋯</span>
-which should stabilize. Then there exists <span
-class="math inline"><em>n</em> ∈ ℕ</span> such that <span
-class="math inline"><em>A</em><em>x</em><sup><em>n</em></sup> = <em>A</em><em>x</em><sup><em>n</em> + 1</sup></span>.
-This means there is an element <span
-class="math inline"><em>a</em> ∈ <em>A</em></span> such that <span
-class="math display"><em>x</em><sup><em>n</em></sup> = <em>a</em><em>x</em><sup><em>n</em> + 1</sup>   ⟹ (<em>a</em><em>x</em>−1)<em>x</em><sup><em>n</em></sup> = 0</span>
-But <span class="math inline"><em>x</em></span> is in the nil radical,
-and therefore, <span class="math inline"><em>x</em></span> is in the
-Jacobson radical. Therefore, <span
-class="math inline"><em>a</em><em>x</em></span> is also in the Jacobson
-radical which in turn implies <span
-class="math inline"><em>a</em><em>x</em> − 1</span> is invertible. Then
-we necessarily have that <span
-class="math inline"><em>x</em><sup><em>n</em></sup> = 0</span>. This
-finishes the proof.</p>
+class="math display">\[ Ax \supseteq Ax^2
+\subseteq Ax^3\supseteq \cdots \]</span> which should stabilize. Then
+there exists <span class="math inline">\(n\in\mathbb{N}\)</span> such
+that <span class="math inline">\(Ax^n = Ax^{n+1}\)</span>. This means
+there is an element <span class="math inline">\(a\in A\)</span> such
+that <span class="math display">\[ x^n = ax^{n+1}
+\quad\implies (ax - 1)x^n = 0 \]</span> But <span
+class="math inline">\(x\)</span> is in the nil radical, and therefore,
+<span class="math inline">\(x\)</span> is in the Jacobson radical.
+Therefore, <span class="math inline">\(ax\)</span> is also in the
+Jacobson radical which in turn implies <span
+class="math inline">\(ax-1\)</span> is invertible. Then we necessarily
+have that <span class="math inline">\(x^n=0\)</span>. This finishes the
+proof.</p>
 <h2 id="a-corollary">A corollary</h2>
 <p>One immediate corollary to the result above is that in an artinian
 algebra, the radical of a an ideal <span
-class="math inline"><em>I</em></span> is the intersection of all prime
-ideals containing <span class="math inline"><em>I</em></span>.</p>
+class="math inline">\(I\)</span> is the intersection of all prime ideals
+containing <span class="math inline">\(I\)</span>.</p>
 <div id="footer">
 <p><span id="timestamp">November 17th, 2012 6:49am</span></p>
 </div>

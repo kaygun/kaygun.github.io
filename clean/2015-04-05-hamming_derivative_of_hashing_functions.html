@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -47,6 +46,10 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -55,21 +58,19 @@
 <h1 id="hamming-derivative-of-hashing-functions">Hamming Derivative of
 Hashing Functions</h1>
 <h2 id="description-of-the-problem">Description of the Problem</h2>
-<p>If <span class="math inline">(<em>X</em>,<em>d</em>)</span> is a
-metric space and if <span
-class="math inline"><em>f</em>: <em>X</em> → <em>X</em></span> is a self
-map there is a quantity of interest: I’d like to see the distribution of
-the numbers defined for every <span
-class="math inline"><em>x</em> ≠ <em>y</em></span></p>
-<p><span class="math display">$$\frac{d(f(x),f(y))}{d(x,y)}$$</span></p>
+<p>If <span class="math inline">\((X,d)\)</span> is a metric space and
+if <span class="math inline">\(f\colon X\to X\)</span> is a self map
+there is a quantity of interest: I’d like to see the distribution of the
+numbers defined for every <span class="math inline">\(x\neq
+y\)</span></p>
+<p><span class="math display">\[\frac{d(f(x),f(y))}{d(x,y)}\]</span></p>
 <p>In today’s note, the metric space is the space of bitstrings of a
 fixed length with the <a
 href="http://en.wikipedia.org/wiki/Hamming_distance">Hamming
-distance</a> as metric and <span
-class="math inline"><em>f</em>: <em>X</em> → <em>X</em></span> is going
-to be <a href="http://en.wikipedia.org/wiki/MD5">MD5 hash digest</a> and
-<a href="http://en.wikipedia.org/wiki/SHA-1">SHA1 hash digest</a>
-functions.</p>
+distance</a> as metric and <span class="math inline">\(f\colon X\to
+X\)</span> is going to be <a href="http://en.wikipedia.org/wiki/MD5">MD5
+hash digest</a> and <a href="http://en.wikipedia.org/wiki/SHA-1">SHA1
+hash digest</a> functions.</p>
 <h2 id="implementation">Implementation</h2>
 <p>I am going to need <a
 href="http://method-combination.net/lisp/ironclad/">ironclad</a> which
