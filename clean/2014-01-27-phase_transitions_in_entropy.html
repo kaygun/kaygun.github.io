@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -125,8 +122,8 @@ GET-LINE-GENOME
 data-orig-width="500" data-orig-src="" />
 </figure>
 <p>Now, I will perform the same analysis for the first <span
-class="math inline">\(10^7\)</span> decimal digits of <span
-class="math inline">\(\pi\)</span>.</p>
+class="math inline">10<sup>7</sup></span> decimal digits of <span
+class="math inline"><em>π</em></span>.</p>
 <pre><code>(defun get-line-pi (stream)
    (remove-if-not
        (lambda (x) (and (char&gt;= x #\0) (char&lt;= x #\9)))
@@ -145,9 +142,9 @@ data-orig-width="500" data-orig-src="" />
 </figure>
 <p>The natural question is, are these results which show similar phase
 transitions, particular to these datasets or are they artifacts of the
-method. So, I will generate <span class="math inline">\(10^6\)</span>
-uniformly random decimal digits and repeat the analysis on that
-data.</p>
+method. So, I will generate <span
+class="math inline">10<sup>6</sup></span> uniformly random decimal
+digits and repeat the analysis on that data.</p>
 <pre><code>(defun random-line (n m)
    (reduce 
       (lambda (x y) (concatenate &#39;string x y))

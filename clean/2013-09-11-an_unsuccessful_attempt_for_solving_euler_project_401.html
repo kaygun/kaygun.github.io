@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -60,37 +57,39 @@ Unsuccessful Attempt for Solving Euler Project #401</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p><a href="http://projecteuler.net/problem=401">Euler Project, Problem
 401</a> is a number theory question. It asks the reader to calculate the
-sum <span class="math display">\[
-\sum_{m=1}^n\sum_{q\|m} q^2 \]</span> modulo <span
-class="math inline">\(10^9\)</span> for <span
-class="math inline">\(n=10^{15}\)</span>.</p>
+sum <span class="math display">$$
+\sum_{m=1}^n\sum_{q\|m} q^2 $$</span> modulo <span
+class="math inline">10<sup>9</sup></span> for <span
+class="math inline"><em>n</em> = 10<sup>15</sup></span>.</p>
 <h2 id="mathematicalreduction">Mathematical Reduction</h2>
 <p>The function we would like to compute is <span
-class="math display">\[ \Upsilon(n,s) =
-\sum_{m=1}^n \sum_{q\|m} q^s \]</span> for <span
-class="math inline">\(s=2\)</span>. I will define the following
-auxiliary function <span class="math display">\[ \nu(q,n) =
+class="math display">$$ \Upsilon(n,s) =
+\sum_{m=1}^n \sum_{q\|m} q^s $$</span> for <span
+class="math inline"><em>s</em> = 2</span>. I will define the following
+auxiliary function <span class="math display">$$ \nu(q,n) =
 \begin{cases} 1 &amp; \text{
-if } q\|n\\ 0 &amp; \text{ otherwise} \end{cases} \]</span> Then I can
-rewrite <span class="math inline">\(\Upsilon(n,s)\)</span> as follows:
-<span class="math display">\[ \Upsilon(n,s) =
-\sum_{m=1}^n\sum_{q=1}^m \nu(q,m) q^s \]</span> Now we can switch the
-summations <span class="math display">\[ \Upsilon(n,s) = \sum_{q=1}^n
+if } q\|n\\ 0 &amp; \text{ otherwise} \end{cases} $$</span> Then I can
+rewrite <span
+class="math inline"><em>Υ</em>(<em>n</em>,<em>s</em>)</span> as follows:
+<span class="math display">$$ \Upsilon(n,s) =
+\sum_{m=1}^n\sum_{q=1}^m \nu(q,m) q^s $$</span> Now we can switch the
+summations <span class="math display">$$ \Upsilon(n,s) = \sum_{q=1}^n
 \sum_{m=a}^n
 \nu(q,m) q^s = \sum_{q=1}^n q^s \left(\sum_{m=a}^n
-\nu(q,m)\right) \]</span> Notice that, the inner sum terms are <span
-class="math inline">\(m=q,q+1,\ldots,n\)</span> but the function we sum
-is non-zero only if <span class="math inline">\(m\)</span> is a multiple
-of <span class="math inline">\(q\)</span>. This means the sum <span
-class="math inline">\(\sum_{m=q}^n \nu(q,m) =
-\left\lfloor\frac{n}{a}\right\rfloor\)</span>. Therefore, <span
-class="math display">\[
+\nu(q,m)\right) $$</span> Notice that, the inner sum terms are <span
+class="math inline"><em>m</em> = <em>q</em>, <em>q</em> + 1, …, <em>n</em></span>
+but the function we sum is non-zero only if <span
+class="math inline"><em>m</em></span> is a multiple of <span
+class="math inline"><em>q</em></span>. This means the sum <span
+class="math inline">$\sum_{m=q}^n \nu(q,m) =
+\left\lfloor\frac{n}{a}\right\rfloor$</span>. Therefore, <span
+class="math display">$$
 \Upsilon(n,s) = \sum_{q=1}^n q^s
 \left\lfloor\frac{n}{q}\right\rfloor = \sum_{q=1}^n q^{s-1} n -
-\sum_{q=1}^n q^{s-1} (n \text{ mod } q) \]</span> For <span
-class="math inline">\(s=2\)</span> this can be written as <span
-class="math display">\[ \Upsilon(n,2) = \frac{n^2(n+1)}{2} -
-\sum_{q=1}^n q (n \text{ mod } q) \]</span></p>
+\sum_{q=1}^n q^{s-1} (n \text{ mod } q) $$</span> For <span
+class="math inline"><em>s</em> = 2</span> this can be written as <span
+class="math display">$$ \Upsilon(n,2) = \frac{n^2(n+1)}{2} -
+\sum_{q=1}^n q (n \text{ mod } q) $$</span></p>
 <h2 id="implementationwithoutthereduction">Implementation without the
 reduction</h2>
 <p>First, I need a function which returns the list of divisors of a
@@ -134,7 +133,7 @@ UPSILON</code></pre>
 
 (1 6 16 37 63 113)</code></pre>
 <p>and finally I will evaluate the function for <span
-class="math inline">\(n=10^9\)</span></p>
+class="math inline"><em>n</em> = 10<sup>9</sup></span></p>
 <pre><code>(time (upsilon (expt 10 9)))
 
 400685635084923815073475174
@@ -163,14 +162,15 @@ href="http://julialang.org/">Julia</a> took about 6 seconds :)</p>
 <h2 id="discussionandrestrictions">Discussion and restrictions</h2>
 <p>The original <a href="http://projecteuler.net/problem=401">Euler
 Project Question 401</a> is for <span
-class="math inline">\(n=10^{15}\)</span> and for <span
-class="math inline">\(s=2\)</span>, but they require the result
-calculated modulo <span class="math inline">\(10^9\)</span>. The reduced
-calculation for <span class="math inline">\(n=10^9\)</span> took about
-180 seconds for lisp and about 6 seconds for julia. Assuming the
-complexity is linear (though I guess it is with a large multiplier
-coefficient), the real problem is out of reach for this implementation.
-I will have to come back to this problem later.</p>
+class="math inline"><em>n</em> = 10<sup>15</sup></span> and for <span
+class="math inline"><em>s</em> = 2</span>, but they require the result
+calculated modulo <span class="math inline">10<sup>9</sup></span>. The
+reduced calculation for <span
+class="math inline"><em>n</em> = 10<sup>9</sup></span> took about 180
+seconds for lisp and about 6 seconds for julia. Assuming the complexity
+is linear (though I guess it is with a large multiplier coefficient),
+the real problem is out of reach for this implementation. I will have to
+come back to this problem later.</p>
 <div id="footer">
 <p><span id="timestamp">September 11th, 2013 11:21am</span></p>
 </div>

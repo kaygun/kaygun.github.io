@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -57,20 +54,21 @@
 <body>
 <h1 id="listing-all-young-tableaux">Listing all Young Tableaux</h1>
 <h2 id="description-of-the-problem">Description of the problem:</h2>
-<p>A <span class="math inline">\(k\)</span> partition of <span
-class="math inline">\(n\)</span> is a sequence of numbers <span
-class="math inline">\(1\leq n_1\leq \cdots\leq n_k\)</span> such that
-<span class="math inline">\(n = \sum_i n_i\)</span>. We usually
-visualize such partitions as blocks stacked on top of each other as
-follows:</p>
+<p>A <span class="math inline"><em>k</em></span> partition of <span
+class="math inline"><em>n</em></span> is a sequence of numbers <span
+class="math inline">1 ≤ <em>n</em><sub>1</sub> ≤ ⋯ ≤ <em>n</em><sub><em>k</em></sub></span>
+such that <span
+class="math inline"><em>n</em> = ∑<sub><em>i</em></sub><em>n</em><sub><em>i</em></sub></span>.
+We usually visualize such partitions as blocks stacked on top of each
+other as follows:</p>
 <figure data-orig-height="143" data-orig-width="234" data-orig-src="../media/2016-06-01-conjugate_partitions_0.png">
 <img src="../media/2018-02-01-listing_all_young_tableaux_0.png" data-orig-height="143"
 data-orig-width="234" data-orig-src="../media/2016-06-01-conjugate_partitions_0.png"
 alt="image" />
 </figure>
 <p>You can read the diagram above as the partition <span
-class="math inline">\(1\leq 4\leq 5\)</span>, or its conjugate as <span
-class="math inline">\(3\geq 2\geq 2\geq 2\geq 1\)</span>. I have <a
+class="math inline">1 ≤ 4 ≤ 5</span>, or its conjugate as <span
+class="math inline">3 ≥ 2 ≥ 2 ≥ 2 ≥ 1</span>. I have <a
 href="clean/2016-06-01-conjugate_partitions.html">written about
 conjugate partitions before</a>.</p>
 <p>A <a href="http://www.ams.org/notices/200702/whatis-yong.pdf">Young
@@ -89,10 +87,11 @@ data-orig-width="234" data-orig-src="" alt="image" />
 <p>does not come from a valid Young tableau.</p>
 <p>Today, I am going to write a scala program that lists all possible
 Young tableaux of a given size. The algorithm is simple: for Young
-tableaux of size <span class="math inline">\(n+1\)</span> take all Young
-tableaux of size <span class="math inline">\(n\)</span> and insert <span
-class="math inline">\(n+1\)</span> in every possible position satisfying
-the constraints that the resulting diagram is still a Young tableau.</p>
+tableaux of size <span class="math inline"><em>n</em> + 1</span> take
+all Young tableaux of size <span class="math inline"><em>n</em></span>
+and insert <span class="math inline"><em>n</em> + 1</span> in every
+possible position satisfying the constraints that the resulting diagram
+is still a Young tableau.</p>
 <h2 id="implementation">Implementation</h2>
 <p>If you followed this blog long enough, you probably know that I like
 common lisp a lot. But this is one of those problems in which one can

@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -718,8 +715,8 @@ ENTROPY</code></pre>
 </table>
 <h2 id="ananalysis">An analysis</h2>
 <p>The theoretical limit for the entropy for truly random collection of
-2 bytes is <span class="math display">\[ -\sum_{i=1}^{2^{16}}
-\frac{1}{2^{16}}\log_2(2^{-16}) = 16 \]</span> and the values are
+2 bytes is <span class="math display">$$ -\sum_{i=1}^{2^{16}}
+\frac{1}{2^{16}}\log_2(2^{-16}) = 16 $$</span> and the values are
 uniformly close to the theoretical value. I didn’t have time to repeat
 the experiment with 3 or more bytes. The code above took about a minute
 on my old workstation at work.</p>

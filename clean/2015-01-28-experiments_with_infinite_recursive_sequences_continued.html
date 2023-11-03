@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -255,11 +252,12 @@ to me that it would be easier, and perhaps conceptually clearer, to
 construct streams as recursive functions that depend only on the head of
 the stream. To be clear: when I say <em>the head</em> I mean the whole
 initial segment <span
-class="math inline">\((a_n,a_{n-1},\ldots,a_1)\)</span> of the stream,
-not just the last element <span class="math inline">\(a_n\)</span>. This
-way, the stream can also be functional, that is, whoever has the head
-has also the next element. With clever use of memoization, there would
-be no collisions, no blocking, no semaphores, no nothing.</p>
+class="math inline">(<em>a</em><sub><em>n</em></sub>,<em>a</em><sub><em>n</em> − 1</sub>,…,<em>a</em><sub>1</sub>)</span>
+of the stream, not just the last element <span
+class="math inline"><em>a</em><sub><em>n</em></sub></span>. This way,
+the stream can also be functional, that is, whoever has the head has
+also the next element. With clever use of memoization, there would be no
+collisions, no blocking, no semaphores, no nothing.</p>
 <p>To be fair, there are a couple of things missing in my
 implementation. For example, this approach is good for infinite
 sequences, but I need a way of signaling that a stream has reached its

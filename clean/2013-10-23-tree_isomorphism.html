@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,8 +55,9 @@
 <h1 id="tree-isomorphism">Tree Isomorphism</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Deciding whether two graphs <span
-class="math inline">\((E,V)\)</span> and <span
-class="math inline">\((E&#39;,V&#39;)\)</span> are isomorphic is a <a
+class="math inline">(<em>E</em>,<em>V</em>)</span> and <span
+class="math inline">(<em>E</em>′,<em>V</em>′)</span> are isomorphic is a
+<a
 href="http://en.wikipedia.org/wiki/Graph_isomorphism_problem">difficult
 problem</a>. Best known algorithms are of exponential complexity.
 However, for trees the situation is much simpler. Today, I will describe
@@ -70,68 +68,74 @@ notes</a> on the subject. (All errors are mine, of course.) Thierry
 claims the algorithm is of linear complexity following <a
 href="http://www.lsi.upc.edu/~valiente/algorithm/">Valiente</a>, but
 because of the sorting part involved in the algorithm, it seems more
-like <span class="math inline">\(\mathcal{O}(n\log(n))\)</span>.</p>
+like <span class="math inline">𝒪(<em>n</em>log(<em>n</em>))</span>.</p>
 <h2 id="thealgorithmanditscorrectness">The Algorithm and Its
 Correctness</h2>
 <p>For us, a (labeled) graph is a pair <span
-class="math inline">\((E,V)\)</span> such that <span
-class="math inline">\(V\)</span> is a finite subset of <span
-class="math inline">\(\mathbb{N}\)</span> of type <span
-class="math inline">\({0,\ldots,n-1}\)</span>, and <span
-class="math inline">\(E\)</span> is a collection of 2-element subsets of
-<span class="math inline">\(V\)</span>. A tree is a graph in which every
-vertex <span class="math inline">\(m\in V\)</span> is connected to <span
-class="math inline">\(0\in V\)</span> via a unique path.</p>
-<p>Let <span class="math inline">\(\mathcal{T}\)</span> be the set of
-all rooted trees (the vertex 0 is defined to be the root) as we defined
-above. We want to construct a function <span
-class="math inline">\(\Upsilon\)</span> from the set of trees into the
-set of finite sequences of natural numbers such that <span
-class="math inline">\(\Upsilon(T_1) = \Upsilon(T_2)\)</span> if and only
-if <span class="math inline">\(T_1\)</span> and <span
-class="math inline">\(T_2\)</span> are isomorphic. I will define the
-function recursively as follows:</p>
+class="math inline">(<em>E</em>,<em>V</em>)</span> such that <span
+class="math inline"><em>V</em></span> is a finite subset of <span
+class="math inline">ℕ</span> of type <span
+class="math inline">0, …, <em>n</em> − 1</span>, and <span
+class="math inline"><em>E</em></span> is a collection of 2-element
+subsets of <span class="math inline"><em>V</em></span>. A tree is a
+graph in which every vertex <span
+class="math inline"><em>m</em> ∈ <em>V</em></span> is connected to <span
+class="math inline">0 ∈ <em>V</em></span> via a unique path.</p>
+<p>Let <span class="math inline">𝒯</span> be the set of all rooted trees
+(the vertex 0 is defined to be the root) as we defined above. We want to
+construct a function <span class="math inline"><em>Υ</em></span> from
+the set of trees into the set of finite sequences of natural numbers
+such that <span
+class="math inline"><em>Υ</em>(<em>T</em><sub>1</sub>) = <em>Υ</em>(<em>T</em><sub>2</sub>)</span>
+if and only if <span class="math inline"><em>T</em><sub>1</sub></span>
+and <span class="math inline"><em>T</em><sub>2</sub></span> are
+isomorphic. I will define the function recursively as follows:</p>
 <ol type="1">
-<li><p>Define <span class="math inline">\(\Upsilon(\bullet) =
-(0)\)</span>.</p></li>
-<li><p>Let <span class="math inline">\(T\)</span> be a tree and let
-<span class="math inline">\(T_1,\ldots,T_m\)</span> be the set of
-subtrees connected to the root. Assume we calculated <span
-class="math inline">\(\Upsilon(T_i)\)</span> for <span
-class="math inline">\(i=1,\ldots,m\)</span>. Sort them as <span
-class="math inline">\(\Upsilon(T_{i_1}) \preceq \cdots \preceq
-\Upsilon(T_{i_m})\)</span> using the <a
+<li><p>Define <span
+class="math inline"><em>Υ</em>(•) = (0)</span>.</p></li>
+<li><p>Let <span class="math inline"><em>T</em></span> be a tree and let
+<span
+class="math inline"><em>T</em><sub>1</sub>, …, <em>T</em><sub><em>m</em></sub></span>
+be the set of subtrees connected to the root. Assume we calculated <span
+class="math inline"><em>Υ</em>(<em>T</em><sub><em>i</em></sub>)</span>
+for <span class="math inline"><em>i</em> = 1, …, <em>m</em></span>. Sort
+them as <span
+class="math inline"><em>Υ</em>(<em>T</em><sub><em>i</em><sub>1</sub></sub>) ≼ ⋯ ≼ <em>Υ</em>(<em>T</em><sub><em>i</em><sub><em>m</em></sub></sub>)</span>
+using the <a
 href="http://en.wikipedia.org/wiki/Lexicographical_order">lexicographical
 ordering</a> on the set of all finite sequences in <span
-class="math inline">\(\mathbb{N}\)</span>. Now, define <span
-class="math display">\[
-\Upsilon(T) = (m, \Upsilon(T_{i_1}), \ldots, \Upsilon(T_{i_m})
-) \]</span></p></li>
+class="math inline">ℕ</span>. Now, define <span
+class="math display"><em>Υ</em>(<em>T</em>) = (<em>m</em>,<em>Υ</em>(<em>T</em><sub><em>i</em><sub>1</sub></sub>),…,<em>Υ</em>(<em>T</em><sub><em>i</em><sub><em>m</em></sub></sub>))</span></p></li>
 </ol>
 <p>The function is well-defined for any tree <span
-class="math inline">\(T\)</span> as the notion of <em>the subtrees
+class="math inline"><em>T</em></span> as the notion of <em>the subtrees
 connected to the root</em> is a well-defined notion and we defined <span
-class="math inline">\(\Upsilon(\bullet)\)</span>. What remains to be
-shown is that <span class="math inline">\(\Upsilon(T_1)\)</span> and
-<span class="math inline">\(\Upsilon(T_2)\)</span> are equal if and only
-if the trees are isomorphic.</p>
+class="math inline"><em>Υ</em>(•)</span>. What remains to be shown is
+that <span class="math inline"><em>Υ</em>(<em>T</em><sub>1</sub>)</span>
+and <span class="math inline"><em>Υ</em>(<em>T</em><sub>2</sub>)</span>
+are equal if and only if the trees are isomorphic.</p>
 <p>One side of the implication is straightforward: if <span
-class="math inline">\(T_1\)</span> and <span
-class="math inline">\(T_2\)</span> are isomorphic then <span
-class="math inline">\(\Upsilon(T_1)=\Upsilon(T_2)\)</span>. This is
-basically recursion/induction on the number of vertices in the tree.</p>
-<p>For the converse, assume <span class="math inline">\(\Upsilon(T_1) =
-\Upsilon(T_2)\)</span>. In that case, we have</p>
+class="math inline"><em>T</em><sub>1</sub></span> and <span
+class="math inline"><em>T</em><sub>2</sub></span> are isomorphic then
+<span
+class="math inline"><em>Υ</em>(<em>T</em><sub>1</sub>) = <em>Υ</em>(<em>T</em><sub>2</sub>)</span>.
+This is basically recursion/induction on the number of vertices in the
+tree.</p>
+<p>For the converse, assume <span
+class="math inline"><em>Υ</em>(<em>T</em><sub>1</sub>) = <em>Υ</em>(<em>T</em><sub>2</sub>)</span>.
+In that case, we have</p>
 <ol type="1">
 <li><p>The first terms of <span
-class="math inline">\(\Upsilon(T_1)\)</span> and <span
-class="math inline">\(\Upsilon(T_2)\)</span> are equal which means the
-number of subtrees connected to the root are the same for <span
-class="math inline">\(T_1\)</span> and <span
-class="math inline">\(T_2\)</span></p></li>
-<li><p>The subtrees of <span class="math inline">\(T_1\)</span> and
-<span class="math inline">\(T_2\)</span> produce the same sequence of
-terms out of <span class="math inline">\(\Upsilon\)</span>.</p></li>
+class="math inline"><em>Υ</em>(<em>T</em><sub>1</sub>)</span> and <span
+class="math inline"><em>Υ</em>(<em>T</em><sub>2</sub>)</span> are equal
+which means the number of subtrees connected to the root are the same
+for <span class="math inline"><em>T</em><sub>1</sub></span> and <span
+class="math inline"><em>T</em><sub>2</sub></span></p></li>
+<li><p>The subtrees of <span
+class="math inline"><em>T</em><sub>1</sub></span> and <span
+class="math inline"><em>T</em><sub>2</sub></span> produce the same
+sequence of terms out of <span
+class="math inline"><em>Υ</em></span>.</p></li>
 </ol>
 <p>Then again using an induction/recursion argument on the number of
 vertices in a tree, we get the reverse implication.</p>
@@ -164,7 +168,7 @@ of integers:</p>
         (t (compare (car a) (car b)))))</code></pre>
 <p>Actually, <code>compare</code> does more than comparing lists of
 integers. I will leave it up to you to figure out why and how. Now, the
-function <span class="math inline">\(\Upsilon\)</span>:</p>
+function <span class="math inline"><em>Υ</em></span>:</p>
 <pre><code>(defun upsilon (tree)
   (cond ((null tree) nil)
         ((atom tree) (list 0))

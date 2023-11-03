@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -74,15 +71,15 @@ connected via a computation graph.</p>
 <p><img
 src="../media/2018-12-04-feed-forward_and_back-propagation_in_neural_networks_as_left-_and_right-fold_0.png" /></p>
 <p>A perceptron on the other hand is a computation unit which takes a
-vector <span class="math inline">\(\mathbf{x}\)</span> as an input and
-produces a scalar output</p>
-<p><span class="math display">\[ f(\mathbf{w}\cdot\mathbf{x} + b)
-\]</span></p>
-<p>Here <span class="math inline">\(f\)</span> is a function of type
-signature <span class="math inline">\(f\colon\mathbb{R}\to
-\mathbb{R}\)</span> and <span class="math inline">\(\mathbf{w}\)</span>
-and <span class="math inline">\(b\)</span> are parameters of the
-underlying perceptron.</p>
+vector <span class="math inline"><strong>x</strong></span> as an input
+and produces a scalar output</p>
+<p><span
+class="math display"><em>f</em>(<strong>w</strong>⋅<strong>x</strong>+<em>b</em>)</span></p>
+<p>Here <span class="math inline"><em>f</em></span> is a function of
+type signature <span class="math inline"><em>f</em>: ℝ → ℝ</span> and
+<span class="math inline"><strong>w</strong></span> and <span
+class="math inline"><em>b</em></span> are parameters of the underlying
+perceptron.</p>
 <p>In the simplest version of the neural networks, the network consists
 of layers of perceptrons where input propagates from one layer to the
 next. Then depending on the error produced, we back-propagate the error

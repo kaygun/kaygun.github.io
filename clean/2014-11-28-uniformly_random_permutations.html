@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -65,22 +62,23 @@ permutation should appear equally likely.</p>
 <h2 id="algorithm">Algorithm</h2>
 <p>The algorithm is easy enough, and the fact that one gets uniformly
 random random permutations is almost built into it. Imagine you have a
-set of <span class="math inline">\(n\)</span> distinct items. Pick a
-random object completely at random. Continue until nothing is left.</p>
+set of <span class="math inline"><em>n</em></span> distinct items. Pick
+a random object completely at random. Continue until nothing is
+left.</p>
 <p>Why is this uniformly random? The verification is done by induction:
 if we have two distinct objects, and if we chose one object at random we
 get two sequences and each sequence has a probability of 0.5, since we
 picked the first object uniformly random with probability of 0.5.
 Assume, by induction that any sequence of choices of length <span
-class="math inline">\(n\)</span> can be done uniformly each with
-probability <span class="math inline">\(\frac{1}{n!}\)</span>. Take a
-set of size <span class="math inline">\(n+1\)</span>. Pick an element
+class="math inline"><em>n</em></span> can be done uniformly each with
+probability <span class="math inline">$\frac{1}{n!}$</span>. Take a set
+of size <span class="math inline"><em>n</em> + 1</span>. Pick an element
 randomly with probability <span
-class="math inline">\(\frac{1}{(n+1)}\)</span>. Since the rest of the
+class="math inline">$\frac{1}{(n+1)}$</span>. Since the rest of the
 sequence is picked with a probability <span
-class="math inline">\(\frac{1}{n!}\)</span>, the probability of choosing
+class="math inline">$\frac{1}{n!}$</span>, the probability of choosing
 this particular sequence is <span
-class="math inline">\(\frac{1}{(n+1)!}\)</span>.</p>
+class="math inline">$\frac{1}{(n+1)!}$</span>.</p>
 <p>This is <a
 href="http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle">the
 original algorithm proposed by Fisher and Yates in 1938</a>.</p>

@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -94,9 +91,9 @@ yd. ucpoy m.ooai.
 
 the first message</code></pre>
 <p>A substitution cipher such as qwerty to dvorak would correspond to an
-element in <span class="math inline">\(\Sigma_{36}\)</span> the <a
-href="http://en.wikipedia.org/wiki/Symmetric_group">symmetric group</a>
-on 36 letters which contains exactly 36! =
+element in <span class="math inline"><em>Σ</em><sub>36</sub></span> the
+<a href="http://en.wikipedia.org/wiki/Symmetric_group">symmetric
+group</a> on 36 letters which contains exactly 36! =
 371993326789901217467999448150835200000000 elements. This means there
 are exactly 371993326789901217467999448150835200000000 different
 substitution ciphers. However, even though the large number of such
@@ -112,19 +109,21 @@ href="https://twitter.com/thattommyhall/status/494916131598393344">question</a>
 that <a href="https://twitter.com/thattommyhall">Tommy Hall</a>
 posed:</p>
 <blockquote>
-<p>What is the smallest <span
-class="math inline">\(m\in\mathbb{N}\)</span> such that for every
-permutation <span class="math inline">\(\sigma\in \Sigma_{36}\)</span>
-the permutation <span class="math inline">\(\sigma^ m\)</span> is the
-unit permutation?</p>
+<p>What is the smallest <span class="math inline"><em>m</em> ∈ ℕ</span>
+such that for every permutation <span
+class="math inline"><em>σ</em> ∈ <em>Σ</em><sub>36</sub></span> the
+permutation <span
+class="math inline"><em>σ</em><sup><em>m</em></sup></span> is the unit
+permutation?</p>
 </blockquote>
 <h2 id="somegrouptheory">Some group theory</h2>
 <p>Now, because of <a
 href="http://en.wikipedia.org/wiki/Lagrange%27s_theorem_%28group_theory%29">Legendre
-Theorem</a>, any such <span class="math inline">\(m\)</span> must divide
-36! the order of <span class="math inline">\(\Sigma_{36}\)</span> which,
-as you can guess, not very helpful. Well, at least we know that (1) such
-a number exists, and (2) it must divide 36!.</p>
+Theorem</a>, any such <span class="math inline"><em>m</em></span> must
+divide 36! the order of <span
+class="math inline"><em>Σ</em><sub>36</sub></span> which, as you can
+guess, not very helpful. Well, at least we know that (1) such a number
+exists, and (2) it must divide 36!.</p>
 <p>Before I go any further, I need to define what a cycle is: a cycle is
 the trace (a.k.a. the orbit) of an element under successive applications
 of the cipher.</p>
@@ -165,7 +164,7 @@ CYCLE</code></pre>
 ([ / z ; s o r p l n b x q &#39; -)</code></pre>
 <p>I have 4 cycles of length 1, 2 cycles of length 2, 1 cycle of length
 14 and 1 cycle of length 15. As Matt observes, the smallest <span
-class="math inline">\(m\)</span> in this case is the least common
+class="math inline"><em>m</em></span> in this case is the least common
 multiple of 2, 14 and 15 which is</p>
 <pre><code>(lcm 2 14 15)
 
@@ -205,16 +204,18 @@ RANDOM-LAYOUT
 90</code></pre>
 <p>Still, this doesn’t solve the original question I posed. What would
 be the largest such mystery number for all possible permutations in
-<span class="math inline">\(\Sigma_{36}\)</span>? Since I can’t go over
-all 371993326789901217467999448150835200000000 elements, I should find a
-better way.</p>
+<span class="math inline"><em>Σ</em><sub>36</sub></span>? Since I can’t
+go over all 371993326789901217467999448150835200000000 elements, I
+should find a better way.</p>
 <h2 id="anoptimizationproblem">An optimization problem</h2>
 <p>Recall that the number we are looking for is a least common multiple
-of a collection of numbers <span class="math inline">\(x_1\)</span>
-through <span class="math inline">\(x_\ell\)</span> such that the sum
-<span class="math inline">\(x_1 + \cdots + x_\ell = 36\)</span> where we
-want that <span class="math inline">\(1\leq x_1\leq \cdots \leq
-x_\ell\leq 36\)</span>.</p>
+of a collection of numbers <span
+class="math inline"><em>x</em><sub>1</sub></span> through <span
+class="math inline"><em>x</em><sub>ℓ</sub></span> such that the sum
+<span
+class="math inline"><em>x</em><sub>1</sub> + ⋯ + <em>x</em><sub>ℓ</sub> = 36</span>
+where we want that <span
+class="math inline">1 ≤ <em>x</em><sub>1</sub> ≤ ⋯ ≤ <em>x</em><sub>ℓ</sub> ≤ 36</span>.</p>
 <p>Today, I will use the brute-force method because I need to teach soon
 and I don’t have much time, and 36 is relatively small.</p>
 <p>The following function returns the list of all possible k-partitions
@@ -264,10 +265,10 @@ HELPER</code></pre>
  (21 . 420) (2 . 323) (22 . 210) (23 . 210) (24 . 105) (25 . 84) (26 . 60)
  (27 . 60) (1 . 36) (28 . 30) (29 . 30) (30 . 15) (31 . 12) (32 . 6)
  (33 . 6) (34 . 3) (35 . 2) (36 . 1))</code></pre>
-<p>So, there is a permutation <span class="math inline">\(\sigma\in
-\Sigma_{36}\)</span> which consists of 5 cycles and when composed with
-itself 13860 times will return unit, and no smaller number would
-work.</p>
+<p>So, there is a permutation <span
+class="math inline"><em>σ</em> ∈ <em>Σ</em><sub>36</sub></span> which
+consists of 5 cycles and when composed with itself 13860 times will
+return unit, and no smaller number would work.</p>
 <p>My hunch is that the number of cycles is related to the square root,
 but I will have to come back to this later.</p>
 <pre><code>(car (sort (helper 4) (lambda (x y) (&gt; (cdr x) (cdr y)))))

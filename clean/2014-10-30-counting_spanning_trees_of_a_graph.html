@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,12 +55,13 @@
 <h1 id="counting-spanning-trees-of-a-graph">Counting Spanning Trees of a
 Graph</h1>
 <h2 id="descriptionoftheproblem">Description of the Problem</h2>
-<p>Given a undirected graph <span class="math inline">\(G =
-(V,E)\)</span>, a spanning tree <span class="math inline">\(T\)</span>
-of <span class="math inline">\(G\)</span> is a connected subgraph of
-<span class="math inline">\(G\)</span> which uses the full set of
+<p>Given a undirected graph <span
+class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span>, a
+spanning tree <span class="math inline"><em>T</em></span> of <span
+class="math inline"><em>G</em></span> is a connected subgraph of <span
+class="math inline"><em>G</em></span> which uses the full set of
 vertices but uses a minimal set of edges such that <span
-class="math inline">\(T\)</span> has no cycles while still being
+class="math inline"><em>T</em></span> has no cycles while still being
 connected. Today, we are going to count all spanning trees in a given
 graph.</p>
 <h2 id="laplacianmatrix">Laplacian Matrix</h2>
@@ -81,22 +79,22 @@ data-orig-width="131" data-orig-src="../media/2014-10-30-counting_spanning_trees
 </figure>
 <p>Of course there are other representations. One of them is the <a
 href="#">adjacency matrix</a> which is a <span
-class="math inline">\(n\times n\)</span> matrix which consists of 0’s
-and 1’s and defined as <span class="math display">\[ a_{ij} =
+class="math inline"><em>n</em> × <em>n</em></span> matrix which consists
+of 0’s and 1’s and defined as <span class="math display">$$ a_{ij} =
 \begin{cases} 1 &amp; \text{ if there is
 an edge between $i$ and $j$ }\\ 0 &amp; \text{ otherwise }
-\end{cases} \]</span> and yet another one is the <a
+\end{cases} $$</span> and yet another one is the <a
 href="#">Laplacian</a> of a graph which is also an <span
-class="math inline">\(n\times n\)</span> matrix given by <span
-class="math display">\[ a_{ij} =
+class="math inline"><em>n</em> × <em>n</em></span> matrix given by <span
+class="math display">$$ a_{ij} =
 \begin{cases} \deg(i) &amp; \text{ if } i=j\\ -1 &amp; \text{ if there
 is
 an edge between $i\neq j$ }\\ 0 &amp; \text{ otherwise } \end{cases}
-\]</span></p>
+$$</span></p>
 <p><a href="#">Kirchoff’s Theorem</a> states that the determinant of any
 minor of the Laplacian will give us <span
-class="math inline">\(n\)</span> times the number of spanning trees of
-<span class="math inline">\(G\)</span>.</p>
+class="math inline"><em>n</em></span> times the number of spanning trees
+of <span class="math inline"><em>G</em></span>.</p>
 <h2 id="code">Code</h2>
 <p>The following function returns the Laplacian matrix of a given graph
 represented as a list of edges. We assume edges are represented by lists

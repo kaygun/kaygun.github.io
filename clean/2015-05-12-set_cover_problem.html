@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -57,13 +54,15 @@
 <body>
 <h1 id="set-cover-problem">Set Cover Problem</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Assume we have a finite set <span class="math inline">\(X\)</span>
-and a collection of subsets <span class="math inline">\(\{U_i\|\
-i=1,...,n\}\)</span>. I’d like to find the smallest number of subsets
-covering <span class="math inline">\(X\)</span>, i.e. find the smallest
-number <span class="math inline">\(m\)</span> and the subsets <span
-class="math inline">\(U_{i_1},\ldots,U_{i_m}\)</span> such that <span
-class="math inline">\(X = \bigcup_{j=1}^m U_{i_j}\)</span>.</p>
+<p>Assume we have a finite set <span
+class="math inline"><em>X</em></span> and a collection of subsets <span
+class="math inline">{<em>U</em><sub><em>i</em></sub>∥ <em>i</em> = 1, ..., <em>n</em>}</span>.
+I’d like to find the smallest number of subsets covering <span
+class="math inline"><em>X</em></span>, i.e. find the smallest number
+<span class="math inline"><em>m</em></span> and the subsets <span
+class="math inline"><em>U</em><sub><em>i</em><sub>1</sub></sub>, …, <em>U</em><sub><em>i</em><sub><em>m</em></sub></sub></span>
+such that <span class="math inline">$X = \bigcup_{j=1}^m
+U_{i_j}$</span>.</p>
 <p>This problem is known as the <a
 href="http://en.wikipedia.org/wiki/Set_cover_problem">Set Cover
 Problem</a></p>

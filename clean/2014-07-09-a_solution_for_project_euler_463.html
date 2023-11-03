@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,41 +55,37 @@
 <h1 id="a-solution-for-project-euler-463">A Solution for Project Euler
 #463</h1>
 <h2 id="the-problem">The problem</h2>
-<p>We have a function <span class="math inline">\(f\colon\mathbb{Z}\to
-\mathbb{Z}\)</span> defined recursively as <span class="math display">\[
-f(n) = \begin{cases} 0 &amp; \text{ if } n &lt; 1\\ 1
+<p>We have a function <span class="math inline"><em>f</em>: ℤ → ℤ</span>
+defined recursively as <span class="math display">$$ f(n) =
+\begin{cases} 0 &amp; \text{ if } n &lt; 1\\ 1
 &amp; \text{ if } n=1\\ f(n/2) &amp; \text{ if $n$ is even }\\ 2
 f((n+1)/2) - f((n-1)/4) &amp; \text{ if } n\equiv 1 \text{ mod } 4\\ 3
 f((n-1)/2) - 2 f((n-3)/4) &amp; \text{ if } n\equiv 3 \text{ mod } 4
-\end{cases} \]</span> and we want to calculate <span
-class="math inline">\(\sum_{n=1}^{3^{27}} f(n)\)</span>.</p>
+\end{cases} $$</span> and we want to calculate <span
+class="math inline">$\sum_{n=1}^{3^{27}} f(n)$</span>.</p>
 <h2 id="reduction">Reduction</h2>
 <p>First let us find a recurrence relation for the summation. Let <span
-class="math inline">\(S(n) = \sum_i^n f(i)\)</span>. Notice that <span
-class="math display">\[ f(4n+3) - f(4n+2) = f(4n+3) -
-f(2n+1) = 2 f(2n+1) - 2 f(n) \]</span> for <span
-class="math inline">\(n\geq 0\)</span> and <span class="math display">\[
-f(4n+2) -
-f(4n+1) = - f(2n+1) + f(n) \]</span> for <span
-class="math inline">\(n\&gt;0\)</span>, and finally <span
-class="math display">\[ f(4n+1) -
-f(4n) = 2 f(2n+1) - 2 f(n) \]</span> for <span
-class="math inline">\(n\&gt;0\)</span>. Then we get <span
-class="math display">\[ f(4n+3) +
-f(4n+2) + f(4n+1) + f(4n) = 6 f(2n+1) - 2 f(n) \]</span> which can be
-written as <span class="math display">\[ f(4n+3) + f(4n+2) + f(4n+1) +
-f(4n) = 6 f(2n+1) + 6 f(2n) - 8
-f(n) \]</span> By induction/recursion we get a recurrence relation for
-<span class="math inline">\(S(n)\)</span> as <span
-class="math display">\[ S(4n+3) = 6 S(2n+1) - 8 S(n) -1 \]</span> The
-last –1 comes as a correction from the fact that one recurrence relation
-for <span class="math inline">\(f(n)\)</span> works for <span
-class="math inline">\(n\geq 0\)</span> while the other two work for
-<span class="math inline">\(n \&gt; 0\)</span>.</p>
+class="math inline">$S(n) = \sum_i^n f(i)$</span>. Notice that <span
+class="math display"><em>f</em>(4<em>n</em>+3) − <em>f</em>(4<em>n</em>+2) = <em>f</em>(4<em>n</em>+3) − <em>f</em>(2<em>n</em>+1) = 2<em>f</em>(2<em>n</em>+1) − 2<em>f</em>(<em>n</em>)</span>
+for <span class="math inline"><em>n</em> ≥ 0</span> and <span
+class="math display"><em>f</em>(4<em>n</em>+2) − <em>f</em>(4<em>n</em>+1) =  − <em>f</em>(2<em>n</em>+1) + <em>f</em>(<em>n</em>)</span>
+for <span class="math inline"><em>n</em> 0</span>, and finally <span
+class="math display"><em>f</em>(4<em>n</em>+1) − <em>f</em>(4<em>n</em>) = 2<em>f</em>(2<em>n</em>+1) − 2<em>f</em>(<em>n</em>)</span>
+for <span class="math inline"><em>n</em> 0</span>. Then we get <span
+class="math display"><em>f</em>(4<em>n</em>+3) + <em>f</em>(4<em>n</em>+2) + <em>f</em>(4<em>n</em>+1) + <em>f</em>(4<em>n</em>) = 6<em>f</em>(2<em>n</em>+1) − 2<em>f</em>(<em>n</em>)</span>
+which can be written as <span
+class="math display"><em>f</em>(4<em>n</em>+3) + <em>f</em>(4<em>n</em>+2) + <em>f</em>(4<em>n</em>+1) + <em>f</em>(4<em>n</em>) = 6<em>f</em>(2<em>n</em>+1) + 6<em>f</em>(2<em>n</em>) − 8<em>f</em>(<em>n</em>)</span>
+By induction/recursion we get a recurrence relation for <span
+class="math inline"><em>S</em>(<em>n</em>)</span> as <span
+class="math display"><em>S</em>(4<em>n</em>+3) = 6<em>S</em>(2<em>n</em>+1) − 8<em>S</em>(<em>n</em>) − 1</span>
+The last –1 comes as a correction from the fact that one recurrence
+relation for <span class="math inline"><em>f</em>(<em>n</em>)</span>
+works for <span class="math inline"><em>n</em> ≥ 0</span> while the
+other two work for <span class="math inline"><em>n</em> 0</span>.</p>
 <h2 id="thecode">The code</h2>
 <p>First, I will code the function <span
-class="math inline">\(f\)</span>. I used memoization to cut down the
-computation time which is not shown here.</p>
+class="math inline"><em>f</em></span>. I used memoization to cut down
+the computation time which is not shown here.</p>
 <pre><code>(defun fn (n)
    (cond ((&lt; n 1) 0)
          ((= n 3) 3)
@@ -113,7 +106,8 @@ shown here.</p>
          ((= (rem n 4) 1) (+ (fn n) (fn (/ (1- n) 2)) (S (- n 2))))
          (t (+ (fn (/ n 4)) (S (1- n))))))</code></pre>
 <p>I am not going to show the result, but it took less than a second to
-calculate <span class="math inline">\(S(3^{37})\)</span>.</p>
+calculate <span
+class="math inline"><em>S</em>(3<sup>37</sup>)</span>.</p>
 <div id="footer">
 <p><span id="timestamp">July 9th, 2014 5:02pm</span></p>
 </div>

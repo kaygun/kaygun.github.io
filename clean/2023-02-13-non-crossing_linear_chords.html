@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -72,14 +69,14 @@ organization.</p>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>I needed something that would occupy my mind and prevent me from
 reading news 24/7. So, I chose this.</p>
-<p>For a natural number <span class="math inline">\(n\geq 1\)</span>,
+<p>For a natural number <span class="math inline"><em>n</em> ≥ 1</span>,
 consider the set <span
-class="math inline">\(\[2n\]={0,1,\ldots,2n}\)</span>. A partition <span
-class="math inline">\(\mathcal{P}\)</span> of <span
-class="math inline">\(\[2n\]\)</span> is called a linear chord of length
-<span class="math inline">\(n\)</span> if for every <span
-class="math inline">\(X\in \mathcal{P}\)</span> we have <span
-class="math inline">\(\|X\|=2\)</span>. We usually represent these
+class="math inline">$\[2n\]={0,1,\ldots,2n}$</span>. A partition <span
+class="math inline">𝒫</span> of <span
+class="math inline">$\[2n\]$</span> is called a linear chord of length
+<span class="math inline"><em>n</em></span> if for every <span
+class="math inline"><em>X</em> ∈ 𝒫</span> we have <span
+class="math inline">∥<em>X</em>∥ = 2</span>. We usually represent these
 chords with chord diagrams such as</p>
 <figure class="tmblr-full" data-orig-width="439" data-orig-height="247">
 <img
@@ -94,10 +91,10 @@ src="../media/2023-02-13-non-crossing_linear_chords_1.png"
 data-orig-width="504" data-orig-height="222" />
 </figure>
 <p>Notice that the set of all non-crossing linear chords of length <span
-class="math inline">\(n\)</span> is the same as the set of balanced
-brackets of length <span class="math inline">\(2n\)</span>. Using this
-fact, today I am going to write a common lisp program that lists all
-non-crossing linear chords.</p>
+class="math inline"><em>n</em></span> is the same as the set of balanced
+brackets of length <span class="math inline">2<em>n</em></span>. Using
+this fact, today I am going to write a common lisp program that lists
+all non-crossing linear chords.</p>
 <h2 id="a-first-implementation">A First Implementation</h2>
 <p>I am not going to explain the code below. It is a heavily modified
 version I took from <a
@@ -166,7 +163,7 @@ NNC</code></pre>
 <h2 id="a-second-implementation">A Second Implementation</h2>
 <p>As I was finishing the implementation above, I remembered that the
 set of balanced brackets of length <span
-class="math inline">\(n\)</span> is bijective to the set of <a
+class="math inline"><em>n</em></span> is bijective to the set of <a
 href="https://blogs.ams.org/visualinsight/2015/07/15/dyck-words/">Dyck
 Words</a>, and I already <a
 href="clean/2017-07-01-lattice_of_dyck_words.html">implemented a lisp

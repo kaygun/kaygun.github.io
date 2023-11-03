@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,14 +55,15 @@
 <h1 id="graphs-and-entropy">Graphs and Entropy</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Assume we have a directed graph with weighted edges. In other
-words,we have a triple <span class="math inline">\((V,E,w)\)</span> such
+words,we have a triple <span
+class="math inline">(<em>V</em>,<em>E</em>,<em>w</em>)</span> such
 that</p>
 <ol type="1">
-<li><span class="math inline">\(V\)</span> is a finite set</li>
-<li><span class="math inline">\(E\)</span> is a set of ordered pairs
-<span class="math inline">\((a,b)\)</span> of elements from <span
-class="math inline">\(V\)</span></li>
-<li><span class="math inline">\(w\colon E\to \mathbb{N}\)</span> is a
+<li><span class="math inline"><em>V</em></span> is a finite set</li>
+<li><span class="math inline"><em>E</em></span> is a set of ordered
+pairs <span class="math inline">(<em>a</em>,<em>b</em>)</span> of
+elements from <span class="math inline"><em>V</em></span></li>
+<li><span class="math inline"><em>w</em>: <em>E</em> → ℕ</span> is a
 positive integer valued function</li>
 </ol>
 <p>One can assume that weights can be arbitrary real numbers, but for
@@ -76,10 +74,10 @@ thepurposes of today’s note, positive integer weights will do.</p>
 wecalculate it?</p>
 </blockquote>
 <h2 id="theory">Theory</h2>
-<p>For every graph <span class="math inline">\(G\)</span>, assume we
-have such a hypothetical measure<span
-class="math inline">\(\mu(G)\)</span>. We would like this measure to
-satisfy</p>
+<p>For every graph <span class="math inline"><em>G</em></span>, assume
+we have such a hypothetical measure<span
+class="math inline"><em>μ</em>(<em>G</em>)</span>. We would like this
+measure to satisfy</p>
 <p><strong>Locality</strong>: The measure must be local, that is, one
 should be able to calculateit by looking at every vertex and
 <em>only</em> those vertices adjacent tothat vertex.</p>
@@ -88,25 +86,28 @@ connected component, the totalmeasure should be the sum of the measures
 on each component.</p>
 <h2 id="some-postulates">Some Postulates</h2>
 <p>I would like to say that the complete graph on <span
-class="math inline">\(n\)</span> vertices in whichevery edge has the
-same weight contains no information. For examplethe directed version of
-<span class="math inline">\(K_3\)</span> (complete graph on 3 vertices)
-depicted below should not contain any information as every vertex is
-connected every other vertex in every way imaginable.</p>
+class="math inline"><em>n</em></span> vertices in whichevery edge has
+the same weight contains no information. For examplethe directed version
+of <span class="math inline"><em>K</em><sub>3</sub></span> (complete
+graph on 3 vertices) depicted below should not contain any information
+as every vertex is connected every other vertex in every way
+imaginable.</p>
 <figure data-orig-height="291" data-orig-width="177" data-orig-src="../media/2015-03-01-graphs_and_entropy_0.png">
 <img src="../media/2015-03-01-graphs_and_entropy_0.png" data-orig-height="291"
 data-orig-width="177" data-orig-src="../media/2015-03-01-graphs_and_entropy_0.png" />
 </figure>
 <p>I would also like to say graphs in which there is no preference in
 the in the incoming edges contain no information either. Such as the
-line graphs <span class="math inline">\(A_n\)</span> on <span
-class="math inline">\(n\)</span> vertices,</p>
+line graphs <span
+class="math inline"><em>A</em><sub><em>n</em></sub></span> on <span
+class="math inline"><em>n</em></span> vertices,</p>
 <figure data-orig-height="291" data-orig-width="59" data-orig-src="../media/2015-03-01-graphs_and_entropy_1.png">
 <img src="../media/2015-03-01-graphs_and_entropy_1.png" data-orig-height="291"
 data-orig-width="59" data-orig-src="../media/2015-03-01-graphs_and_entropy_1.png" />
 </figure>
-<p>or cycle graphs <span class="math inline">\(C_n\)</span> on <span
-class="math inline">\(n\)</span> vertices:</p>
+<p>or cycle graphs <span
+class="math inline"><em>C</em><sub><em>n</em></sub></span> on <span
+class="math inline"><em>n</em></span> vertices:</p>
 <figure data-orig-height="291" data-orig-width="112" data-orig-src="../media/2015-03-01-graphs_and_entropy_2.png">
 <img src="../media/2015-03-01-graphs_and_entropy_2.png" data-orig-height="291"
 data-orig-width="112" data-orig-src="../media/2015-03-01-graphs_and_entropy_2.png" />
@@ -115,54 +116,65 @@ data-orig-width="112" data-orig-src="../media/2015-03-01-graphs_and_entropy_2.pn
 <p>The entropy is usually good measure to measure randomness in any
 probabilistic system. So, our first approximation is the randomness at a
 specific vertex. I’d like to measure the randomness in the incoming
-edges of a vertex. Assume <span class="math inline">\((V,E,w)\)</span>
-is a weighted graph. I will write <span
-class="math inline">\(w_{ab}\)</span> for the weight of an edge <span
-class="math inline">\(a\to b\)</span>. I will use the convention <span
-class="math display">\[ w_{\cdot b} = \sum_{a\in V} w_{ab} \quad\text{
-and }\quad w_{a\cdot} = \sum_{b\in V} w_{ab} \]</span> In that case, I
-would like to say that <span class="math display">\[ -\sum_{a\in V}
-\frac{w_{ab}}{w_{\cdot
-b}} \log_2\left(\frac{w_{ab}}{w_{\cdot b}}\right) \]</span> measures the
+edges of a vertex. Assume <span
+class="math inline">(<em>V</em>,<em>E</em>,<em>w</em>)</span> is a
+weighted graph. I will write <span
+class="math inline"><em>w</em><sub><em>a</em><em>b</em></sub></span> for
+the weight of an edge <span
+class="math inline"><em>a</em> → <em>b</em></span>. I will use the
+convention <span
+class="math display"><em>w</em><sub>⋅<em>b</em></sub> = ∑<sub><em>a</em> ∈ <em>V</em></sub><em>w</em><sub><em>a</em><em>b</em></sub>  
+and
+  <em>w</em><sub><em>a</em>⋅</sub> = ∑<sub><em>b</em> ∈ <em>V</em></sub><em>w</em><sub><em>a</em><em>b</em></sub></span>
+In that case, I would like to say that <span class="math display">$$
+-\sum_{a\in V} \frac{w_{ab}}{w_{\cdot
+b}} \log_2\left(\frac{w_{ab}}{w_{\cdot b}}\right) $$</span> measures the
 amount of information of the incoming edges of a vertex contains. Notice
 that this measure is scale invariant: if we replace <span
-class="math inline">\(w\)</span> with <span
-class="math inline">\(\lambda w\)</span> we get the same measure.
+class="math inline"><em>w</em></span> with <span
+class="math inline"><em>λ</em><em>w</em></span> we get the same measure.
 However, this measure goes against our postulate that <span
-class="math inline">\(\mu(K_n)\)</span> must be 0 since for every vertex
-in <span class="math inline">\(K_n\)</span> we get <span
-class="math inline">\(\log_2(n)\)</span>. So, we will correct this
-measure by setting <span class="math display">\[ E(b) = \log_2(\deg(b))
-+ \sum_{a\in V}
+class="math inline"><em>μ</em>(<em>K</em><sub><em>n</em></sub>)</span>
+must be 0 since for every vertex in <span
+class="math inline"><em>K</em><sub><em>n</em></sub></span> we get <span
+class="math inline">log<sub>2</sub>(<em>n</em>)</span>. So, we will
+correct this measure by setting <span class="math display">$$ E(b) =
+\log_2(\deg(b)) + \sum_{a\in V}
 \frac{w_{ab}}{w_{\cdot b}} \log_2\left(\frac{w_{ab}}{w_{\cdot
-b}}\right) \]</span> which can be simplified to <span
-class="math display">\[ E(b) =
+b}}\right) $$</span> which can be simplified to <span
+class="math display">$$ E(b) =
 \log_2(\deg(b)) - \log_2(w_{\cdot b}) + \frac{1}{w_{\cdot
-b}}\sum_{a\in V} w_{ab}\log_2(w_{ab}) \]</span> Then we define <span
-class="math display">\[
+b}}\sum_{a\in V} w_{ab}\log_2(w_{ab}) $$</span> Then we define <span
+class="math display">$$
 \mu(G) = \sum_{b\in V} E(b) = \sum_{b\in V} \log_2(\deg(b)) -
 \sum_{b\in V}\log_2(w_{\cdot b}) +  \sum_{a,b\in V}
-\frac{w_{ab}}{w_{\cdot b}}\log_2(w_{ab}) \]</span> This measure is both
+\frac{w_{ab}}{w_{\cdot b}}\log_2(w_{ab}) $$</span> This measure is both
 local and additive. On top of that <span
-class="math inline">\(\mu(K_n)\)</span>, <span
-class="math inline">\(\mu(A_n)\)</span> and <span
-class="math inline">\(\mu(C_n)\)</span> are all zero.</p>
+class="math inline"><em>μ</em>(<em>K</em><sub><em>n</em></sub>)</span>,
+<span
+class="math inline"><em>μ</em>(<em>A</em><sub><em>n</em></sub>)</span>
+and <span
+class="math inline"><em>μ</em>(<em>C</em><sub><em>n</em></sub>)</span>
+are all zero.</p>
 <p>The measure actually satisfies much more: if <span
-class="math inline">\((a,b)\in E\)</span> is a bridge between two
-components <span class="math inline">\(G_1\)</span> and <span
-class="math inline">\(G_2\)</span>,</p>
+class="math inline">(<em>a</em>,<em>b</em>) ∈ <em>E</em></span> is a
+bridge between two components <span
+class="math inline"><em>G</em><sub>1</sub></span> and <span
+class="math inline"><em>G</em><sub>2</sub></span>,</p>
 <figure data-orig-height="197" data-orig-width="80" data-orig-src="../media/2015-03-01-graphs_and_entropy_3.png">
 <img src="../media/2015-03-01-graphs_and_entropy_3.png" data-orig-height="197"
 data-orig-width="80" data-orig-src="../media/2015-03-01-graphs_and_entropy_3.png" />
 </figure>
-<p>i.e. removing <span class="math inline">\((a,b)\)</span> causes <span
-class="math inline">\(G\)</span> to split into 2 connected components,
-then <span class="math inline">\(\mu(G) = \mu(G_1) + \mu(G_2)\)</span>
+<p>i.e. removing <span
+class="math inline">(<em>a</em>,<em>b</em>)</span> causes <span
+class="math inline"><em>G</em></span> to split into 2 connected
+components, then <span
+class="math inline"><em>μ</em>(<em>G</em>) = <em>μ</em>(<em>G</em><sub>1</sub>) + <em>μ</em>(<em>G</em><sub>2</sub>)</span>
 which is quite nice.</p>
 <h2 id="implementation">Implementation</h2>
 <p>I am going to represent each edge as a list of vertices <span
-class="math inline">\((a b)\)</span> and weighted edges are going to be
-a <code>assoc</code> list such as</p>
+class="math inline">(<em>a</em><em>b</em>)</span> and weighted edges are
+going to be a <code>assoc</code> list such as</p>
 <pre><code>(defvar G
    `(((0 1) . 2)
      ((0 2) . 3)
@@ -266,9 +278,9 @@ C</code></pre>
 <p>So, by looking at these numbers, I would<a
 href="http://web.bahcesehir.edu.tr/atabey_kaygun/Blog/graphs-and-entropy.html"
 class="uri">http://web.bahcesehir.edu.tr/atabey_kaygun/Blog/graphs-and-entropy.html</a>
-say that the outgoing edges of <span class="math inline">\(G\)</span>
-has more randomness than the incoming edges. And if I modify the graph
-into</p>
+say that the outgoing edges of <span
+class="math inline"><em>G</em></span> has more randomness than the
+incoming edges. And if I modify the graph into</p>
 <pre><code>(defvar H
    `(((0 1) . 1)
      ((0 2) . 2)

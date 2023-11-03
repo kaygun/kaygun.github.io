@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,9 +55,9 @@
 <h1 id="mccarthy91-terminates">McCarthy91 Terminates</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Fix three natural number parameters <span
-class="math inline">\(a,b,c\)</span> such that <span
-class="math inline">\(a \&gt; b\)</span>. Let me define a function
-recursively as follow (in pseudo-code)</p>
+class="math inline"><em>a</em>, <em>b</em>, <em>c</em></span> such that
+<span class="math inline"><em>a</em> <em>b</em></span>. Let me define a
+function recursively as follow (in pseudo-code)</p>
 <pre><code>function f
    input: a natural number n
    output: a natural number
@@ -72,95 +69,112 @@ begin
    end if
 end</code></pre>
 <p>Today I would like to show that the recursion terminates for every
-input <span class="math inline">\(x\)</span>.</p>
+input <span class="math inline"><em>x</em></span>.</p>
 <h2 id="a-solution">A solution</h2>
 <p>First, observe that the recursion terminates at the first step if the
-input <span class="math inline">\(x\)</span> is greater or equal to
-<span class="math inline">\(c\)</span>. This means, we need to show that
-recursion terminates when the input is in the range <span
-class="math inline">\(\{0,1,\ldots,c-1\}\)</span>.</p>
+input <span class="math inline"><em>x</em></span> is greater or equal to
+<span class="math inline"><em>c</em></span>. This means, we need to show
+that recursion terminates when the input is in the range <span
+class="math inline">{0, 1, …, <em>c</em> − 1}</span>.</p>
 <p>Let us inspect the way this function is evaluated <em>on the
 stack</em>. Assume that we start with 0. The recursion will iterate
 as</p>
 <pre><code>0 f =&gt; a f f =&gt; 2a f f f =&gt; 3a f f f f =&gt; ...</code></pre>
-<p>until we find a number <span class="math inline">\(m\)</span> such
-that <span class="math inline">\((m-1)a &lt; c \leq ma\)</span>. Then
-the number of f’s we applied starts decreasing until we hit a point
-where we find another number <span class="math inline">\(\ell\)</span>
-such that <span class="math inline">\(ma-\ell b &lt; c \leq ma -
-(\ell-1)b\)</span>. If at this point the number of f’s on the stack is 0
-then we stop. Otherwise, we repeat this 2-step procedure.</p>
+<p>until we find a number <span class="math inline"><em>m</em></span>
+such that <span
+class="math inline">(<em>m</em>−1)<em>a</em> &lt; <em>c</em> ≤ <em>m</em><em>a</em></span>.
+Then the number of f’s we applied starts decreasing until we hit a point
+where we find another number <span class="math inline">ℓ</span> such
+that <span
+class="math inline"><em>m</em><em>a</em> − ℓ<em>b</em> &lt; <em>c</em> ≤ <em>m</em><em>a</em> − (ℓ−1)<em>b</em></span>.
+If at this point the number of f’s on the stack is 0 then we stop.
+Otherwise, we repeat this 2-step procedure.</p>
 <p>I will change the problem, and make it slightly more general. Assume
 we define a recursive sequence of pairs of integers <span
-class="math inline">\((x_n,y_n)\)</span> as follows <span
-class="math display">\[ (x_{n+1},y_{n+1}) = \begin{cases} (x_n,0) &amp;
-\text{ if }
+class="math inline">(<em>x</em><sub><em>n</em></sub>,<em>y</em><sub><em>n</em></sub>)</span>
+as follows <span class="math display">$$ (x_{n+1},y_{n+1}) =
+\begin{cases} (x_n,0) &amp; \text{ if }
 y_n = 0\\ (x_n + a, y_n + 1) &amp; \text{ if } x_n &lt; c\\ (x_n - b,
-y_n - 1) &amp; \text{ otherwise } \end{cases} \]</span> Then the problem
+y_n - 1) &amp; \text{ otherwise } \end{cases} $$</span> Then the problem
 of showing that the recursion terminates translates into showing the
 sequence above becomes stationary when the first term <span
-class="math inline">\((x_0,y_0)\)</span> is set to <span
-class="math inline">\((x,1)\)</span>.</p>
+class="math inline">(<em>x</em><sub>0</sub>,<em>y</em><sub>0</sub>)</span>
+is set to <span class="math inline">(<em>x</em>,1)</span>.</p>
 <p><strong>Lemma:</strong> If there are two indices <span
-class="math inline">\(n \&gt; m\)</span> such that <span
-class="math inline">\(x_n = x_m\)</span> then <span
-class="math inline">\(y_n &lt; y_m\)</span>.</p>
+class="math inline"><em>n</em> <em>m</em></span> such that <span
+class="math inline"><em>x</em><sub><em>n</em></sub> = <em>x</em><sub><em>m</em></sub></span>
+then <span
+class="math inline"><em>y</em><sub><em>n</em></sub> &lt; <em>y</em><sub><em>m</em></sub></span>.</p>
 <p><strong>Proof:</strong> (By way of contradiction) Assume <span
-class="math inline">\(y_n \geq y_m\)</span>. This means between the
-indices <span class="math inline">\(m\)</span> and <span
-class="math inline">\(n\)</span> (inclusive), we saw the cases <span
-class="math inline">\(x_i &lt; c\)</span> with <span
-class="math inline">\(y_i \&gt; 0\)</span> more than the cases <span
-class="math inline">\(x_i \geq c\)</span> with <span
-class="math inline">\(y_i \&gt; 0\)</span>. Respectively, let <span
-class="math inline">\(r\)</span> be the number of the cases <span
-class="math inline">\(x_i &lt; c\)</span> and let <span
-class="math inline">\(\ell\)</span> be the number of cases <span
-class="math inline">\(x_i \geq c\)</span> from <span
-class="math inline">\(i=n\)</span> to <span
-class="math inline">\(i=m\)</span>. Then we get that <span
-class="math inline">\(r \geq \ell\)</span> by our assumption and <span
-class="math display">\[ x_n = x_m = x_n + ra - \ell b \]</span> which is
-impossible as <span class="math inline">\(a \&gt; b\)</span>.</p>
+class="math inline"><em>y</em><sub><em>n</em></sub> ≥ <em>y</em><sub><em>m</em></sub></span>.
+This means between the indices <span
+class="math inline"><em>m</em></span> and <span
+class="math inline"><em>n</em></span> (inclusive), we saw the cases
+<span
+class="math inline"><em>x</em><sub><em>i</em></sub> &lt; <em>c</em></span>
+with <span class="math inline"><em>y</em><sub><em>i</em></sub> 0</span>
+more than the cases <span
+class="math inline"><em>x</em><sub><em>i</em></sub> ≥ <em>c</em></span>
+with <span class="math inline"><em>y</em><sub><em>i</em></sub> 0</span>.
+Respectively, let <span class="math inline"><em>r</em></span> be the
+number of the cases <span
+class="math inline"><em>x</em><sub><em>i</em></sub> &lt; <em>c</em></span>
+and let <span class="math inline">ℓ</span> be the number of cases <span
+class="math inline"><em>x</em><sub><em>i</em></sub> ≥ <em>c</em></span>
+from <span class="math inline"><em>i</em> = <em>n</em></span> to <span
+class="math inline"><em>i</em> = <em>m</em></span>. Then we get that
+<span class="math inline"><em>r</em> ≥ ℓ</span> by our assumption and
+<span
+class="math display"><em>x</em><sub><em>n</em></sub> = <em>x</em><sub><em>m</em></sub> = <em>x</em><sub><em>n</em></sub> + <em>r</em><em>a</em> − ℓ<em>b</em></span>
+which is impossible as <span
+class="math inline"><em>a</em> <em>b</em></span>.</p>
 <p><strong>Proposition:</strong> For every <span
-class="math inline">\(x\in\{0,1,\ldots,c-1\}\)</span> the recursive
-sequence we defined above for every initial value of the form <span
-class="math inline">\((x,m)\)</span> will always stabilize.</p>
+class="math inline"><em>x</em> ∈ {0, 1, …, <em>c</em> − 1}</span> the
+recursive sequence we defined above for every initial value of the form
+<span class="math inline">(<em>x</em>,<em>m</em>)</span> will always
+stabilize.</p>
 <p><strong>Proof:</strong> (By way of contradiction) Assume the sequence
-does not stabilize for a specific <span class="math inline">\(1\leq x
-&lt; c\)</span>. We consider the first component <span
-class="math inline">\((x_n)\)</span> of the recursive sequence only.
-Note that the recursive sequence is designed so that when <span
-class="math inline">\(x_n\)</span> is larger than <span
-class="math inline">\(c\)</span>, the next terms in the sequence are
-forced to be smaller until <span class="math inline">\(x_n\)</span>
-becomes smaller than <span class="math inline">\(c\)</span>. Thus if the
+does not stabilize for a specific <span
+class="math inline">1 ≤ <em>x</em> &lt; <em>c</em></span>. We consider
+the first component <span
+class="math inline">(<em>x</em><sub><em>n</em></sub>)</span> of the
+recursive sequence only. Note that the recursive sequence is designed so
+that when <span
+class="math inline"><em>x</em><sub><em>n</em></sub></span> is larger
+than <span class="math inline"><em>c</em></span>, the next terms in the
+sequence are forced to be smaller until <span
+class="math inline"><em>x</em><sub><em>n</em></sub></span> becomes
+smaller than <span class="math inline"><em>c</em></span>. Thus if the
 sequence is not stationary it must visit the region <span
-class="math inline">\(\{0,1,\ldots,c-1\}\)</span> infinitely often. Then
-by <em>pigeon-hole</em> principle there must be a number <span
-class="math inline">\(z\in \{0,1,\ldots,c-1\}\)</span> which our
-sequence <span class="math inline">\((x_n)\)</span> must visit
+class="math inline">{0, 1, …, <em>c</em> − 1}</span> infinitely often.
+Then by <em>pigeon-hole</em> principle there must be a number <span
+class="math inline"><em>z</em> ∈ {0, 1, …, <em>c</em> − 1}</span> which
+our sequence <span
+class="math inline">(<em>x</em><sub><em>n</em></sub>)</span> must visit
 infinitely often. That is, there must be a subsequence <span
-class="math inline">\(n_1 &lt; n_2 &lt; \cdots &lt; n_k &lt;
-\cdots\)</span> such that <span class="math inline">\(x_{n_i} =
-z\)</span>. But then the Lemma above indicates that we have a strictly
-decreasing sequence of natural numbers <span class="math display">\[
-y_{n_1} \&gt; y_{n_2} \&gt; \cdots \&gt; y_{n_k} \&gt;
-\cdots \geq 0 \]</span> which is impossible. Thus the sequence <span
-class="math inline">\((y_n)\)</span> must stabilize which is possible
-only when <span class="math inline">\(y_n=0\)</span> after some
-point.</p>
+class="math inline"><em>n</em><sub>1</sub> &lt; <em>n</em><sub>2</sub> &lt; ⋯ &lt; <em>n</em><sub><em>k</em></sub> &lt; ⋯</span>
+such that <span
+class="math inline"><em>x</em><sub><em>n</em><sub><em>i</em></sub></sub> = <em>z</em></span>.
+But then the Lemma above indicates that we have a strictly decreasing
+sequence of natural numbers <span
+class="math display"><em>y</em><sub><em>n</em><sub>1</sub></sub> <em>y</em><sub><em>n</em><sub>2</sub></sub> ⋯ <em>y</em><sub><em>n</em><sub><em>k</em></sub></sub> ⋯ ≥ 0</span>
+which is impossible. Thus the sequence <span
+class="math inline">(<em>y</em><sub><em>n</em></sub>)</span> must
+stabilize which is possible only when <span
+class="math inline"><em>y</em><sub><em>n</em></sub> = 0</span> after
+some point.</p>
 <h2 id="a-little-bit-of-history-on-mccarthy91">A little bit of history
 on McCarthy91</h2>
 <p>The original version of the function is defined and used by McCarthy
 in a series papers in the 70’s. That version uses the parameters <span
-class="math inline">\(a=11\)</span>, <span
-class="math inline">\(b=10\)</span> and <span
-class="math inline">\(c=101\)</span>. Then Knuth asked a similar
+class="math inline"><em>a</em> = 11</span>, <span
+class="math inline"><em>b</em> = 10</span> and <span
+class="math inline"><em>c</em> = 101</span>. Then Knuth asked a similar
 question using real number parameters <span
-class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>
-and <span class="math inline">\(c\)</span>. The fact the function
-terminates with real parameters is formally verified by <a
+class="math inline"><em>a</em></span>, <span
+class="math inline"><em>b</em></span> and <span
+class="math inline"><em>c</em></span>. The fact the function terminates
+with real parameters is formally verified by <a
 href="http://www.cs.utexas.edu/users/moore/acl2/workshop-1999/Cowles-abstract.html">Cowles</a>
 using <a href="http://www.cs.utexas.edu/~moore/acl2/">ACL2</a>. The case
 I did here is somewhat in between.</p>

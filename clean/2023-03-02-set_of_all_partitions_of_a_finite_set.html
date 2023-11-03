@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -109,10 +110,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -121,24 +118,26 @@
 <h1 id="set-of-all-partitions-of-a-finite-set">Set of All Partitions of
 a Finite Set</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Assume <span class="math inline">\(A\)</span> is a finite set. Today,
-I would like to write a lisp function that returns the set of all
-partitions of <span class="math inline">\(A\)</span>.</p>
+<p>Assume <span class="math inline"><em>A</em></span> is a finite set.
+Today, I would like to write a lisp function that returns the set of all
+partitions of <span class="math inline"><em>A</em></span>.</p>
 <h2 id="an-algorithm">An algorithm</h2>
-<p>For an element <span class="math inline">\(x\in A\)</span>, assume we
+<p>For an element <span
+class="math inline"><em>x</em> ∈ <em>A</em></span>, assume we
 constructed the set of all partitions of <span
-class="math inline">\(A\setminus \{x\}\)</span>. Then for any partition
-<span class="math inline">\(p\)</span> of <span
-class="math inline">\(A\setminus\{x\}\)</span>, the set <span
-class="math inline">\(p\cup \{\{x\}\}\)</span> is a partition of <span
-class="math inline">\(A\)</span>. Moreover, if <span
-class="math inline">\(p = \{ a_1,\ldots,a_k \}\)</span> is a partition
-of <span class="math inline">\(A\setminus \{x\}\)</span> then each <span
-class="math inline">\(p_i\)</span> obtained from <span
-class="math inline">\(p\)</span> by replacing <span
-class="math inline">\(a_i\)</span> with <span
-class="math inline">\(a_i\cup \{x\}\)</span> is another partition of
-<span class="math inline">\(A\)</span>.</p>
+class="math inline"><em>A</em> \ {<em>x</em>}</span>. Then for any
+partition <span class="math inline"><em>p</em></span> of <span
+class="math inline"><em>A</em> \ {<em>x</em>}</span>, the set <span
+class="math inline"><em>p</em> ∪ {{<em>x</em>}}</span> is a partition of
+<span class="math inline"><em>A</em></span>. Moreover, if <span
+class="math inline"><em>p</em> = {<em>a</em><sub>1</sub>, …, <em>a</em><sub><em>k</em></sub>}</span>
+is a partition of <span
+class="math inline"><em>A</em> \ {<em>x</em>}</span> then each <span
+class="math inline"><em>p</em><sub><em>i</em></sub></span> obtained from
+<span class="math inline"><em>p</em></span> by replacing <span
+class="math inline"><em>a</em><sub><em>i</em></sub></span> with <span
+class="math inline"><em>a</em><sub><em>i</em></sub> ∪ {<em>x</em>}</span>
+is another partition of <span class="math inline"><em>A</em></span>.</p>
 <pre><code> Algorithm Partitions
  Input: A finite set A
  Output: Set of all partitions of A

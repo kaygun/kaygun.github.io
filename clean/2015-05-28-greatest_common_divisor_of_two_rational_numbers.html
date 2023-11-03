@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -65,21 +62,21 @@ divisor</strong> of two integers to the set of rational numbers. Today,
 I will give this extension.</p>
 <h2 id="thedefinition">The definition</h2>
 <p>In order to simplify the notation, I will use <span
-class="math inline">\(\frac{a}{b}\wedge\frac{c}{d}\)</span> instead of
-<span class="math inline">\(\gcd(\frac{a}{b},\frac{c}{d})\)</span>.</p>
+class="math inline">$\frac{a}{b}\wedge\frac{c}{d}$</span> instead of
+<span class="math inline">$\gcd(\frac{a}{b},\frac{c}{d})$</span>.</p>
 <p>Given two rational numbers <span
-class="math inline">\(\frac{a}{b}\)</span> and <span
-class="math inline">\(\frac{c}{d}\)</span> define <span
-class="math display">\[ \frac{a}{b}\wedge\frac{c}{d} = \frac{ad\wedge
-bc}{bd} \]</span></p>
+class="math inline">$\frac{a}{b}$</span> and <span
+class="math inline">$\frac{c}{d}$</span> define <span
+class="math display">$$ \frac{a}{b}\wedge\frac{c}{d} = \frac{ad\wedge
+bc}{bd} $$</span></p>
 <p>This definition enjoys a rather nice property: multiplication is
 distributive over the greatest common divisor <span
-class="math display">\[
+class="math display">$$
 \frac{a}{b}\left(\frac{c}{d}\wedge\frac{e}{f}\right) =
-\frac{\gcd(acf,ade)}{bdf} = \frac{ac}{bd}\wedge\frac{ae}{bf} \]</span>
+\frac{\gcd(acf,ade)}{bdf} = \frac{ac}{bd}\wedge\frac{ae}{bf} $$</span>
 This means the set of positive rationals <span
-class="math inline">\(\mathbb{Q}_+\)</span> form a semi-ring with
-respect to greatest common divisor and multiplication operators.</p>
+class="math inline">ℚ<sub>+</sub></span> form a semi-ring with respect
+to greatest common divisor and multiplication operators.</p>
 <h2 id="computations">Computations</h2>
 <p>In common lisp’s <a
 href="http://en.wikipedia.org/wiki/Numerical_tower">numerical tower</a>

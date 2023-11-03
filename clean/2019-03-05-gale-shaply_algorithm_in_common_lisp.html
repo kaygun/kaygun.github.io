@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -109,10 +110,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -128,10 +125,10 @@ declared a list of preferences of vertices they want to be matched, and
 vice versa. A one-to-one matching M between L and R is called
 <em>stable</em> if any subset of M is altered to obtain another matching
 M’ then there is at least one matching <span
-class="math inline">\((x,y)\)</span> in M’ where both <span
-class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span> are matched with their lesser choices
-than their original match M.</p>
+class="math inline">(<em>x</em>,<em>y</em>)</span> in M’ where both
+<span class="math inline"><em>x</em></span> and <span
+class="math inline"><em>y</em></span> are matched with their lesser
+choices than their original match M.</p>
 <p>The problem of finding such stable matchings is called the <a
 href="https://en.wikipedia.org/wiki/Stable_marriage_problem">Stable
 Matching Problem</a>, and you can find a detailed description of the

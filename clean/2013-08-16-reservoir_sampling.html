@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -62,8 +59,8 @@ from <a href="http://lemire.me/blog/">Daniel Lemire’s blog</a>.</p>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Assume that you have a stream of distinct objects of some unknown
 length, and that we are supposed to take a sample of <span
-class="math inline">\(k\)</span> objects from this stream. We can use
-the algorithm of <a
+class="math inline"><em>k</em></span> objects from this stream. We can
+use the algorithm of <a
 href="http://en.wikipedia.org/wiki/Reservoir_sampling">Reservoir
 Sampling</a> to perform the task efficiently and fast.</p>
 <h2 id="thealgorithm">The algorithm</h2>
@@ -88,39 +85,41 @@ End</code></pre>
 <p>It is easy to see that the algorithm finishes in one pass, and the
 complexity of each iteration is independent of the length of the stream.
 So, the algorithm is of order <span
-class="math inline">\(\mathcal{O}(n)\)</span> where <span
-class="math inline">\(n\)</span> is the length of the stream.</p>
+class="math inline">𝒪(<em>n</em>)</span> where <span
+class="math inline"><em>n</em></span> is the length of the stream.</p>
 <p>I lifted the argument fro the correctness of the algorithm I present
 here (with some pedantic changes) from <a
 href="http://blogs.msdn.com/b/spt/archive/2008/02/05/reservoir-sampling.aspx%5D">here</a>.
 I will use induction to show correctness. The base case when <span
-class="math inline">\(n\)</span> the length of the stream is equal to
-<span class="math inline">\(k\)</span> the number of elements we are
-supposed to pick. Then algorithm clearly states that we pick every
+class="math inline"><em>n</em></span> the length of the stream is equal
+to <span class="math inline"><em>k</em></span> the number of elements we
+are supposed to pick. Then algorithm clearly states that we pick every
 element from the stream. Thus probability of picking each <span
-class="math inline">\(x\in S\)</span> is <span
-class="math inline">\(1/k\)</span>. Assume, as our induction hypothesis,
-that at <span class="math inline">\(m\)</span>-th step the probability
-of picking each <span class="math inline">\(x\)</span> from the stream
-so far is <span class="math inline">\(1/m\)</span>. Let <span
-class="math inline">\(y\)</span> be the element of <span
-class="math inline">\(S\)</span> provided to us at the <span
-class="math inline">\(m+1\)</span>-st step. Our algorithm dictates that
-the probability of picking <span class="math inline">\(y\)</span> is
-<span class="math inline">\(k/(m+1)\)</span> and replacing an element at
-the <span class="math inline">\(i\)</span>-th position in
-<code>res</code> is <span class="math inline">\(1/k\)</span>. Thus the
-probability of an element at the <span
-class="math inline">\(i\)</span>-th position in <code>res</code> is
-replaced with <span class="math inline">\(y\)</span> is <span
-class="math inline">\(1/(m+1)\)</span>, and the probability of the rest
-of the elements in <code>res</code> to survive to the next round is
-<span class="math inline">\(m/(m+1)\)</span>. The probability that we
-picked these elements from rounds 1 to <span
-class="math inline">\(m\)</span> were <span
-class="math inline">\(1/m\)</span>. Thus, at the next round the
-probabilities become <span class="math inline">\((1/m)(m/(m+1)) =
-1/(m+1)\)</span>.</p>
+class="math inline"><em>x</em> ∈ <em>S</em></span> is <span
+class="math inline">1/<em>k</em></span>. Assume, as our induction
+hypothesis, that at <span class="math inline"><em>m</em></span>-th step
+the probability of picking each <span
+class="math inline"><em>x</em></span> from the stream so far is <span
+class="math inline">1/<em>m</em></span>. Let <span
+class="math inline"><em>y</em></span> be the element of <span
+class="math inline"><em>S</em></span> provided to us at the <span
+class="math inline"><em>m</em> + 1</span>-st step. Our algorithm
+dictates that the probability of picking <span
+class="math inline"><em>y</em></span> is <span
+class="math inline"><em>k</em>/(<em>m</em>+1)</span> and replacing an
+element at the <span class="math inline"><em>i</em></span>-th position
+in <code>res</code> is <span class="math inline">1/<em>k</em></span>.
+Thus the probability of an element at the <span
+class="math inline"><em>i</em></span>-th position in <code>res</code> is
+replaced with <span class="math inline"><em>y</em></span> is <span
+class="math inline">1/(<em>m</em>+1)</span>, and the probability of the
+rest of the elements in <code>res</code> to survive to the next round is
+<span class="math inline"><em>m</em>/(<em>m</em>+1)</span>. The
+probability that we picked these elements from rounds 1 to <span
+class="math inline"><em>m</em></span> were <span
+class="math inline">1/<em>m</em></span>. Thus, at the next round the
+probabilities become <span
+class="math inline">(1/<em>m</em>)(<em>m</em>/(<em>m</em>+1)) = 1/(<em>m</em>+1)</span>.</p>
 <p>As one can see, this is a <em>streaming</em> algorithm. If the stream
 is cut off at any point, the sample we chose is chosen uniformly until
 that point. At each iteration, the fact that elements are chosen

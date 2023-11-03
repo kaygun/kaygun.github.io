@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -67,21 +64,21 @@ integers, rationals, reals or complex numbers) together with the
 addition operation in which the unit is 0, and numbers together with the
 multiplication operation in which the unit is 1.</p>
 <p>The defining binary operator with type signature <span
-class="math inline">\(M\times M\to M\)</span> (addition or
-multiplication in the case of numbers) for a monoid must be associative.
-Remember that the defining operator is binary, and therefore, applying
-these operators on lists longer than 2 requires making choices of
-parenthesizations. The associativity constraint <span
-class="math display">\[ a
-\circ (b \circ c) = (a\circ b)\circ c \]</span> makes application of
-such reduction operators on addition or multiplication together with a
-list easier to implement as we do not have to worry about the choices we
-have to make.</p>
+class="math inline"><em>M</em> × <em>M</em> → <em>M</em></span>
+(addition or multiplication in the case of numbers) for a monoid must be
+associative. Remember that the defining operator is binary, and
+therefore, applying these operators on lists longer than 2 requires
+making choices of parenthesizations. The associativity constraint <span
+class="math display"><em>a</em> ∘ (<em>b</em>∘<em>c</em>) = (<em>a</em>∘<em>b</em>) ∘ <em>c</em></span>
+makes application of such reduction operators on addition or
+multiplication together with a list easier to implement as we do not
+have to worry about the choices we have to make.</p>
 <p>In order to go further with more elaborate examples on units, we must
 think of these elements as unary operators of left and right variants
-whose type signatures are <span class="math inline">\(M\to M\times
-M\)</span> which is exactly the opposite of the type signature of our
-binary operator. In the case of addition operator:</p>
+whose type signatures are <span
+class="math inline"><em>M</em> → <em>M</em> × <em>M</em></span> which is
+exactly the opposite of the type signature of our binary operator. In
+the case of addition operator:</p>
 <blockquote>
 <p><code>add-left-unit(x) = (x,0)</code></p>
 <p><code>add-right-unit(x) = (0,x)</code></p>
@@ -128,17 +125,17 @@ means that I will have be more careful in implementing
 
 (flatten &#39;((0 1) (2 3 4) ((5 6)) (7 8) (9)))
 (0 1 2 3 4 (5 6) 7 8 9)</code></pre>
-<p>Given a list <span class="math inline">\(L\)</span> of objects of
-type <span class="math inline">\(A\)</span>, there are two ways one can
-create a list of list of objects of type <span
-class="math inline">\(A\)</span>:</p>
+<p>Given a list <span class="math inline"><em>L</em></span> of objects
+of type <span class="math inline"><em>A</em></span>, there are two ways
+one can create a list of list of objects of type <span
+class="math inline"><em>A</em></span>:</p>
 <ol type="1">
 <li>Either create a new list which contains a single element <span
-class="math inline">\(L\)</span>.</li>
-<li>Or for each <span class="math inline">\(x\)</span> in <span
-class="math inline">\(L\)</span> create a list containing just <span
-class="math inline">\(x\)</span> and combine the results into a new
-list.</li>
+class="math inline"><em>L</em></span>.</li>
+<li>Or for each <span class="math inline"><em>x</em></span> in <span
+class="math inline"><em>L</em></span> create a list containing just
+<span class="math inline"><em>x</em></span> and combine the results into
+a new list.</li>
 </ol>
 <p>In lisp one possible implementation of these left and right units can
 be accomplished as follows:</p>

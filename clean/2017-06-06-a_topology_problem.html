@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,133 +55,152 @@
 <h1 id="a-topology-problem">A topology problem</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I am going to consider a topology problem: If <span
-class="math inline">\(X\)</span> is a compact normal topological space,
-and if <span class="math inline">\(\sim\)</span> is an equivalence
-relation on <span class="math inline">\(X\)</span>, under what
+class="math inline"><em>X</em></span> is a compact normal topological
+space, and if <span class="math inline">∼</span> is an equivalence
+relation on <span class="math inline"><em>X</em></span>, under what
 conditions is the quotient space <span
-class="math inline">\(X/\sim\)</span> of equivalence classes also
+class="math inline"><em>X</em>/∼</span> of equivalence classes also
 compact normal? Here is one possible solution.</p>
 <blockquote>
-<p>Assume <span class="math inline">\((X,\tau)\)</span> is a compact
-normal <span class="math inline">\((T_4+T_1)\)</span> topological space,
-<span class="math inline">\((Y,\kappa)\)</span> be a <span
-class="math inline">\(T_1\)</span> topological space, and let <span
-class="math inline">\(\pi\colon X\to Y\)</span> be a surjective
-continuous map. Then <span class="math inline">\(Y\)</span> is also
-compact normal.</p>
+<p>Assume <span class="math inline">(<em>X</em>,<em>τ</em>)</span> is a
+compact normal <span
+class="math inline">(<em>T</em><sub>4</sub>+<em>T</em><sub>1</sub>)</span>
+topological space, <span
+class="math inline">(<em>Y</em>,<em>κ</em>)</span> be a <span
+class="math inline"><em>T</em><sub>1</sub></span> topological space, and
+let <span class="math inline"><em>π</em>: <em>X</em> → <em>Y</em></span>
+be a surjective continuous map. Then <span
+class="math inline"><em>Y</em></span> is also compact normal.</p>
 </blockquote>
 <p>For example this works when each equivalence class is closed.</p>
 <h2 id="proof">Proof</h2>
 <h3 id="image-of-a-compact-subset-k-of-x-is-compact.">Image of a compact
-subset <span class="math inline">\(K\)</span> of <span
-class="math inline">\(X\)</span> is compact.</h3>
-<p>Assume <span class="math inline">\(K\subseteq X\)</span> is compact,
-and consider <span class="math inline">\(\pi( K )\subseteq Y\)</span>.
-Take an open cover <span class="math inline">\(\mathcal{U}\)</span> of
-<span class="math inline">\(\pi( K )\)</span>. Then <span
-class="math display">\[
-\pi^{-1}\mathcal{U} = \left\{\pi^{-1}(U)\mid U\in\mathcal{U}
-\right\} \]</span> is an open cover of <span
-class="math inline">\(\pi^{-1}\pi( K )\)</span>. However, since <span
-class="math inline">\(K\subseteq \pi^{-1}\pi( K )\)</span>, we also have
-that <span class="math inline">\(\pi^{-1}\mathcal{U}\)</span> is an open
-cover of <span class="math inline">\(K\)</span>. But <span
-class="math inline">\(K\)</span> is compact. So, there is a finite
-subcover <span class="math inline">\(\pi^{-1}\mathcal{U}&#39;\)</span>.
-Since <span class="math inline">\(\pi\pi^{-1}(U)\subseteq U\)</span> for
-every <span class="math inline">\(U\)</span>, we get that <span
-class="math inline">\(\mathcal{U}&#39;\)</span> is also a finite
-subcover of <span class="math inline">\(\pi( K )\)</span>.</p>
-<h3 id="y-is-compact"><span class="math inline">\(Y\)</span> is
+subset <span class="math inline"><em>K</em></span> of <span
+class="math inline"><em>X</em></span> is compact.</h3>
+<p>Assume <span class="math inline"><em>K</em> ⊆ <em>X</em></span> is
+compact, and consider <span
+class="math inline"><em>π</em>(<em>K</em>) ⊆ <em>Y</em></span>. Take an
+open cover <span class="math inline">𝒰</span> of <span
+class="math inline"><em>π</em>(<em>K</em>)</span>. Then <span
+class="math display"><em>π</em><sup>−1</sup>𝒰 = {<em>π</em><sup>−1</sup>(<em>U</em>)∣<em>U</em>∈𝒰}</span>
+is an open cover of <span
+class="math inline"><em>π</em><sup>−1</sup><em>π</em>(<em>K</em>)</span>.
+However, since <span
+class="math inline"><em>K</em> ⊆ <em>π</em><sup>−1</sup><em>π</em>(<em>K</em>)</span>,
+we also have that <span
+class="math inline"><em>π</em><sup>−1</sup>𝒰</span> is an open cover of
+<span class="math inline"><em>K</em></span>. But <span
+class="math inline"><em>K</em></span> is compact. So, there is a finite
+subcover <span class="math inline"><em>π</em><sup>−1</sup>𝒰′</span>.
+Since <span
+class="math inline"><em>π</em><em>π</em><sup>−1</sup>(<em>U</em>) ⊆ <em>U</em></span>
+for every <span class="math inline"><em>U</em></span>, we get that <span
+class="math inline">𝒰′</span> is also a finite subcover of <span
+class="math inline"><em>π</em>(<em>K</em>)</span>.</p>
+<h3 id="y-is-compact"><span class="math inline"><em>Y</em></span> is
 compact</h3>
 <p>Easily follows from the fact that <span
-class="math inline">\(X\)</span> is compact and <span
-class="math inline">\(\pi(X)=Y\)</span>.</p>
+class="math inline"><em>X</em></span> is compact and <span
+class="math inline"><em>π</em>(<em>X</em>) = <em>Y</em></span>.</p>
 <h3 id="every-closed-subset-k-of-x-is-compact.">Every closed subset
-<span class="math inline">\(K\)</span> of <span
-class="math inline">\(X\)</span> is compact.</h3>
-<p>Assume <span class="math inline">\(\mathcal{U}\)</span> is an open
-cover of <span class="math inline">\(K\)</span>. Then <span
-class="math display">\[\mathcal{U}&#39; =
-\mathcal{U}\cup\left\{K^c\right\}\]</span> is an open cover of <span
-class="math inline">\(X\)</span>, but <span
-class="math inline">\(X\)</span> is compact. So, <span
-class="math inline">\(\mathcal{U}&#39;\)</span> has a finite subcover
-<span class="math inline">\(\mathcal{U}&quot;\)</span>. Then <span
-class="math inline">\(\mathcal{U}&quot;\setminus\left\{K^c\right\}\)</span>
-is a finite subcover of <span class="math inline">\(K\)</span>.</p>
+<span class="math inline"><em>K</em></span> of <span
+class="math inline"><em>X</em></span> is compact.</h3>
+<p>Assume <span class="math inline">𝒰</span> is an open cover of <span
+class="math inline"><em>K</em></span>. Then <span
+class="math display">𝒰′ = 𝒰 ∪ {<em>K</em><sup><em>c</em></sup>}</span>
+is an open cover of <span class="math inline"><em>X</em></span>, but
+<span class="math inline"><em>X</em></span> is compact. So, <span
+class="math inline">𝒰′</span> has a finite subcover <span
+class="math inline">$\mathcal{U}"$</span>. Then <span
+class="math inline">$\mathcal{U}"\setminus\left\{K^c\right\}$</span> is
+a finite subcover of <span class="math inline"><em>K</em></span>.</p>
 <h3 id="every-compact-subset-k-of-x-is-closed.">Every compact subset
-<span class="math inline">\(K\)</span> of <span
-class="math inline">\(X\)</span> is closed.</h3>
-<p>Fix <span class="math inline">\(y\in K^c\)</span>. Since <span
-class="math inline">\(X\)</span> is <span
-class="math inline">\(T_2\)</span> any point <span
-class="math inline">\(a\in K\)</span> and <span
-class="math inline">\(y\in K^c\)</span> can be separated by open
-neighborhoods which means for all <span class="math inline">\(a\in
-K\)</span>, there are open subset <span class="math inline">\(U_a,V_a\in
-\tau\)</span> where <span class="math inline">\(a\in U_a\)</span> and
-<span class="math inline">\(y\in V_a\)</span> and <span
-class="math inline">\(U_a\cap V_a\)</span> is empty. Then <span
-class="math inline">\(\mathcal{U} = \left\{U_a \right \}_{a\in
-K}\)</span> is an open cover of <span class="math inline">\(K\)</span>.
-Since <span class="math inline">\(K\)</span> is compact, <span
-class="math inline">\(\mathcal{U}\)</span> has a finite subcover. Then
-there are finitely many points <span
-class="math inline">\(a_1,\ldots,a_n\in K\)</span> such that <span
-class="math display">\[ K\subseteq \bigcup_{i=1}^n U_{a_i}\quad \text{
-and
-} \quad y\in V = \bigcap_{i=1}^n V_{a_i} \]</span> and <span
-class="math inline">\(V\cap K\)</span> is empty. Thus <span
-class="math inline">\(K^c\)</span> is open, or equivalently, <span
-class="math inline">\(K\)</span> is closed.</p>
-<h3 id="pi-is-a-closed-map."><span class="math inline">\(\pi\)</span> is
-a closed map.</h3>
+<span class="math inline"><em>K</em></span> of <span
+class="math inline"><em>X</em></span> is closed.</h3>
+<p>Fix <span
+class="math inline"><em>y</em> ∈ <em>K</em><sup><em>c</em></sup></span>.
+Since <span class="math inline"><em>X</em></span> is <span
+class="math inline"><em>T</em><sub>2</sub></span> any point <span
+class="math inline"><em>a</em> ∈ <em>K</em></span> and <span
+class="math inline"><em>y</em> ∈ <em>K</em><sup><em>c</em></sup></span>
+can be separated by open neighborhoods which means for all <span
+class="math inline"><em>a</em> ∈ <em>K</em></span>, there are open
+subset <span
+class="math inline"><em>U</em><sub><em>a</em></sub>, <em>V</em><sub><em>a</em></sub> ∈ <em>τ</em></span>
+where <span
+class="math inline"><em>a</em> ∈ <em>U</em><sub><em>a</em></sub></span>
+and <span
+class="math inline"><em>y</em> ∈ <em>V</em><sub><em>a</em></sub></span>
+and <span
+class="math inline"><em>U</em><sub><em>a</em></sub> ∩ <em>V</em><sub><em>a</em></sub></span>
+is empty. Then <span
+class="math inline">𝒰 = {<em>U</em><sub><em>a</em></sub>}<sub><em>a</em> ∈ <em>K</em></sub></span>
+is an open cover of <span class="math inline"><em>K</em></span>. Since
+<span class="math inline"><em>K</em></span> is compact, <span
+class="math inline">𝒰</span> has a finite subcover. Then there are
+finitely many points <span
+class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>n</em></sub> ∈ <em>K</em></span>
+such that <span class="math display">$$ K\subseteq \bigcup_{i=1}^n
+U_{a_i}\quad \text{ and
+} \quad y\in V = \bigcap_{i=1}^n V_{a_i} $$</span> and <span
+class="math inline"><em>V</em> ∩ <em>K</em></span> is empty. Thus <span
+class="math inline"><em>K</em><sup><em>c</em></sup></span> is open, or
+equivalently, <span class="math inline"><em>K</em></span> is closed.</p>
+<h3 id="pi-is-a-closed-map."><span class="math inline"><em>π</em></span>
+is a closed map.</h3>
 <p>In other words, for every closed subset <span
-class="math inline">\(K\subseteq X\)</span>, the image <span
-class="math inline">\(\pi( K )\subseteq Y\)</span> is closed. This
-easily follows from the fact that <span class="math inline">\(K\subseteq
-X\)</span> is closed if and only if <span
-class="math inline">\(K\)</span> is compact, and <span
-class="math inline">\(\pi\)</span> sends compact sets to compact
+class="math inline"><em>K</em> ⊆ <em>X</em></span>, the image <span
+class="math inline"><em>π</em>(<em>K</em>) ⊆ <em>Y</em></span> is
+closed. This easily follows from the fact that <span
+class="math inline"><em>K</em> ⊆ <em>X</em></span> is closed if and only
+if <span class="math inline"><em>K</em></span> is compact, and <span
+class="math inline"><em>π</em></span> sends compact sets to compact
 sets.</p>
-<h3 id="y-is-normal"><span class="math inline">\(Y\)</span> is
+<h3 id="y-is-normal"><span class="math inline"><em>Y</em></span> is
 normal</h3>
-<p>Assume <span class="math inline">\(A_1\)</span> and <span
-class="math inline">\(A_2\)</span> are two disjoint closed subsets of
-<span class="math inline">\(Y\)</span>. Then <span
-class="math inline">\(\pi^{-1}(A_i)\)</span> for <span
-class="math inline">\(i=1,2\)</span> are two disjoint closed subsets of
-<span class="math inline">\(X\)</span>. Since <span
-class="math inline">\(X\)</span> is normal, there are two disjoint open
-subsets <span class="math inline">\(U_i\)</span> for <span
-class="math inline">\(i=1,2\)</span> such that <span
-class="math inline">\(\pi^{-1}(A_i)\subseteq U_i\)</span>. Then since
-<span class="math inline">\(\pi\)</span> is surjective we get <span
-class="math inline">\(A_i^c = \pi\pi^{-1}(A_i^c) \supseteq
-\pi(U_i^c)\)</span>. Since <span class="math inline">\(\pi\)</span> is a
-closed map, <span class="math inline">\(\pi(U_i^c)\)</span> is closed,
-and therefore, <span class="math inline">\(\pi(U_i^c)^c\)</span> is open
-with the property that <span class="math inline">\(A_i\subseteq
-\pi(U_i^c)^c\)</span>. All that remains is to check the disjointness of
-<span class="math inline">\(\pi(U_1^c)^c\)</span> and <span
-class="math inline">\(\pi(U_2^c)^c\)</span>. We get <span
-class="math display">\[ \pi(U_1^c)^c \cap \pi(U_2^c)^c =
-\left(\pi(U_1^c)\cup \pi(U_2^c)\right)^c =
-\left(\pi(U_1^c\cup U_2^c)\right)^c = \pi(X)^c = \emptyset
-\]</span> since <span class="math inline">\(U_1\cap U_2\)</span> is the
-empty set.</p>
+<p>Assume <span class="math inline"><em>A</em><sub>1</sub></span> and
+<span class="math inline"><em>A</em><sub>2</sub></span> are two disjoint
+closed subsets of <span class="math inline"><em>Y</em></span>. Then
+<span
+class="math inline"><em>π</em><sup>−1</sup>(<em>A</em><sub><em>i</em></sub>)</span>
+for <span class="math inline"><em>i</em> = 1, 2</span> are two disjoint
+closed subsets of <span class="math inline"><em>X</em></span>. Since
+<span class="math inline"><em>X</em></span> is normal, there are two
+disjoint open subsets <span
+class="math inline"><em>U</em><sub><em>i</em></sub></span> for <span
+class="math inline"><em>i</em> = 1, 2</span> such that <span
+class="math inline"><em>π</em><sup>−1</sup>(<em>A</em><sub><em>i</em></sub>) ⊆ <em>U</em><sub><em>i</em></sub></span>.
+Then since <span class="math inline"><em>π</em></span> is surjective we
+get <span
+class="math inline"><em>A</em><sub><em>i</em></sub><sup><em>c</em></sup> = <em>π</em><em>π</em><sup>−1</sup>(<em>A</em><sub><em>i</em></sub><sup><em>c</em></sup>) ⊇ <em>π</em>(<em>U</em><sub><em>i</em></sub><sup><em>c</em></sup>)</span>.
+Since <span class="math inline"><em>π</em></span> is a closed map, <span
+class="math inline"><em>π</em>(<em>U</em><sub><em>i</em></sub><sup><em>c</em></sup>)</span>
+is closed, and therefore, <span
+class="math inline"><em>π</em>(<em>U</em><sub><em>i</em></sub><sup><em>c</em></sup>)<sup><em>c</em></sup></span>
+is open with the property that <span
+class="math inline"><em>A</em><sub><em>i</em></sub> ⊆ <em>π</em>(<em>U</em><sub><em>i</em></sub><sup><em>c</em></sup>)<sup><em>c</em></sup></span>.
+All that remains is to check the disjointness of <span
+class="math inline"><em>π</em>(<em>U</em><sub>1</sub><sup><em>c</em></sup>)<sup><em>c</em></sup></span>
+and <span
+class="math inline"><em>π</em>(<em>U</em><sub>2</sub><sup><em>c</em></sup>)<sup><em>c</em></sup></span>.
+We get <span
+class="math display"><em>π</em>(<em>U</em><sub>1</sub><sup><em>c</em></sup>)<sup><em>c</em></sup> ∩ <em>π</em>(<em>U</em><sub>2</sub><sup><em>c</em></sup>)<sup><em>c</em></sup> = (<em>π</em>(<em>U</em><sub>1</sub><sup><em>c</em></sup>)∪<em>π</em>(<em>U</em><sub>2</sub><sup><em>c</em></sup>))<sup><em>c</em></sup> = (<em>π</em>(<em>U</em><sub>1</sub><sup><em>c</em></sup>∪<em>U</em><sub>2</sub><sup><em>c</em></sup>))<sup><em>c</em></sup> = <em>π</em>(<em>X</em>)<sup><em>c</em></sup> = ∅</span>
+since <span
+class="math inline"><em>U</em><sub>1</sub> ∩ <em>U</em><sub>2</sub></span>
+is the empty set.</p>
 <h2 id="extension">Extension</h2>
 <p>We can do with less. In fact, the whole proof relies on the fact that
-<span class="math inline">\(\pi\)</span> is a closed surjection. So,
+<span class="math inline"><em>π</em></span> is a closed surjection. So,
 here is one possible extension: <em>Assume <span
-class="math inline">\((X,\tau)\)</span> is <span
-class="math inline">\(T_4+T_1\)</span> and <span
-class="math inline">\((Y,\kappa)\)</span> is <span
-class="math inline">\(T_1\)</span>. Assume also that <span
-class="math inline">\(\pi\colon X\to Y\)</span> is a closed continuous
-surjection. Then <span class="math inline">\(Y\)</span> is also a <span
-class="math inline">\(T_4+T_1\)</span> space.</em></p>
+class="math inline">(<em>X</em>,<em>τ</em>)</span> is <span
+class="math inline"><em>T</em><sub>4</sub> + <em>T</em><sub>1</sub></span>
+and <span class="math inline">(<em>Y</em>,<em>κ</em>)</span> is <span
+class="math inline"><em>T</em><sub>1</sub></span>. Assume also that
+<span class="math inline"><em>π</em>: <em>X</em> → <em>Y</em></span> is
+a closed continuous surjection. Then <span
+class="math inline"><em>Y</em></span> is also a <span
+class="math inline"><em>T</em><sub>4</sub> + <em>T</em><sub>1</sub></span>
+space.</em></p>
 <div id="footer">
 <p><span id="timestamp">June 6th, 2017 1:01pm</span></p>
 </div>

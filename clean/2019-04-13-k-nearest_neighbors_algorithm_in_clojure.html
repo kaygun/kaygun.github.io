@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -109,10 +110,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -132,10 +129,11 @@ of these points. Labels could be anything: numbers, strings, letters
 etc. Our aim to come up with a classification scheme in which we produce
 a label when we are presented with a point whose label is not known. The
 <em>k-nearest neighbors</em> algorithm does the simplest thing: given a
-point <span class="math inline">\(x\)</span>, we find k-nearest points
-to <span class="math inline">\(x\)</span> whose labels are known. Then
-we take a vote among these points. Largest vote wins and we assign the
-point <span class="math inline">\(x\)</span> with that label.</p>
+point <span class="math inline"><em>x</em></span>, we find k-nearest
+points to <span class="math inline"><em>x</em></span> whose labels are
+known. Then we take a vote among these points. Largest vote wins and we
+assign the point <span class="math inline"><em>x</em></span> with that
+label.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>First we need to define a distance function. Since I am going to use
 the distance function for comparisons, I do not need the actual value. I

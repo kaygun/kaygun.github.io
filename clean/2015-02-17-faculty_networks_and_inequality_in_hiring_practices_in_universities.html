@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -67,13 +64,13 @@ href="http://advances.sciencemag.org/highwire/filestream/185201/field_highwire_a
 for other researchers to download and play.</p>
 <h2 id="how-i-constructed-the-graphs">How I constructed the graphs</h2>
 <p>What I did was to graph all hiring data as a weighted directed graph.
-If university <span class="math inline">\(y\)</span> hired someone from
-university <span class="math inline">\(x\)</span>, the weight of the
-directed edge <span class="math inline">\(x\to y\)</span> is increased
-by 1. The final graphs are huge. So, I only pictured those edges whose
-weight are above certain value and removed “All others” (which I am
-guessing, indicates Universities not from Northern American
-continent).</p>
+If university <span class="math inline"><em>y</em></span> hired someone
+from university <span class="math inline"><em>x</em></span>, the weight
+of the directed edge <span
+class="math inline"><em>x</em> → <em>y</em></span> is increased by 1.
+The final graphs are huge. So, I only pictured those edges whose weight
+are above certain value and removed “All others” (which I am guessing,
+indicates Universities not from Northern American continent).</p>
 <h2 id="computer-science-with-threshold-value-1.5">Computer Science
 (with threshold value 1.5)</h2>
 <p><a

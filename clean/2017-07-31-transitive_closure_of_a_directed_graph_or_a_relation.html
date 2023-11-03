@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,32 +55,33 @@
 <h1 id="transitive-closure-of-a-directed-graph-or-a-relation">Transitive
 Closure of a Directed Graph or a Relation</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Assume we have a set <span class="math inline">\(X\)</span> and a
-relation <span class="math inline">\(R:X\to X\)</span> on <span
-class="math inline">\(X\)</span>. One can think of <span
-class="math inline">\(R\)</span> as a directed graph on vertices
-labelled by elements of <span class="math inline">\(X\)</span>. I have
-written about <a
+<p>Assume we have a set <span class="math inline"><em>X</em></span> and
+a relation <span
+class="math inline"><em>R</em> : <em>X</em> → <em>X</em></span> on <span
+class="math inline"><em>X</em></span>. One can think of <span
+class="math inline"><em>R</em></span> as a directed graph on vertices
+labelled by elements of <span class="math inline"><em>X</em></span>. I
+have written about <a
 href="clean/2012-09-26-transitive_closure_of_a_directed_graph.html">transitive
 closure</a> before, but the code I wrote then was in python. Today, we
 are doing lisp(s).</p>
 <p>Let us recall: The transitive closure of <span
-class="math inline">\(R\)</span> is a new directed graph (or a new
+class="math inline"><em>R</em></span> is a new directed graph (or a new
 relation) such that if two vertices <span
-class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span> are connected by an oriented path, then
-<span class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span> are connected via an edge.</p>
+class="math inline"><em>x</em></span> and <span
+class="math inline"><em>y</em></span> are connected by an oriented path,
+then <span class="math inline"><em>x</em></span> and <span
+class="math inline"><em>y</em></span> are connected via an edge.</p>
 <h2 id="an-algorithm">An algorithm</h2>
 <p>Today’s implementation is based on the following algorithm:</p>
 <ol type="1">
-<li>For each vertex <span class="math inline">\(x\)</span> do steps 2
-and 3 below.</li>
+<li>For each vertex <span class="math inline"><em>x</em></span> do steps
+2 and 3 below.</li>
 <li>Find the longest paths starting at <span
-class="math inline">\(x\)</span>.</li>
+class="math inline"><em>x</em></span>.</li>
 <li>For each path in this collection and for each vertex <span
-class="math inline">\(y\)</span> in this path add <span
-class="math inline">\((x,y)\)</span> as a new edge.</li>
+class="math inline"><em>y</em></span> in this path add <span
+class="math inline">(<em>x</em>,<em>y</em>)</span> as a new edge.</li>
 </ol>
 <h2 id="an-implementation-in-common-lisp">An Implementation in Common
 Lisp</h2>

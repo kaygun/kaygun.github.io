@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -62,135 +59,146 @@ href="http://kaygun.tumblr.com/post/32394831596">a previous post</a>.
 These were Hasse subgraphs obtained by a reduction algorithm which we
 will now call <em>Hasse reduction</em> which was defined as</p>
 <blockquote>
-<p>For every edge <span class="math inline">\(x\)</span> in <span
-class="math inline">\(G\)</span> do</p>
+<p>For every edge <span class="math inline"><em>x</em></span> in <span
+class="math inline"><em>G</em></span> do</p>
 <ol type="1">
-<li>Remove <span class="math inline">\(x=(u,v)\)</span> from <span
-class="math inline">\(G\)</span>.</li>
-<li>If in the new graph <span class="math inline">\(G\setminus
-x\)</span> there is no path from <span class="math inline">\(u\)</span>
-to <span class="math inline">\(v\)</span> then put <span
-class="math inline">\(x\)</span> back in <span
-class="math inline">\(G\)</span>. Otherwise, leave <span
-class="math inline">\(x\)</span> out.</li>
+<li>Remove <span
+class="math inline"><em>x</em> = (<em>u</em>,<em>v</em>)</span> from
+<span class="math inline"><em>G</em></span>.</li>
+<li>If in the new graph <span
+class="math inline"><em>G</em> \ <em>x</em></span> there is no path from
+<span class="math inline"><em>u</em></span> to <span
+class="math inline"><em>v</em></span> then put <span
+class="math inline"><em>x</em></span> back in <span
+class="math inline"><em>G</em></span>. Otherwise, leave <span
+class="math inline"><em>x</em></span> out.</li>
 </ol>
 </blockquote>
 <p>Today I will look at another kind of reduction. I am going to
 consider the following kind of graphs:</p>
 <ol type="1">
-<li><span class="math inline">\(G\)</span> is a finite directed acyclic
-graph.</li>
-<li><span class="math inline">\(G\)</span> has a unique source <span
-class="math inline">\(s\)</span> and a unique sink <span
-class="math inline">\(t\)</span>.</li>
+<li><span class="math inline"><em>G</em></span> is a finite directed
+acyclic graph.</li>
+<li><span class="math inline"><em>G</em></span> has a unique source
+<span class="math inline"><em>s</em></span> and a unique sink <span
+class="math inline"><em>t</em></span>.</li>
 </ol>
 <p>I will call such graphs <em>admissible</em>. It is not very difficult
 to show that in an admissible graph for every vertex <span
-class="math inline">\(x\)</span> there is a path from <span
-class="math inline">\(s\)</span> to <span
-class="math inline">\(x\)</span>, and there is a path from <span
-class="math inline">\(x\)</span> to <span
-class="math inline">\(t\)</span>. I will show this <strong>Lemma
+class="math inline"><em>x</em></span> there is a path from <span
+class="math inline"><em>s</em></span> to <span
+class="math inline"><em>x</em></span>, and there is a path from <span
+class="math inline"><em>x</em></span> to <span
+class="math inline"><em>t</em></span>. I will show this <strong>Lemma
 1</strong> below.</p>
 <p><strong>Lemma 1:</strong> Assume <span
-class="math inline">\(G=(V,E)\)</span> is a directed admissible graph
-with a unique source <span class="math inline">\(s\)</span> and a unique
-sink <span class="math inline">\(t\)</span>. Then for every vertex <span
-class="math inline">\(v\in V\)</span> there is a path from <span
-class="math inline">\(s\)</span> to <span
-class="math inline">\(v\)</span> and there is a path from <span
-class="math inline">\(v\)</span> to <span
-class="math inline">\(t\)</span>.</p>
-<p><strong>Proof:</strong> Assume <span class="math inline">\(v\in
-V\)</span> is a vertex in <span class="math inline">\(G\)</span>. We
-will prove the existence of a path from <span
-class="math inline">\(s\)</span> to <span
-class="math inline">\(v\)</span>. The proof for a path from <span
-class="math inline">\(v\)</span> to <span
-class="math inline">\(t\)</span> is similar. If <span
-class="math inline">\(v\)</span> is the source then we have the trivial
-path <span class="math inline">\((s)\)</span> of length <span
-class="math inline">\(0\)</span> and the proof is completed. So, assume
-<span class="math inline">\(v_0=v\)</span> is not the source. Then there
-is another vertex <span class="math inline">\(v_1\in
-V\setminus\{v_0\}\)</span> such that <span
-class="math inline">\((v_1,v_0)\)</span> is an edge. We proceed by
-induction. At each inductive step the vertex <span
-class="math inline">\(v_n\)</span> we obtain is distinct from all of the
-vertices <span class="math inline">\({v_1,\ldots, v_{n-1}}\)</span>
-since <span class="math inline">\(G\)</span> contains no cycles. The
-process must terminate since <span class="math inline">\(V\)</span> is a
-finite set, and the process ends at a source. Since <span
-class="math inline">\(G\)</span> has a unique source, this vertex must
-be <span class="math inline">\(s\)</span>.</p>
-<p>Let <span class="math inline">\(s\)</span> be the unique source of
-<span class="math inline">\(G\)</span> and <span
-class="math inline">\(t\)</span> be the unique sink of <span
-class="math inline">\(G\)</span>. The type of minimal graph I would like
-to consider satisfies the following condition: if <span
-class="math inline">\((u,v)\)</span> is an edge in <span
-class="math inline">\(G\)</span> then every path connecting <span
-class="math inline">\(s\)</span> to <span
-class="math inline">\(v\)</span> passes through <span
-class="math inline">\(u\)</span>, and every path connecting <span
-class="math inline">\(u\)</span> to <span
-class="math inline">\(t\)</span> passes through <span
-class="math inline">\(v\)</span>.</p>
+class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> is a
+directed admissible graph with a unique source <span
+class="math inline"><em>s</em></span> and a unique sink <span
+class="math inline"><em>t</em></span>. Then for every vertex <span
+class="math inline"><em>v</em> ∈ <em>V</em></span> there is a path from
+<span class="math inline"><em>s</em></span> to <span
+class="math inline"><em>v</em></span> and there is a path from <span
+class="math inline"><em>v</em></span> to <span
+class="math inline"><em>t</em></span>.</p>
+<p><strong>Proof:</strong> Assume <span
+class="math inline"><em>v</em> ∈ <em>V</em></span> is a vertex in <span
+class="math inline"><em>G</em></span>. We will prove the existence of a
+path from <span class="math inline"><em>s</em></span> to <span
+class="math inline"><em>v</em></span>. The proof for a path from <span
+class="math inline"><em>v</em></span> to <span
+class="math inline"><em>t</em></span> is similar. If <span
+class="math inline"><em>v</em></span> is the source then we have the
+trivial path <span class="math inline">(<em>s</em>)</span> of length
+<span class="math inline">0</span> and the proof is completed. So,
+assume <span
+class="math inline"><em>v</em><sub>0</sub> = <em>v</em></span> is not
+the source. Then there is another vertex <span
+class="math inline"><em>v</em><sub>1</sub> ∈ <em>V</em> \ {<em>v</em><sub>0</sub>}</span>
+such that <span
+class="math inline">(<em>v</em><sub>1</sub>,<em>v</em><sub>0</sub>)</span>
+is an edge. We proceed by induction. At each inductive step the vertex
+<span class="math inline"><em>v</em><sub><em>n</em></sub></span> we
+obtain is distinct from all of the vertices <span
+class="math inline"><em>v</em><sub>1</sub>, …, <em>v</em><sub><em>n</em> − 1</sub></span>
+since <span class="math inline"><em>G</em></span> contains no cycles.
+The process must terminate since <span
+class="math inline"><em>V</em></span> is a finite set, and the process
+ends at a source. Since <span class="math inline"><em>G</em></span> has
+a unique source, this vertex must be <span
+class="math inline"><em>s</em></span>.</p>
+<p>Let <span class="math inline"><em>s</em></span> be the unique source
+of <span class="math inline"><em>G</em></span> and <span
+class="math inline"><em>t</em></span> be the unique sink of <span
+class="math inline"><em>G</em></span>. The type of minimal graph I would
+like to consider satisfies the following condition: if <span
+class="math inline">(<em>u</em>,<em>v</em>)</span> is an edge in <span
+class="math inline"><em>G</em></span> then every path connecting <span
+class="math inline"><em>s</em></span> to <span
+class="math inline"><em>v</em></span> passes through <span
+class="math inline"><em>u</em></span>, and every path connecting <span
+class="math inline"><em>u</em></span> to <span
+class="math inline"><em>t</em></span> passes through <span
+class="math inline"><em>v</em></span>.</p>
 <p>In order to generate such minimal admissible graphs, I will apply the
 following algorithm which I will call as <code>Reduce</code>. Assume
-<span class="math inline">\(s\)</span> denotes the unique source of
-<span class="math inline">\(G\)</span> and <span
-class="math inline">\(t\)</span> denote the unique sink of <span
-class="math inline">\(G\)</span>.</p>
+<span class="math inline"><em>s</em></span> denotes the unique source of
+<span class="math inline"><em>G</em></span> and <span
+class="math inline"><em>t</em></span> denote the unique sink of <span
+class="math inline"><em>G</em></span>.</p>
 <blockquote>
-<p>For every edge <span class="math inline">\(x=(u,v)\)</span> in <span
-class="math inline">\(G\)</span> do</p>
+<p>For every edge <span
+class="math inline"><em>x</em> = (<em>u</em>,<em>v</em>)</span> in <span
+class="math inline"><em>G</em></span> do</p>
 <ol type="1">
-<li>Remove the edge <span class="math inline">\(x\)</span> from <span
-class="math inline">\(G\)</span></li>
-<li>If there are no paths from <span class="math inline">\(s\)</span> to
-<span class="math inline">\(v\)</span> or there are no paths from <span
-class="math inline">\(u\)</span> to <span
-class="math inline">\(t\)</span> in <span
-class="math inline">\(G\setminus x\)</span> then add <span
-class="math inline">\(x\)</span> back to <span
-class="math inline">\(G\)</span>. Otherwise leave <span
-class="math inline">\(x\)</span> out.</li>
+<li>Remove the edge <span class="math inline"><em>x</em></span> from
+<span class="math inline"><em>G</em></span></li>
+<li>If there are no paths from <span
+class="math inline"><em>s</em></span> to <span
+class="math inline"><em>v</em></span> or there are no paths from <span
+class="math inline"><em>u</em></span> to <span
+class="math inline"><em>t</em></span> in <span
+class="math inline"><em>G</em> \ <em>x</em></span> then add <span
+class="math inline"><em>x</em></span> back to <span
+class="math inline"><em>G</em></span>. Otherwise leave <span
+class="math inline"><em>x</em></span> out.</li>
 </ol>
 </blockquote>
 <p>There is an important detail we need to check before we proceed: How
 do we know that later in the for loop removing an edge destroys the
-connectivity of another vertex <span class="math inline">\(w\)</span>?
-Assume, by way of contradiction, that we have a graph and we removed an
-edge <span class="math inline">\((u,v)\)</span> and it happened that we
-have another vertex <span class="math inline">\(w\)</span> such that
-<span class="math inline">\(s\)</span> is not connected to <span
-class="math inline">\(w\)</span> or <span
-class="math inline">\(w\)</span> is not connected to <span
-class="math inline">\(t\)</span> because all such paths contained <span
-class="math inline">\((u,v)\)</span>. Assume, without loss of
-generality, that <span class="math inline">\(w\)</span> lost its
-connection to <span class="math inline">\(t\)</span> because the edge
-<span class="math inline">\((u,v)\)</span> was on all paths connecting
-<span class="math inline">\(w\)</span> to <span
-class="math inline">\(t\)</span>. Since <code>Reduce</code> is going to
-remove <span class="math inline">\((u,v)\)</span> we necessarily have
-that <span class="math inline">\(u\)</span> connected to <span
-class="math inline">\(t\)</span> via a path. But <span
-class="math inline">\(w\)</span> is connected to <span
-class="math inline">\(u\)</span> because all paths from <span
-class="math inline">\(w\)</span> to <span
-class="math inline">\(t\)</span> passes through <span
-class="math inline">\(u\)</span> by our assumption. Then removing <span
-class="math inline">\((u,v)\)</span> will not separate <span
-class="math inline">\(w\)</span> from <span
-class="math inline">\(t\)</span>. This is a contradiction.</p>
+connectivity of another vertex <span
+class="math inline"><em>w</em></span>? Assume, by way of contradiction,
+that we have a graph and we removed an edge <span
+class="math inline">(<em>u</em>,<em>v</em>)</span> and it happened that
+we have another vertex <span class="math inline"><em>w</em></span> such
+that <span class="math inline"><em>s</em></span> is not connected to
+<span class="math inline"><em>w</em></span> or <span
+class="math inline"><em>w</em></span> is not connected to <span
+class="math inline"><em>t</em></span> because all such paths contained
+<span class="math inline">(<em>u</em>,<em>v</em>)</span>. Assume,
+without loss of generality, that <span
+class="math inline"><em>w</em></span> lost its connection to <span
+class="math inline"><em>t</em></span> because the edge <span
+class="math inline">(<em>u</em>,<em>v</em>)</span> was on all paths
+connecting <span class="math inline"><em>w</em></span> to <span
+class="math inline"><em>t</em></span>. Since <code>Reduce</code> is
+going to remove <span class="math inline">(<em>u</em>,<em>v</em>)</span>
+we necessarily have that <span class="math inline"><em>u</em></span>
+connected to <span class="math inline"><em>t</em></span> via a path. But
+<span class="math inline"><em>w</em></span> is connected to <span
+class="math inline"><em>u</em></span> because all paths from <span
+class="math inline"><em>w</em></span> to <span
+class="math inline"><em>t</em></span> passes through <span
+class="math inline"><em>u</em></span> by our assumption. Then removing
+<span class="math inline">(<em>u</em>,<em>v</em>)</span> will not
+separate <span class="math inline"><em>w</em></span> from <span
+class="math inline"><em>t</em></span>. This is a contradiction.</p>
 <h2 id="animplementationinpython">An implementation in python</h2>
 <p>For the implementation of the new reduction algorithm below, I will
 assume that the unique source is labelled by <span
-class="math inline">\(0\)</span> and the unique sink is labelled by the
+class="math inline">0</span> and the unique sink is labelled by the
 number 1 less than the number of vertices in <span
-class="math inline">\(G\)</span>.</p>
+class="math inline"><em>G</em></span>.</p>
 <pre><code> import igraph
 
  def Reduce(G):
@@ -238,16 +246,17 @@ Consider the graph</p>
 while <code>Reduce</code> reduction algorithm will give us</p>
 <p><img src="../media/2012-10-15-reducing_directed_graphs_5.png" /></p>
 <p>Now, as for our former claim: if <span
-class="math inline">\(e=(u,v)\)</span> is an edge and if there is a path
-from <span class="math inline">\(u\)</span> to <span
-class="math inline">\(v\)</span> in <span
-class="math inline">\(G\setminus e\)</span> then there is a path from
-the unique <span class="math inline">\(s\)</span> source to <span
-class="math inline">\(v\)</span> and there is a path from <span
-class="math inline">\(u\)</span> to the unique sink <span
-class="math inline">\(t\)</span> in <span
-class="math inline">\(G\setminus e\)</span>. Thus we remove the edge
-using the algorithm <code>Reduce</code>. This means every edge that
+class="math inline"><em>e</em> = (<em>u</em>,<em>v</em>)</span> is an
+edge and if there is a path from <span
+class="math inline"><em>u</em></span> to <span
+class="math inline"><em>v</em></span> in <span
+class="math inline"><em>G</em> \ <em>e</em></span> then there is a path
+from the unique <span class="math inline"><em>s</em></span> source to
+<span class="math inline"><em>v</em></span> and there is a path from
+<span class="math inline"><em>u</em></span> to the unique sink <span
+class="math inline"><em>t</em></span> in <span
+class="math inline"><em>G</em> \ <em>e</em></span>. Thus we remove the
+edge using the algorithm <code>Reduce</code>. This means every edge that
 should be removed using <code>Hasse</code> is removed by the algorithm
 <code>Reduce</code>.</p>
 <div id="footer">

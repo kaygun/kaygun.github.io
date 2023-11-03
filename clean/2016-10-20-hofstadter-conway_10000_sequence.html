@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -65,12 +62,13 @@ a(n) = a(a(n-1)) + a(n-a(n-1))</code></pre>
 <p>This is called <a
 href="http://rosettacode.org/wiki/Hofstadter-Conway_%2410,000_sequence">Hofstadter-Conway
 $10,000 sequence</a>. Originally, the challenge was to find <span
-class="math inline">\(p\)</span> such that <span
-class="math inline">\(a(n)/n\&gt;0.55\)</span> for every <span
-class="math inline">\(p\geq n\)</span>. But we are going to find <span
-class="math inline">\(p\)</span> such that <span
-class="math inline">\(a(n)/n\&gt;0.55\)</span> for every <span
-class="math inline">\(2^{23}\&gt;n\&gt;p\)</span>.</p>
+class="math inline"><em>p</em></span> such that <span
+class="math inline"><em>a</em>(<em>n</em>)/<em>n</em> 0.55</span> for
+every <span class="math inline"><em>p</em> ≥ <em>n</em></span>. But we
+are going to find <span class="math inline"><em>p</em></span> such that
+<span class="math inline"><em>a</em>(<em>n</em>)/<em>n</em> 0.55</span>
+for every <span
+class="math inline">2<sup>23</sup> <em>n</em> <em>p</em></span>.</p>
 <h2 id="an-implementation-for-the-solution">An implementation for the
 solution</h2>
 <p>First, I am going to need a function which generates the values of
@@ -86,8 +84,8 @@ table:</p>
                      (seq (- n (seq (1- n))))))))))
 SEQ</code></pre>
 <p>Next is a function that calculates the maximum of the sequence <span
-class="math inline">\(a(n)/n\)</span> between two consecutive power of
-2:</p>
+class="math inline"><em>a</em>(<em>n</em>)/<em>n</em></span> between two
+consecutive power of 2:</p>
 <pre><code>(defun test (n)
   (let* ((a (expt 2 n))
          (b (* a 2)))
@@ -108,7 +106,7 @@ TEST</code></pre>
  (0.5337792 . 722589) (0.53267705 . 1423078) (0.5319232 . 2903564)
  (0.53101355 . 5696576) (0.53034115 . 11635313))</code></pre>
 <p>Next, let us solve the challenge for numbers less than <span
-class="math inline">\(2^{23}\)</span></p>
+class="math inline">2<sup>23</sup></span></p>
 <pre><code>(defun marrow (n)
    (do ((i (expt 2 n) (1- i)))
        ((&gt; (/ (seq i) i 1.0) 0.55) i)))

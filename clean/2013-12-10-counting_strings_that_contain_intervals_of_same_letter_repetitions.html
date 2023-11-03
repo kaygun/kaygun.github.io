@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -63,67 +60,75 @@ strings that contain intervals of same letter repetitions</h1>
 my discrete math class.</p>
 <blockquote>
 <p>Assume we have an alphabet <span
-class="math inline">\(a_1,\ldots,a_r\)</span> of size <span
-class="math inline">\(r\)</span>. How many different strings of length
-<span class="math inline">\(n\)</span> can I construct in which the
-intervals of same letter repetitions have length at most <span
-class="math inline">\(k\)</span>?</p>
+class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>r</em></sub></span>
+of size <span class="math inline"><em>r</em></span>. How many different
+strings of length <span class="math inline"><em>n</em></span> can I
+construct in which the intervals of same letter repetitions have length
+at most <span class="math inline"><em>k</em></span>?</p>
 </blockquote>
-<p>For example if <span class="math inline">\(n=5\)</span> and <span
-class="math inline">\(k=3\)</span> the strings “ababa” “aabaa” “aabba”
-are ok but “aaaab” is not because the upper limit for lengths of
-intervals of same letter repetitions was <span
-class="math inline">\(3\)</span>.</p>
+<p>For example if <span class="math inline"><em>n</em> = 5</span> and
+<span class="math inline"><em>k</em> = 3</span> the strings “ababa”
+“aabaa” “aabba” are ok but “aaaab” is not because the upper limit for
+lengths of intervals of same letter repetitions was <span
+class="math inline">3</span>.</p>
 <h2 id="a-solution">A solution</h2>
 <p>First, I need to determine the shape of the string. For that I need
 to count the number of solutions for the equation <span
-class="math display">\[ x_1 + \cdots + x_m
-= n \quad\text{ with }\quad 0&lt; x_i\leq k \]</span> The number of
-solutions of this equation counts the number of strings of the shape
-<span class="math display">\[ \underbrace{a_1\cdots
+class="math display"><em>x</em><sub>1</sub> + ⋯ + <em>x</em><sub><em>m</em></sub> = <em>n</em>  
+with   0 &lt; <em>x</em><sub><em>i</em></sub> ≤ <em>k</em></span> The
+number of solutions of this equation counts the number of strings of the
+shape <span class="math display">$$ \underbrace{a_1\cdots
 a_1}_{\text{$x_1$-times}}\cdots
-\underbrace{a_m\cdots a_m}_{\text{$x_m$-times}} \]</span> where <span
-class="math inline">\(a_i\neq a_{i+1}\)</span>. If <span
-class="math inline">\(N(n,m,k)\)</span> is the number of solutions for
-the equation above, then the number of strings of this shape is <span
-class="math display">\[
-N(n,m,k)\cdot r(r-1)^{m-1} \]</span> Then the number of strings I want
-is <span class="math display">\[ \sum_{m=1}^n N(n,m,k)\cdot r(r-1)^{m-1}
-\]</span></p>
+\underbrace{a_m\cdots a_m}_{\text{$x_m$-times}} $$</span> where <span
+class="math inline"><em>a</em><sub><em>i</em></sub> ≠ <em>a</em><sub><em>i</em> + 1</sub></span>.
+If <span
+class="math inline"><em>N</em>(<em>n</em>,<em>m</em>,<em>k</em>)</span>
+is the number of solutions for the equation above, then the number of
+strings of this shape is <span
+class="math display"><em>N</em>(<em>n</em>,<em>m</em>,<em>k</em>) ⋅ <em>r</em>(<em>r</em>−1)<sup><em>m</em> − 1</sup></span>
+Then the number of strings I want is <span class="math display">$$
+\sum_{m=1}^n N(n,m,k)\cdot r(r-1)^{m-1} $$</span></p>
 <p>I will describe the function <span
-class="math inline">\(N(n,m,k)\)</span> recursively. We have a simple
-recurrence relation of the form <span class="math display">\[ N(n,m,k) =
-\sum_{i=0}^m
-\binom{m}{i} N(n-m,m-i,k-1) \]</span> with the base cases <span
-class="math display">\[ N(n,m,k) =
+class="math inline"><em>N</em>(<em>n</em>,<em>m</em>,<em>k</em>)</span>
+recursively. We have a simple recurrence relation of the form <span
+class="math display">$$ N(n,m,k) = \sum_{i=0}^m
+\binom{m}{i} N(n-m,m-i,k-1) $$</span> with the base cases <span
+class="math display">$$ N(n,m,k) =
 \begin{cases} 0 &amp; \text{ if } km &lt; n\\ 1 &amp; \text{ if $m=n$ or
 $km=n$}\\ 0 &amp; \text{ if $m=1$ and $k &lt; n$}\\ 1 &amp; \text{ if
-$m=1$ and $k\geq n$} \end{cases} \]</span> The recursive equation comes
+$m=1$ and $k\geq n$} \end{cases} $$</span> The recursive equation comes
 from the following argument: in the equation <span
-class="math display">\[ x_1 + \cdots + x_m =
-n \quad\text{ with }\quad 1\leq x_i\leq k \]</span> if we reduce every
-term by one, the upper bound <span class="math inline">\(k\)</span> is
-also reduced by one and we get <span class="math display">\[ y_1 +
-\cdots + y_m = n-m \quad\text{ with }\quad 0\leq
-y_i\leq k-1 \]</span> Now, we have to control the terms which are equal
-to <span class="math inline">\(0\)</span> and we go over all
-possibilities in which <span class="math inline">\(y_j\)</span>’s are 0
+class="math display"><em>x</em><sub>1</sub> + ⋯ + <em>x</em><sub><em>m</em></sub> = <em>n</em>  
+with   1 ≤ <em>x</em><sub><em>i</em></sub> ≤ <em>k</em></span> if we
+reduce every term by one, the upper bound <span
+class="math inline"><em>k</em></span> is also reduced by one and we get
+<span
+class="math display"><em>y</em><sub>1</sub> + ⋯ + <em>y</em><sub><em>m</em></sub> = <em>n</em> − <em>m</em>  
+with   0 ≤ <em>y</em><sub><em>i</em></sub> ≤ <em>k</em> − 1</span> Now,
+we have to control the terms which are equal to <span
+class="math inline">0</span> and we go over all possibilities in which
+<span class="math inline"><em>y</em><sub><em>j</em></sub></span>’s are 0
 in the sum.</p>
 <p>There is also a functional relation of the form <span
-class="math display">\[ N(n,m,k) =
-N(m(k+1)-n,m,k) \]</span> because the set of solutions to the equation
-<span class="math display">\[
-x_1 + \cdots + x_m = n \]</span> with the constraint <span
-class="math inline">\(1\leq x_i\leq k\)</span> is bijective to the set
-of solutions of the equation <span class="math display">\[ z_1 +
-\cdots + z_m = mk - n \]</span> with the constraint <span
-class="math inline">\(0\leq z_i\leq k-1\)</span> since every <span
-class="math inline">\(x_i\)</span> in the first equation has a unique
-conjugate <span class="math inline">\(z_i = k-x_i\)</span> in the second
-equation. By increasing the elements <span
-class="math inline">\(z_i\)</span> by 1 we get <span
-class="math display">\[ y_1 + \cdots + y_m = m(k+1) - n\]</span> with
-the constraint <span class="math inline">\(1\leq y_i\leq k\)</span>.</p>
+class="math display"><em>N</em>(<em>n</em>,<em>m</em>,<em>k</em>) = <em>N</em>(<em>m</em>(<em>k</em>+1)−<em>n</em>,<em>m</em>,<em>k</em>)</span>
+because the set of solutions to the equation <span
+class="math display"><em>x</em><sub>1</sub> + ⋯ + <em>x</em><sub><em>m</em></sub> = <em>n</em></span>
+with the constraint <span
+class="math inline">1 ≤ <em>x</em><sub><em>i</em></sub> ≤ <em>k</em></span>
+is bijective to the set of solutions of the equation <span
+class="math display"><em>z</em><sub>1</sub> + ⋯ + <em>z</em><sub><em>m</em></sub> = <em>m</em><em>k</em> − <em>n</em></span>
+with the constraint <span
+class="math inline">0 ≤ <em>z</em><sub><em>i</em></sub> ≤ <em>k</em> − 1</span>
+since every <span
+class="math inline"><em>x</em><sub><em>i</em></sub></span> in the first
+equation has a unique conjugate <span
+class="math inline"><em>z</em><sub><em>i</em></sub> = <em>k</em> − <em>x</em><sub><em>i</em></sub></span>
+in the second equation. By increasing the elements <span
+class="math inline"><em>z</em><sub><em>i</em></sub></span> by 1 we get
+<span
+class="math display"><em>y</em><sub>1</sub> + ⋯ + <em>y</em><sub><em>m</em></sub> = <em>m</em>(<em>k</em>+1) − <em>n</em></span>
+with the constraint <span
+class="math inline">1 ≤ <em>y</em><sub><em>i</em></sub> ≤ <em>k</em></span>.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>I will start by implementing a function for the binomial numbers.</p>
 <pre><code>(defun binom (n k)
@@ -165,18 +170,18 @@ COUNT-SOLUTIONS</code></pre>
    (loop for i from 1 to a collect (count-solutions a i b)))
 
 TEST-SOLUTIONS</code></pre>
-<p>For <span class="math inline">\(n=3\)</span> the list of bit strings
-of length 3 are</p>
+<p>For <span class="math inline"><em>n</em> = 3</span> the list of bit
+strings of length 3 are</p>
 <pre><code>101 010
 001 110 100 011
 000 111</code></pre>
 <p>grouped together according to the largest repeating intervals. For
-<span class="math inline">\(n=4\)</span> the list is</p>
+<span class="math inline"><em>n</em> = 4</span> the list is</p>
 <pre><code>1010 0101
 0010 1101 0100 1011 0011 1100 0110 1001
 0001 1110 1000 0111
 0000 1111</code></pre>
-<p>And finally for <span class="math inline">\(n=5\)</span></p>
+<p>And finally for <span class="math inline"><em>n</em> = 5</span></p>
 <pre><code>10101 01010
 00101 11010 10100 01011 00110 11001 01100 10011 10010 01101 01001 10110 00100 11011 
 00010 11101 01000 10111 10001 01110 00111 11000 11100 00011

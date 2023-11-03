@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -60,20 +57,20 @@ id="partitions-of-equal-measure-whatever-the-measure-may-be">Partitions
 of Equal Measure Whatever the Measure May Be</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Assume we have a finite list of real numbers <span
-class="math inline">\(a_1,\ldots,a_n\)</span> that we want to split into
-<span class="math inline">\(k\)</span> piles. But we would like to split
-them in such a way that the sum of the numbers in each pile is
-approximately the same.</p>
+class="math inline"><em>a</em><sub>1</sub>, …, <em>a</em><sub><em>n</em></sub></span>
+that we want to split into <span class="math inline"><em>k</em></span>
+piles. But we would like to split them in such a way that the sum of the
+numbers in each pile is approximately the same.</p>
 <p>I don’t know if there is a nice solution for the general case, but I
-have a solution if there is an <span class="math inline">\(m\)</span>
-such that <span class="math inline">\(k = \lceil \frac{n}{2^m}
-\rceil\)</span>.</p>
+have a solution if there is an <span
+class="math inline"><em>m</em></span> such that <span
+class="math inline">$k = \lceil \frac{n}{2^m} \rceil$</span>.</p>
 <h2 id="thealgorithm">The algorithm</h2>
-<p>Assume I already have <span class="math inline">\(p\)</span> piles
-each approximately equal size. Sort the piles according to the sum of
-the numbers in each pile. Now, pick the head and the tail and merge
+<p>Assume I already have <span class="math inline"><em>p</em></span>
+piles each approximately equal size. Sort the piles according to the sum
+of the numbers in each pile. Now, pick the head and the tail and merge
 these piles. Continue until all piles are merged. Now, we have <span
-class="math inline">\(\lceil \frac{p}{2} \rceil\)</span> piles. Continue
+class="math inline">$\lceil \frac{p}{2} \rceil$</span> piles. Continue
 until the desired number of piles is achieved.</p>
 <h2 id="whydoesitwork">Why does it work?</h2>
 <p>The short answer: it doesn’t.</p>

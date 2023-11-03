@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -174,10 +171,10 @@ href="clean/2015-01-28-experiments_with_infinite_recursive_sequences_continued.h
 I gave several examples (some of which I reproduced here), but today I
 will give a new one: I’d like to construct a stream of integers which
 will give the sums of squares of the first <span
-class="math inline">\(n\)</span> integers. In that case, the iterator
-takes the last value of the list, adds one to it and then affixes to the
-head. The extractor on the other hand, takes the whole list and finds
-the sum of the squares.</p>
+class="math inline"><em>n</em></span> integers. In that case, the
+iterator takes the last value of the list, adds one to it and then
+affixes to the head. The extractor on the other hand, takes the whole
+list and finds the sum of the squares.</p>
 <pre><code>(defvar sums-of-squares
    (cons (lambda (x)
             (if (null x)

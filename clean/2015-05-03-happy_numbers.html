@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,10 +55,10 @@
 <h1 id="happy-numbers">Happy Numbers</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Assume we have a decimal integer <span
-class="math inline">\(N\)</span> of the form <span
-class="math inline">\((a_k a_{k-1} \ldots a_1 a_0)\)</span>. Now
-consider the sum <span class="math display">\[ \sum_{i=0}^k a_i^2
-\]</span> in decimal again. Iterate recursively. Such numbers are called
+class="math inline"><em>N</em></span> of the form <span
+class="math inline">(<em>a</em><sub><em>k</em></sub><em>a</em><sub><em>k</em> − 1</sub>…<em>a</em><sub>1</sub><em>a</em><sub>0</sub>)</span>.
+Now consider the sum <span class="math display">$$ \sum_{i=0}^k a_i^2
+$$</span> in decimal again. Iterate recursively. Such numbers are called
 <a href="http://en.wikipedia.org/wiki/Happy_number">Happy
 Numbers</a>.</p>
 <p>Today, I am going to see if numbers create cycles in this iteration.

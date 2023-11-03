@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -109,10 +110,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -123,21 +120,23 @@ Primes, Cousin Primes, Sexy Primes, and Prime Triplets</h1>
 <h2 id="description-of-the-problems">Description of the problems</h2>
 <p>Today, I am going to write about primes. Specifically, certain
 progression of primes. Let us fix our notation: I am going to use <span
-class="math inline">\(p_n\)</span> for the <span
-class="math inline">\(n\)</span>-th prime number.</p>
+class="math inline"><em>p</em><sub><em>n</em></sub></span> for the <span
+class="math inline"><em>n</em></span>-th prime number.</p>
 <p>A pair of consecutive primes <span
-class="math inline">\((p_n,p_{n+1})\)</span> are called</p>
+class="math inline">(<em>p</em><sub><em>n</em></sub>,<em>p</em><sub><em>n</em> + 1</sub>)</span>
+are called</p>
 <ul>
-<li><strong>twin primes</strong> if <span class="math inline">\(p_{n+1}
-- p_n = 2\)</span>,</li>
+<li><strong>twin primes</strong> if <span
+class="math inline"><em>p</em><sub><em>n</em> + 1</sub> − <em>p</em><sub><em>n</em></sub> = 2</span>,</li>
 <li><strong>cousin primes</strong> if <span
-class="math inline">\(p_{n+1} - p_n = 4\)</span>,</li>
-<li><strong>sexy primes</strong> if <span class="math inline">\(p_{n+1}
-- p_n = 6\)</span>.</li>
+class="math inline"><em>p</em><sub><em>n</em> + 1</sub> − <em>p</em><sub><em>n</em></sub> = 4</span>,</li>
+<li><strong>sexy primes</strong> if <span
+class="math inline"><em>p</em><sub><em>n</em> + 1</sub> − <em>p</em><sub><em>n</em></sub> = 6</span>.</li>
 </ul>
-<p>Three consecutive primes <span class="math inline">\((p_n, p_{n+1},
-p_{n+2})\)</span> are called a triplet if <span
-class="math inline">\(p_{n+2} - p_n = 6\)</span>.</p>
+<p>Three consecutive primes <span
+class="math inline">(<em>p</em><sub><em>n</em></sub>,<em>p</em><sub><em>n</em> + 1</sub>,<em>p</em><sub><em>n</em> + 2</sub>)</span>
+are called a triplet if <span
+class="math inline"><em>p</em><sub><em>n</em> + 2</sub> − <em>p</em><sub><em>n</em></sub> = 6</span>.</p>
 <p>Today, I am going to write a clojure program that will give us these
 prime pairs and triples for the first few prime numbers.</p>
 <h2 id="an-implementation-in-clojure">An implementation in clojure</h2>

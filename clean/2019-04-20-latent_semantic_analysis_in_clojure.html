@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -147,22 +144,26 @@ labeled with the words appearing in the sentence. The entries are going
 to be either 0 or 1. For a (word, sentence) pair, the corresponding
 entry in the matrix is 1 if the word appears in the sentence, and 0
 otherwise. The interesting thing about this matrix <span
-class="math inline">\(A\)</span> is the following: If we look at <span
-class="math inline">\(A^t A\)</span> we get a matrix whose rows and
-columns are labeled with sentences appearing in our text. Each entry
-labeled with a pair <span
-class="math inline">\((sentence_1,sentence_2)\)</span> counts the number
-of words common to both sentences. On the other hand, <span
-class="math inline">\(A A^t\)</span> is another matrix whose rows and
-columns are labeled with words and each entry labeled with a pair <span
-class="math inline">\((word_1,word_2)\)</span> count the number of
-sentences that these words appeared together.</p>
+class="math inline"><em>A</em></span> is the following: If we look at
+<span
+class="math inline"><em>A</em><sup><em>t</em></sup><em>A</em></span> we
+get a matrix whose rows and columns are labeled with sentences appearing
+in our text. Each entry labeled with a pair <span
+class="math inline">(<em>s</em><em>e</em><em>n</em><em>t</em><em>e</em><em>n</em><em>c</em><em>e</em><sub>1</sub>,<em>s</em><em>e</em><em>n</em><em>t</em><em>e</em><em>n</em><em>c</em><em>e</em><sub>2</sub>)</span>
+counts the number of words common to both sentences. On the other hand,
+<span
+class="math inline"><em>A</em><em>A</em><sup><em>t</em></sup></span> is
+another matrix whose rows and columns are labeled with words and each
+entry labeled with a pair <span
+class="math inline">(<em>w</em><em>o</em><em>r</em><em>d</em><sub>1</sub>,<em>w</em><em>o</em><em>r</em><em>d</em><sub>2</sub>)</span>
+count the number of sentences that these words appeared together.</p>
 <p>In the next step we use <a
 href="https://en.wikipedia.org/wiki/Singular_value_decomposition">SVD</a>
-to decompose the matrix as a product <span class="math display">\[ A =
-U\Sigma V^t \]</span> where <span class="math inline">\(\Sigma\)</span>
-is a diagonal matrix consisting of singular values of <span
-class="math inline">\(A\)</span>. Then the largest singular value
+to decompose the matrix as a product <span
+class="math display"><em>A</em> = <em>U</em><em>Σ</em><em>V</em><sup><em>t</em></sup></span>
+where <span class="math inline"><em>Σ</em></span> is a diagonal matrix
+consisting of singular values of <span
+class="math inline"><em>A</em></span>. Then the largest singular value
 corresponds to the dominant topic of the document. From the point of
 view of LDA, a topic is a probability distribution over the set of
 words. So, we take the first column of the singular matrix as this

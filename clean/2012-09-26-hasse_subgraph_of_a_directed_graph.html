@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,33 +55,34 @@
 <h1 id="hassesubgraphofadirectedgraph">Hasse subgraph of a directed
 graph</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
-<p>Let <span class="math inline">\(G = (V,E)\)</span> be a directed
-graph. For the purposes of this note, assume that <span
-class="math inline">\(G\)</span> has no multiple edges. In other words,
-assume <span class="math inline">\(E\)</span> is a subset of <span
-class="math inline">\(V\times V\)</span>. We would like to understand
-the connectivity of <span class="math inline">\(G\)</span> in its
-minimal form.</p>
-<p>A subgraph <span class="math inline">\(H\)</span> of <span
-class="math inline">\(G\)</span> is called a <em>Hasse subgraph</em>
-if</p>
+<p>Let <span
+class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> be a
+directed graph. For the purposes of this note, assume that <span
+class="math inline"><em>G</em></span> has no multiple edges. In other
+words, assume <span class="math inline"><em>E</em></span> is a subset of
+<span class="math inline"><em>V</em> × <em>V</em></span>. We would like
+to understand the connectivity of <span
+class="math inline"><em>G</em></span> in its minimal form.</p>
+<p>A subgraph <span class="math inline"><em>H</em></span> of <span
+class="math inline"><em>G</em></span> is called a <em>Hasse
+subgraph</em> if</p>
 <ol type="1">
-<li><span class="math inline">\(H\)</span> contains all the vertices of
-<span class="math inline">\(G\)</span>.</li>
-<li>For any pair of vertices <span class="math inline">\(a,b\in
-V\)</span>, there is a path connecting <span
-class="math inline">\(a\)</span> to <span
-class="math inline">\(b\)</span> in <span
-class="math inline">\(G\)</span> if and only if there is a path in <span
-class="math inline">\(H\)</span> connecting <span
-class="math inline">\(a\)</span> to <span
-class="math inline">\(b\)</span>.</li>
-<li>If <span class="math inline">\((a,b)\)</span> is a directed edge in
-<span class="math inline">\(H\)</span>, then every path connecting <span
-class="math inline">\(a\)</span> to <span
-class="math inline">\(b\)</span> in <span
-class="math inline">\(H\)</span> contains the edge <span
-class="math inline">\((a,b)\)</span>.</li>
+<li><span class="math inline"><em>H</em></span> contains all the
+vertices of <span class="math inline"><em>G</em></span>.</li>
+<li>For any pair of vertices <span
+class="math inline"><em>a</em>, <em>b</em> ∈ <em>V</em></span>, there is
+a path connecting <span class="math inline"><em>a</em></span> to <span
+class="math inline"><em>b</em></span> in <span
+class="math inline"><em>G</em></span> if and only if there is a path in
+<span class="math inline"><em>H</em></span> connecting <span
+class="math inline"><em>a</em></span> to <span
+class="math inline"><em>b</em></span>.</li>
+<li>If <span class="math inline">(<em>a</em>,<em>b</em>)</span> is a
+directed edge in <span class="math inline"><em>H</em></span>, then every
+path connecting <span class="math inline"><em>a</em></span> to <span
+class="math inline"><em>b</em></span> in <span
+class="math inline"><em>H</em></span> contains the edge <span
+class="math inline">(<em>a</em>,<em>b</em>)</span>.</li>
 </ol>
 <p>Today, I would like to develop an algorithm which constructs a Hasse
 subgraph of a given directed graph.</p>
@@ -103,16 +101,19 @@ src="../media/2012-09-26-hasse_subgraph_of_a_directed_graph_0.png"
 data-orig-height="347" data-orig-width="119" />
 </figure>
 <p>One must give the number of vertices at the time of definition. The
-vertices are labelled as <span class="math inline">\(0,\ldots,n\)</span>
-for a graph of size <span class="math inline">\(n+1\)</span>. Also, for
-<code>igraph</code> the default is a undirected graph, and one must
-declare a graph as directed in our case</p>
+vertices are labelled as <span
+class="math inline">0, …, <em>n</em></span> for a graph of size <span
+class="math inline"><em>n</em> + 1</span>. Also, for <code>igraph</code>
+the default is a undirected graph, and one must declare a graph as
+directed in our case</p>
 <p>The algorithm will remove an existing edge <span
-class="math inline">\((a,b)\)</span> first, and then will check if there
-is a path between <span class="math inline">\(a\)</span> and <span
-class="math inline">\(b\)</span>. If there is a path then the edge <span
-class="math inline">\((a,b)\)</span> is not needed, and we put <span
-class="math inline">\((a,b)\)</span> back in otherwise.</p>
+class="math inline">(<em>a</em>,<em>b</em>)</span> first, and then will
+check if there is a path between <span
+class="math inline"><em>a</em></span> and <span
+class="math inline"><em>b</em></span>. If there is a path then the edge
+<span class="math inline">(<em>a</em>,<em>b</em>)</span> is not needed,
+and we put <span class="math inline">(<em>a</em>,<em>b</em>)</span> back
+in otherwise.</p>
 <pre><code> def Hasse(G):
      for edge in G.get_edgelist():
          G.delete_edges([edge])
@@ -124,7 +125,7 @@ class="math inline">\((a,b)\)</span> back in otherwise.</p>
 <code>get.shortest_paths(a,b)</code> will return the list of shortest
 paths from the first vertex <code>a</code> to the second vertex
 <code>b</code>. If such a path exists then the edge <span
-class="math inline">\((a,b)\)</span> is not needed.</p>
+class="math inline">(<em>a</em>,<em>b</em>)</span> is not needed.</p>
 <p>Let us see how this algorithm works in some examples. Consider the
 following graph</p>
 <pre><code> g = igraph.Graph(6)

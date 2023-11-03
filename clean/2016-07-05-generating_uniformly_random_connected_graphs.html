@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -77,7 +74,7 @@ list.</p>
       (take (cdr xs) (1- n) (cons (car xs) res))))
 TAKE</code></pre>
 <p>The following function creates all possible edges on the vertex set
-<span class="math inline">\({0,\ldots,n−1}\)</span> and then randomly
+<span class="math inline">0, …, <em>n</em> − 1</span> and then randomly
 sorts them.</p>
 <pre><code>(defun get-the-pool (n)
    (mapcar #&#39;cdr

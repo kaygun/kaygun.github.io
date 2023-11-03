@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,41 +47,37 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
 </head>
 <body>
 <h1 id="hexadecimal-digits-of-pi">Hexadecimal digits of <span
-class="math inline">\(\pi\)</span></h1>
+class="math inline"><em>π</em></span></h1>
 <h2 id="some-theory">Some theory</h2>
 <p>There is a non-recursive formula that computes <span
-class="math inline">\(\pi\)</span> given as <span
-class="math display">\[
+class="math inline"><em>π</em></span> given as <span
+class="math display">$$
 \sum_{k=0}^\infty \sum_{i=1}^7 \frac{a_i}{16^k(8k+i)} =
-\sum_{i=1}^7 \sum_{k=0}^\infty \frac{a_i}{16^k(8k+i)} \]</span> where
-<span class="math display">\[ a_1 = 4,\quad a_2 = a_3 = a_7 = 0,\quad
-a_4 = -2,\quad a_5
-= a_6 = -1 \]</span> This is known as the <a
+\sum_{i=1}^7 \sum_{k=0}^\infty \frac{a_i}{16^k(8k+i)} $$</span> where
+<span
+class="math display"><em>a</em><sub>1</sub> = 4,  <em>a</em><sub>2</sub> = <em>a</em><sub>3</sub> = <em>a</em><sub>7</sub> = 0,  <em>a</em><sub>4</sub> =  − 2,  <em>a</em><sub>5</sub> = <em>a</em><sub>6</sub> =  − 1</span>
+This is known as the <a
 href="http://en.wikipedia.org/wiki/Bailey%E2%80%93Borwein%E2%80%93Plouffe_formula">Bailey–Borwein–Plouffe
 formula</a>. One can use this series to calculate the hexadecimal digits
-of <span class="math inline">\(\pi\)</span> as follows: First, we
-consider this sum in separate summands as <span class="math display">\[
-\sum_{k=0}^\infty \frac{a_i}{16^k(8k+i)} \]</span> for <span
-class="math inline">\(i=1,\ldots,7\)</span>. In order to get the n-th
-hexadecimal digit we need to multiply the whole series by <span
-class="math inline">\(16^n\)</span>. <span class="math display">\[
-\sum_{k=0}^\infty
+of <span class="math inline"><em>π</em></span> as follows: First, we
+consider this sum in separate summands as <span class="math display">$$
+\sum_{k=0}^\infty \frac{a_i}{16^k(8k+i)} $$</span> for <span
+class="math inline"><em>i</em> = 1, …, 7</span>. In order to get the
+n-th hexadecimal digit we need to multiply the whole series by <span
+class="math inline">16<sup><em>n</em></sup></span>. <span
+class="math display">$$ \sum_{k=0}^\infty
 \frac{a_i\cdot 16^n}{16^k(8k+i)} = a_i \cdot \sum_{k=0}^\infty
-\frac{16^{n-k}}{8k+i} \]</span> and the relevant part of the sum for us
-is the integer value of the sum <span class="math display">\[ a_i\cdot
+\frac{16^{n-k}}{8k+i} $$</span> and the relevant part of the sum for us
+is the integer value of the sum <span class="math display">$$ a_i\cdot
 \sum_{k=0}^n
-\frac{16^{n-k}}{8k+i} \]</span> modulo 16, again for <span
-class="math inline">\(i=1,\ldots,7\)</span>.</p>
+\frac{16^{n-k}}{8k+i} $$</span> modulo 16, again for <span
+class="math inline"><em>i</em> = 1, …, 7</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>The lisp code that generates the n-th hexadecimal digit.</p>
 <pre><code>(let ((mtable (make-hash-table :test &#39;equal)))

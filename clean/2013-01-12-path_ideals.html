@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -57,126 +54,135 @@
 <body>
 <h1 id="path-ideals">Path ideals</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Let <span class="math inline">\(G = (V,E)\)</span> be a directed
-graph without loops and multiple edges. In other words <span
-class="math inline">\(V\)</span> is a finite set and <span
-class="math inline">\(E\)</span> is a subset of <span
-class="math inline">\(V\times V\)</span> which does not contain elements
-of the form <span class="math inline">\((x,x)\)</span> with <span
-class="math inline">\(x\in V\)</span>. I will also assume that <span
-class="math inline">\(G\)</span> contains no oriented cycles and <span
-class="math inline">\(V\)</span> is a subset of the set of natural
-numbers <span class="math inline">\(\mathbb{N}\)</span> of the form
-<span class="math inline">\(\{0,1,\ldots,n\}\)</span> and that edges in
-<span class="math inline">\(G\)</span> are increasing. Increasing
-labelling is possible in cycle-free graphs because of <a
+<p>Let <span
+class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> be a
+directed graph without loops and multiple edges. In other words <span
+class="math inline"><em>V</em></span> is a finite set and <span
+class="math inline"><em>E</em></span> is a subset of <span
+class="math inline"><em>V</em> × <em>V</em></span> which does not
+contain elements of the form <span
+class="math inline">(<em>x</em>,<em>x</em>)</span> with <span
+class="math inline"><em>x</em> ∈ <em>V</em></span>. I will also assume
+that <span class="math inline"><em>G</em></span> contains no oriented
+cycles and <span class="math inline"><em>V</em></span> is a subset of
+the set of natural numbers <span class="math inline">ℕ</span> of the
+form <span class="math inline">{0, 1, …, <em>n</em>}</span> and that
+edges in <span class="math inline"><em>G</em></span> are increasing.
+Increasing labelling is possible in cycle-free graphs because of <a
 href="clean/2012-11-25-strictly_increasing_labels_of_directed_graphs.html">topological
 sort</a>.</p>
 <p>In this context a <em>path</em> is a sequence of vertices <span
-class="math inline">\((v_0,\ldots,v_n)\)</span> such that any two
-consecutive vertices are connected by an edge. Today, I will develop an
-algorithm and the accompanying lisp code which will give the set of all
-paths which contain specific paths as subpaths.</p>
+class="math inline">(<em>v</em><sub>0</sub>,…,<em>v</em><sub><em>n</em></sub>)</span>
+such that any two consecutive vertices are connected by an edge. Today,
+I will develop an algorithm and the accompanying lisp code which will
+give the set of all paths which contain specific paths as subpaths.</p>
 <h2 id="some-poset-theory">Some poset theory</h2>
 <p>You don’t need to read this section if you are only interested in the
 algorithm but my warped mathematician mind requires that I think about
 it.</p>
 <h3 id="basics-and-few-examples">Basics and few examples</h3>
 <p>A <em>partially ordered set</em> (a <em>poset</em> in short) is a
-pair <span class="math inline">\((P,\vdash)\)</span> where <span
-class="math inline">\(P\)</span> is a set and <span
-class="math inline">\(\vdash\)</span> is a subset of the cartesian
-product <span class="math inline">\(P\times P\)</span>. Tradition
-dictates that instead of writing <span class="math inline">\((x,y)\in
-\vdash\)</span>, we write <span class="math inline">\(x\vdash
-y\)</span>. The subset <span class="math inline">\(\vdash\)</span> must
-satisfy certain conditions:</p>
+pair <span class="math inline">(<em>P</em>,⊢)</span> where <span
+class="math inline"><em>P</em></span> is a set and <span
+class="math inline">⊢</span> is a subset of the cartesian product <span
+class="math inline"><em>P</em> × <em>P</em></span>. Tradition dictates
+that instead of writing <span
+class="math inline">(<em>x</em>,<em>y</em>) ∈ ⊢</span>, we write <span
+class="math inline"><em>x</em> ⊢ <em>y</em></span>. The subset <span
+class="math inline">⊢</span> must satisfy certain conditions:</p>
 <ul>
 <li><strong>Reflexivity</strong>: for every <span
-class="math inline">\(x\in P\)</span> we must have <span
-class="math inline">\(x\vdash x\)</span></li>
+class="math inline"><em>x</em> ∈ <em>P</em></span> we must have <span
+class="math inline"><em>x</em> ⊢ <em>x</em></span></li>
 <li><strong>Anti-symmetricity</strong>: for every <span
-class="math inline">\(x,y\in P\)</span>, if <span
-class="math inline">\(x\vdash y\)</span> and <span
-class="math inline">\(y\vdash x\)</span> then <span
-class="math inline">\(x=y\)</span></li>
+class="math inline"><em>x</em>, <em>y</em> ∈ <em>P</em></span>, if <span
+class="math inline"><em>x</em> ⊢ <em>y</em></span> and <span
+class="math inline"><em>y</em> ⊢ <em>x</em></span> then <span
+class="math inline"><em>x</em> = <em>y</em></span></li>
 <li><strong>Transitivity</strong>: for every <span
-class="math inline">\(x,y,z\in P\)</span>, if <span
-class="math inline">\(x\vdash y\)</span> and <span
-class="math inline">\(y\vdash z\)</span> then <span
-class="math inline">\(x\vdash z\)</span></li>
+class="math inline"><em>x</em>, <em>y</em>, <em>z</em> ∈ <em>P</em></span>,
+if <span class="math inline"><em>x</em> ⊢ <em>y</em></span> and <span
+class="math inline"><em>y</em> ⊢ <em>z</em></span> then <span
+class="math inline"><em>x</em> ⊢ <em>z</em></span></li>
 </ul>
-<p>The set of natural numbers <span
-class="math inline">\(\mathbb{N}\)</span> together with the ordinary
-order relation <span class="math inline">\(\leqslant\)</span> is an
-example of a poset. Another good example is the set of English words and
-the lexicographical ordering + reflexivity. But, let me give you a
-non-example: let <span class="math inline">\(P\)</span> be the set <span
-class="math inline">\(B=\{0,1\}\)</span> and let <span
-class="math display">\[ \prec\quad := B\times B = \{ (0,0),
-(0,1), (1,0), (1,1) \} \]</span> The set <span
-class="math inline">\(\prec\)</span> satisfies reflexivity and
+<p>The set of natural numbers <span class="math inline">ℕ</span>
+together with the ordinary order relation <span
+class="math inline">≤</span> is an example of a poset. Another good
+example is the set of English words and the lexicographical ordering +
+reflexivity. But, let me give you a non-example: let <span
+class="math inline"><em>P</em></span> be the set <span
+class="math inline"><em>B</em> = {0, 1}</span> and let <span
+class="math display">≺   := <em>B</em> × <em>B</em> = {(0,0), (0,1), (1,0), (1,1)}</span>
+The set <span class="math inline">≺</span> satisfies reflexivity and
 transitivity but doesn’t satisfy anti-symmetricity.</p>
 <h3 id="the-relevant-example">The relevant example</h3>
 <p>The relevant example for me is the set of all paths in a directed
 graph under the “subpath” relation. Let <span
-class="math inline">\(P(G)\)</span> be the set of all paths in <span
-class="math inline">\(G\)</span> and I will define <span
-class="math inline">\(\vdash \subseteq P(G)\times P(G)\)</span> as
-follows: Let <span class="math inline">\(\alpha,\beta\in P(G)\)</span>.
-Assume <span class="math inline">\(\alpha=(a_0,a_1,\ldots,a_n)\)</span>
-and <span class="math inline">\(\beta=(b_0,\ldots,b_m)\)</span>. I will
-write <span class="math inline">\(\alpha\vdash\beta\)</span> if <span
-class="math inline">\(\alpha\)</span> appears as a full segment of <span
-class="math inline">\(\beta\)</span>. That is, if there exists an index
-<span class="math inline">\(i\)</span> such that <span
-class="math inline">\(b_{i+j} = a_j\)</span> for any <span
-class="math inline">\(j=0,\ldots,n\)</span>. The fact that <span
-class="math inline">\(\vdash\)</span> is reflexive and transitive is
-simple to see. Showing that <span class="math inline">\(\vdash\)</span>
-is anti-symmetric requires that we consider the lengths of the paths
-involved: If <span class="math inline">\(\alpha\vdash \beta\)</span> and
-<span class="math inline">\(\beta\vdash\alpha\)</span> then the lengths
-of <span class="math inline">\(\alpha\)</span> and <span
-class="math inline">\(\beta\)</span> are equal, and since <span
-class="math inline">\(\alpha\)</span> appers in <span
-class="math inline">\(\beta\)</span> as a full segment the only way this
-can happen is when <span
-class="math inline">\(\alpha=\beta\)</span>.</p>
+class="math inline"><em>P</em>(<em>G</em>)</span> be the set of all
+paths in <span class="math inline"><em>G</em></span> and I will define
+<span
+class="math inline"> ⊢  ⊆ <em>P</em>(<em>G</em>) × <em>P</em>(<em>G</em>)</span>
+as follows: Let <span
+class="math inline"><em>α</em>, <em>β</em> ∈ <em>P</em>(<em>G</em>)</span>.
+Assume <span
+class="math inline"><em>α</em> = (<em>a</em><sub>0</sub>,<em>a</em><sub>1</sub>,…,<em>a</em><sub><em>n</em></sub>)</span>
+and <span
+class="math inline"><em>β</em> = (<em>b</em><sub>0</sub>,…,<em>b</em><sub><em>m</em></sub>)</span>.
+I will write <span class="math inline"><em>α</em> ⊢ <em>β</em></span> if
+<span class="math inline"><em>α</em></span> appears as a full segment of
+<span class="math inline"><em>β</em></span>. That is, if there exists an
+index <span class="math inline"><em>i</em></span> such that <span
+class="math inline"><em>b</em><sub><em>i</em> + <em>j</em></sub> = <em>a</em><sub><em>j</em></sub></span>
+for any <span class="math inline"><em>j</em> = 0, …, <em>n</em></span>.
+The fact that <span class="math inline">⊢</span> is reflexive and
+transitive is simple to see. Showing that <span
+class="math inline">⊢</span> is anti-symmetric requires that we consider
+the lengths of the paths involved: If <span
+class="math inline"><em>α</em> ⊢ <em>β</em></span> and <span
+class="math inline"><em>β</em> ⊢ <em>α</em></span> then the lengths of
+<span class="math inline"><em>α</em></span> and <span
+class="math inline"><em>β</em></span> are equal, and since <span
+class="math inline"><em>α</em></span> appers in <span
+class="math inline"><em>β</em></span> as a full segment the only way
+this can happen is when <span
+class="math inline"><em>α</em> = <em>β</em></span>.</p>
 <h3 id="order-ideals">Order ideals</h3>
 <p>An <em>order ideal</em> in a poset <span
-class="math inline">\((P,\vdash)\)</span> is a subset <span
-class="math inline">\(I\)</span> which satisfies the following
+class="math inline">(<em>P</em>,⊢)</span> is a subset <span
+class="math inline"><em>I</em></span> which satisfies the following
 condition:</p>
 <blockquote>
-<p>For all <span class="math inline">\(x,y\in P\)</span> if <span
-class="math inline">\(x\in I\)</span> and <span
-class="math inline">\(x\vdash y\)</span> then <span
-class="math inline">\(y\in I\)</span></p>
+<p>For all <span
+class="math inline"><em>x</em>, <em>y</em> ∈ <em>P</em></span> if <span
+class="math inline"><em>x</em> ∈ <em>I</em></span> and <span
+class="math inline"><em>x</em> ⊢ <em>y</em></span> then <span
+class="math inline"><em>y</em> ∈ <em>I</em></span></p>
 </blockquote>
 <p>Here is another way of describing order ideals. For any <span
-class="math inline">\(x\in P\)</span> and <span
-class="math inline">\(A\subset P\)</span> we let <span
-class="math display">\[ U(x) := \{ y\in P\ \|\ \ x\vdash y
-\}\quad\text{and}\quad U(A) := \bigcup_{x\in A} U(x)\
-\]</span> Then <span class="math inline">\(I\subseteq P\)</span> is an
-order ideal if for every <span class="math inline">\(x\in I\)</span> we
-also have <span class="math inline">\(U(x)\subseteq I\)</span>.</p>
+class="math inline"><em>x</em> ∈ <em>P</em></span> and <span
+class="math inline"><em>A</em> ⊂ <em>P</em></span> we let <span
+class="math display"><em>U</em>(<em>x</em>) := {<em>y</em> ∈ <em>P</em> ∥  <em>x</em> ⊢ <em>y</em>}  and  <em>U</em>(<em>A</em>) := ⋃<sub><em>x</em> ∈ <em>A</em></sub><em>U</em>(<em>x</em>) </span>
+Then <span class="math inline"><em>I</em> ⊆ <em>P</em></span> is an
+order ideal if for every <span
+class="math inline"><em>x</em> ∈ <em>I</em></span> we also have <span
+class="math inline"><em>U</em>(<em>x</em>) ⊆ <em>I</em></span>.</p>
 <h3 id="recasting-the-original-problem">Recasting the original
 problem</h3>
 <p>I can now recast the original problem: develop an algorithm which
-constructs <span class="math inline">\(U(A)\)</span> the order ideal in
-<span class="math inline">\((P(G),\vdash)\)</span> which contains a
-given subset <span class="math inline">\(A\subseteq P(G)\)</span>.</p>
+constructs <span class="math inline"><em>U</em>(<em>A</em>)</span> the
+order ideal in <span
+class="math inline">(<em>P</em>(<em>G</em>),⊢)</span> which contains a
+given subset <span
+class="math inline"><em>A</em> ⊆ <em>P</em>(<em>G</em>)</span>.</p>
 <h2 id="an-algorithm">An algorithm</h2>
 <p>Today’s algorithm will use the algorithms <code>Beginning-At</code>
 and <code>Ending-At</code> from an <a
 href="clean/2013-01-09-finding_all_paths_in_a_directed_graph.html">earlier
 post</a>. Respectively, the <code>Beginning-At</code> and
 <code>Ending-At</code> algorithms construct the set of all paths in
-<span class="math inline">\(G\)</span> beginning and ending at a given
-vertex <span class="math inline">\(v\in V\)</span>. Today’s algorithm in
-pseudo-code is as follows;</p>
+<span class="math inline"><em>G</em></span> beginning and ending at a
+given vertex <span class="math inline"><em>v</em> ∈ <em>V</em></span>.
+Today’s algorithm in pseudo-code is as follows;</p>
 <pre><code>Function Order-Ideal
     Input: a set A of paths
     Output: the order ideal U(A) which contains A

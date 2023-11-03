@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -62,25 +59,28 @@ src="../media/2015-02-05-collatz-type_conjectures_continued.png" /></p>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I am going to show that there is no upper bound on the lengths
 of Collatz sequences. That is given any <span
-class="math inline">\(k\geq 1\)</span>, there is an initial value <span
-class="math inline">\(a_0\)</span> such that the length of the recursive
-sequence <span class="math inline">\(a_{n+1} = g(a_n)\)</span> before we
-terminate it at <span class="math inline">\(a_m = 1\)</span> with <span
-class="math inline">\(m\geq k\)</span>.</p>
+class="math inline"><em>k</em> ≥ 1</span>, there is an initial value
+<span class="math inline"><em>a</em><sub>0</sub></span> such that the
+length of the recursive sequence <span
+class="math inline"><em>a</em><sub><em>n</em> + 1</sub> = <em>g</em>(<em>a</em><sub><em>n</em></sub>)</span>
+before we terminate it at <span
+class="math inline"><em>a</em><sub><em>m</em></sub> = 1</span> with
+<span class="math inline"><em>m</em> ≥ <em>k</em></span>.</p>
 <h2 id="some-theory">Some theory</h2>
-<p>First, let us recall that we defined <span class="math inline">\(g(n)
-= f( 3 f(n) + 1 )\)</span> where <span
-class="math inline">\(f(n)\)</span> is defined to be <span
-class="math inline">\(n\)</span> whenever <span
-class="math inline">\(n\)</span> is odd, and recursively defined as
-<span class="math inline">\(f(n) = f(n/2)\)</span> whenever <span
-class="math inline">\(n\)</span> is even.</p>
+<p>First, let us recall that we defined <span
+class="math inline"><em>g</em>(<em>n</em>) = <em>f</em>(3<em>f</em>(<em>n</em>)+1)</span>
+where <span class="math inline"><em>f</em>(<em>n</em>)</span> is defined
+to be <span class="math inline"><em>n</em></span> whenever <span
+class="math inline"><em>n</em></span> is odd, and recursively defined as
+<span
+class="math inline"><em>f</em>(<em>n</em>) = <em>f</em>(<em>n</em>/2)</span>
+whenever <span class="math inline"><em>n</em></span> is even.</p>
 <p>Simple modular arithmetic shows that an integer <span
-class="math inline">\(m\)</span> is in the image of <span
-class="math inline">\(g\)</span> if and only if <span
-class="math inline">\(m\)</span> modulo 6 is 4. So, in order to keep the
-length of the recursive sequence long, we must maintain that fact for
-successive pre-images.</p>
+class="math inline"><em>m</em></span> is in the image of <span
+class="math inline"><em>g</em></span> if and only if <span
+class="math inline"><em>m</em></span> modulo 6 is 4. So, in order to
+keep the length of the recursive sequence long, we must maintain that
+fact for successive pre-images.</p>
 <h2 id="implementation">Implementation</h2>
 <p>First, the Collatz function:</p>
 <pre><code>(defun g (n)
@@ -103,10 +103,10 @@ number of iterations for an initial point.</p>
      (t (do ((x (* 4 m) (* x 4)))
             ((= 4 (mod x 18)) (pre-image (/ (1- x) 3) (1- s)))))))
 PRE-IMAGE</code></pre>
-<p>There is one thing to note: if <span class="math inline">\(n\)</span>
-is <span class="math inline">\(0\)</span> modulo 3, there is no hope in
-calculating a pre-image: the function returns the number as is. Let me
-test:</p>
+<p>There is one thing to note: if <span
+class="math inline"><em>n</em></span> is <span
+class="math inline">0</span> modulo 3, there is no hope in calculating a
+pre-image: the function returns the number as is. Let me test:</p>
 <pre><code>(run #&#39;g (pre-image 7 1350))
 1357
 (run #&#39;g (pre-image 8 1350))
@@ -118,8 +118,10 @@ test:</p>
 <h2 id="a-neat-graph">A neat graph</h2>
 <p>I am going to finish off the series of posts (for now) on Collatz
 with a neat graph: the graph you see with this post is the length of the
-recursive sequences with <span class="math inline">\(a_0 = n\)</span>
-plotted against <span class="math inline">\(\log_2(n)\)</span>.</p>
+recursive sequences with <span
+class="math inline"><em>a</em><sub>0</sub> = <em>n</em></span> plotted
+against <span
+class="math inline">log<sub>2</sub>(<em>n</em>)</span>.</p>
 </section>
 <div id="footer">
 <p><span id="timestamp">February 5th, 2015 10:00am</span></p>

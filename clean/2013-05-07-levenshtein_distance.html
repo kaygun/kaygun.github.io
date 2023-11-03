@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -61,14 +58,14 @@
 href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein
 Distance</a> also known as the <em>edit distance</em> is a metric on the
 set of all words over a fixed alphabet. The Levenshtein distance between
-two words <span class="math inline">\(\omega_1\)</span> and <span
-class="math inline">\(\omega_2\)</span> is the minimal number of single
-character edits one has to make to convert <span
-class="math inline">\(\omega_1\)</span> to <span
-class="math inline">\(\omega_2\)</span>, or vice versa. The distance
-formula given in the Wikipedia article above has a very nice recursive
-implementation. The implementation I will give below is partly inspired
-by a <a
+two words <span class="math inline"><em>ω</em><sub>1</sub></span> and
+<span class="math inline"><em>ω</em><sub>2</sub></span> is the minimal
+number of single character edits one has to make to convert <span
+class="math inline"><em>ω</em><sub>1</sub></span> to <span
+class="math inline"><em>ω</em><sub>2</sub></span>, or vice versa. The
+distance formula given in the Wikipedia article above has a very nice
+recursive implementation. The implementation I will give below is partly
+inspired by a <a
 href="http://blog.racket-lang.org/2012/08/dynamic-programming-versus-memoization.html">post</a>
 on the <a href="http://blog.racket-lang.org/">Racket Blog</a> on
 memoization vs. dynamic programming. The implementation I give below is

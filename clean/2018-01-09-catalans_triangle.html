@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -109,10 +110,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -124,13 +121,13 @@
 entries in <a
 href="http://mathworld.wolfram.com/CatalansTriangle.html">Catalan’s
 Triangle</a>. The description is an easy recursive function: <span
-class="math inline">\(C(n,k) = 0\)</span> when <span
-class="math inline">\(n&lt;1\)</span>, or <span
-class="math inline">\(k&lt;1\)</span>, or <span
-class="math inline">\(n&lt;k\)</span>. And we have <span
-class="math display">\[ C(n,k) = C(n-1,k) + C(n,k-1)
-\]</span> otherwise. The base case is <span
-class="math inline">\(C(1,1)=1\)</span>.</p>
+class="math inline"><em>C</em>(<em>n</em>,<em>k</em>) = 0</span> when
+<span class="math inline"><em>n</em> &lt; 1</span>, or <span
+class="math inline"><em>k</em> &lt; 1</span>, or <span
+class="math inline"><em>n</em> &lt; <em>k</em></span>. And we have <span
+class="math display"><em>C</em>(<em>n</em>,<em>k</em>) = <em>C</em>(<em>n</em>−1,<em>k</em>) + <em>C</em>(<em>n</em>,<em>k</em>−1)</span>
+otherwise. The base case is <span
+class="math inline"><em>C</em>(1,1) = 1</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>If we were to implement this without <a
 href="https://en.wikipedia.org/wiki/Memoization">memoization</a> it

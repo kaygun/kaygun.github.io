@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -57,15 +54,18 @@
 <body>
 <h1 id="from-walks-to-paths">From walks to paths</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Assume <span class="math inline">\(G = (V,E)\)</span> is an
+<p>Assume <span
+class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> is an
 undirected graph. A <em>walk</em> in <span
-class="math inline">\(G\)</span> is a sequence of vertices <span
-class="math inline">\((v_0,\ldots,v_n)\)</span> such that any two
-consecutive vertices are connected by an edge. A <em>path</em>, on the
-other hand, is a walk in which no edges are repeated consecutively. That
-is <span class="math inline">\(v_{i-1}\)</span> is not the same as <span
-class="math inline">\(v_{i+1}\)</span> whenever the indices make
-sense.</p>
+class="math inline"><em>G</em></span> is a sequence of vertices <span
+class="math inline">(<em>v</em><sub>0</sub>,…,<em>v</em><sub><em>n</em></sub>)</span>
+such that any two consecutive vertices are connected by an edge. A
+<em>path</em>, on the other hand, is a walk in which no edges are
+repeated consecutively. That is <span
+class="math inline"><em>v</em><sub><em>i</em> − 1</sub></span> is not
+the same as <span
+class="math inline"><em>v</em><sub><em>i</em> + 1</sub></span> whenever
+the indices make sense.</p>
 <p>Today, I will develop an algorithm which returns a path from a given
 walk by deleting the unnecessary edges.</p>
 <h2 id="an-algorithm">An algorithm</h2>
@@ -85,15 +85,16 @@ what the algorithm does, and then prove its correctness.</p>
   End while
   Return the reverse of PATH</code></pre>
 <p>It is easy to see that the time and space complexity of the reduction
-algorithm are both <span class="math inline">\(O(n)\)</span> where <span
-class="math inline">\(n\)</span> is the length of the walk fed into the
-algorithm.</p>
+algorithm are both <span
+class="math inline"><em>O</em>(<em>n</em>)</span> where <span
+class="math inline"><em>n</em></span> is the length of the walk fed into
+the algorithm.</p>
 <p>The main difference between a path and a walk is that a walk may
 contain subsequences of the form <span
-class="math inline">\(a,b,a\)</span> and we want to remove such
-subsequences. Imagine our walk is <span
-class="math inline">\((a,b,a)\)</span>, and we feed it to our algorithm.
-After the first two runs we get</p>
+class="math inline"><em>a</em>, <em>b</em>, <em>a</em></span> and we
+want to remove such subsequences. Imagine our walk is <span
+class="math inline">(<em>a</em>,<em>b</em>,<em>a</em>)</span>, and we
+feed it to our algorithm. After the first two runs we get</p>
 <pre><code>  WALK = (a)
   PATH = (a)
   AUX = (b)</code></pre>
@@ -101,39 +102,43 @@ After the first two runs we get</p>
 the unwanted sequences could be longer. I will handle the general case
 by induction. Assume our algorithm removes all of the subsequences of
 the form <span
-class="math inline">\((a_1,\ldots,a_{n-1},a_n,a_{n-1},\ldots,a_1)\)</span>
-which consists of <span class="math inline">\(n\)</span> edges, and
+class="math inline">(<em>a</em><sub>1</sub>,…,<em>a</em><sub><em>n</em> − 1</sub>,<em>a</em><sub><em>n</em></sub>,<em>a</em><sub><em>n</em> − 1</sub>,…,<em>a</em><sub>1</sub>)</span>
+which consists of <span class="math inline"><em>n</em></span> edges, and
 assume we feed a walk which consists of a subsequence <span
-class="math inline">\((a_1,\ldots,a_n,a_{n+1},a_n,\ldots,a_1)\)</span>
-which consists of <span class="math inline">\(n+1\)</span> edges. When
-our algorithm hits <span class="math inline">\(a_1\)</span> at the top
-of <code>WALK</code> there are three cases:</p>
+class="math inline">(<em>a</em><sub>1</sub>,…,<em>a</em><sub><em>n</em></sub>,<em>a</em><sub><em>n</em> + 1</sub>,<em>a</em><sub><em>n</em></sub>,…,<em>a</em><sub>1</sub>)</span>
+which consists of <span class="math inline"><em>n</em> + 1</span> edges.
+When our algorithm hits <span
+class="math inline"><em>a</em><sub>1</sub></span> at the top of
+<code>WALK</code> there are three cases:</p>
 <ol type="1">
 <li><p>It is possible that the vertex at the top of <code>PATH</code> is
-the same as <span class="math inline">\(a_1\)</span> and we discard
-<span class="math inline">\(a_1\)</span> together with the vertices at
-the top of <code>PATH</code> and <code>AUX</code>, and the length of our
-subsequence reduces by 1. The rest can be handled by the inductive
-hypothesis.</p></li>
+the same as <span class="math inline"><em>a</em><sub>1</sub></span> and
+we discard <span class="math inline"><em>a</em><sub>1</sub></span>
+together with the vertices at the top of <code>PATH</code> and
+<code>AUX</code>, and the length of our subsequence reduces by 1. The
+rest can be handled by the inductive hypothesis.</p></li>
 <li><p>At any stage of the algorithm before we reach <span
-class="math inline">\(a_{n+1}\)</span>, a reduction might occur in which
-we have the same vertex appears at the top of <code>WALK</code> and
-<code>PATH</code>. This means there is a short subsequence of the form
-<span class="math inline">\((a,b,a)\)</span> within <code>WALK</code>.
-Then the algorithm discards elements at the top of the lists
-<code>WALK</code>, <code>PATH</code> and <code>AUX</code>. Then the
-state now becomes indistinguishable from processing the sequence
-<code>WALK</code> in which the subsequence <span
-class="math inline">\((a,b,a)\)</span> is replaced by a single vertex
-<span class="math inline">\(a\)</span>. The rest can be handled by the
-induction hypothesis.</p></li>
+class="math inline"><em>a</em><sub><em>n</em> + 1</sub></span>, a
+reduction might occur in which we have the same vertex appears at the
+top of <code>WALK</code> and <code>PATH</code>. This means there is a
+short subsequence of the form <span
+class="math inline">(<em>a</em>,<em>b</em>,<em>a</em>)</span> within
+<code>WALK</code>. Then the algorithm discards elements at the top of
+the lists <code>WALK</code>, <code>PATH</code> and <code>AUX</code>.
+Then the state now becomes indistinguishable from processing the
+sequence <code>WALK</code> in which the subsequence <span
+class="math inline">(<em>a</em>,<em>b</em>,<em>a</em>)</span> is
+replaced by a single vertex <span class="math inline"><em>a</em></span>.
+The rest can be handled by the induction hypothesis.</p></li>
 <li><p>The algorithm might continue without any reduction until we reach
-<span class="math inline">\(a_{n+1}\)</span> and it moves at the top of
-<code>AUX</code>. Then because we reached <span
-class="math inline">\(a_{n+1}\)</span> without a reduction, <span
-class="math inline">\(a_{n-1}\)</span> appears at the top of
-<code>PATH</code> and <code>WALK</code>. So, we will have a reduction
-and we can handle the rest by the induction hypothesis.</p></li>
+<span class="math inline"><em>a</em><sub><em>n</em> + 1</sub></span> and
+it moves at the top of <code>AUX</code>. Then because we reached <span
+class="math inline"><em>a</em><sub><em>n</em> + 1</sub></span> without a
+reduction, <span
+class="math inline"><em>a</em><sub><em>n</em> − 1</sub></span> appears
+at the top of <code>PATH</code> and <code>WALK</code>. So, we will have
+a reduction and we can handle the rest by the induction
+hypothesis.</p></li>
 </ol>
 <h2 id="an-implementation-in-lisp">An implementation in lisp</h2>
 <p>For testing purposes I will use the following graph:</p>

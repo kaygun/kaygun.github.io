@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -109,10 +110,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -152,16 +149,17 @@ Begin
   End For
   Return total
 End</code></pre>
-<p>Assume <span class="math inline">\((d_1\leq \cdots\leq d_n)\)</span>
+<p>Assume <span
+class="math inline">(<em>d</em><sub>1</sub>≤⋯≤<em>d</em><sub><em>n</em></sub>)</span>
 is a degree sequence. We start with the first vertex. Since its degree
-is <span class="math inline">\(d_1\)</span> we must connect it to <span
-class="math inline">\(d_1\)</span> other vertices. In other words we
-must loop over all subsets of the index set <span
-class="math inline">\({1,\ldots,n-1}\)</span> of size <span
-class="math inline">\(d_1\)</span>. By connecting the vertex to another
-vertex, we must reduce the degree of the connected vertex by 1. Thus,
-for every choice of connection, we get another degree sequence. Now, we
-proceed by recursion.</p>
+is <span class="math inline"><em>d</em><sub>1</sub></span> we must
+connect it to <span class="math inline"><em>d</em><sub>1</sub></span>
+other vertices. In other words we must loop over all subsets of the
+index set <span class="math inline">1, …, <em>n</em> − 1</span> of size
+<span class="math inline"><em>d</em><sub>1</sub></span>. By connecting
+the vertex to another vertex, we must reduce the degree of the connected
+vertex by 1. Thus, for every choice of connection, we get another degree
+sequence. Now, we proceed by recursion.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>Before I give my implementation, I am going to need few helper
 functions. I am going to need a function that returns the set of subsets
@@ -207,37 +205,40 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a 
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>GRAPH-COUNT</span></code></pre></div>
 <h2 id="tests">Tests</h2>
-<p>Let us start with <span class="math inline">\(K_5\)</span> the <a
+<p>Let us start with <span
+class="math inline"><em>K</em><sub>5</sub></span> the <a
 href="https://en.wikipedia.org/wiki/Complete_graph#:~:text=In%20the%20mathematical%20field%20of,(one%20in%20each%20direction).">complete
 graph</a> on 5 vertices. The only graph with the degree sequence <span
-class="math inline">\((4,4,4,4,4)\)</span> is <span
-class="math inline">\(K_5\)</span>.</p>
+class="math inline">(4,4,4,4,4)</span> is <span
+class="math inline"><em>K</em><sub>5</sub></span>.</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div>
-<p>The line graph <span class="math inline">\(A_5\)</span> (a.k.a. <a
+<p>The line graph <span
+class="math inline"><em>A</em><sub>5</sub></span> (a.k.a. <a
 href="https://en.wikipedia.org/wiki/Dynkin_diagram">Dynkin diagram</a>
-of type <span class="math inline">\(A_5\)</span>) has the degree
-sequence <span class="math inline">\((1,1,2,2,2)\)</span>. Including the
-permutations of the vertices of degree 2, there are 6 of them:</p>
+of type <span class="math inline"><em>A</em><sub>5</sub></span>) has the
+degree sequence <span class="math inline">(1,1,2,2,2)</span>. Including
+the permutations of the vertices of degree 2, there are 6 of them:</p>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dv">7</span></span></code></pre></div>
 <p>This threw me off at the beginning until I realize there is another
 graph with the same degree sequence: the disjoint union of <span
-class="math inline">\(A_2\)</span> and <a
+class="math inline"><em>A</em><sub>2</sub></span> and <a
 href="https://en.wikipedia.org/wiki/Cycle_graph#:~:text=In%20graph%20theory%2C%20a%20cycle,vertices%20is%20called%20Cn.">the
 cycle graph</a> on three vertices <span
-class="math inline">\(C_3\)</span>. So, the count is correct.</p>
+class="math inline"><em>C</em><sub>3</sub></span>. So, the count is
+correct.</p>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dv">15</span></span></code></pre></div>
 <p>For this count, essentially we are counting the set of all subsets of
 size 2 of a set of size 6, which is <span
-class="math inline">\(\binom{6}{2}=15\)</span>.</p>
+class="math inline">$\binom{6}{2}=15$</span>.</p>
 <p>Next, let us count the number of 3-regular graphs on 5 vertices:</p>
 <div class="sourceCode" id="cb14"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span>))</span></code></pre></div>
@@ -247,8 +248,8 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a
 href="https://en.wikipedia.org/wiki/Handshaking_lemma">hand-shake
 lemma</a> which I put as one of the base cases in the recursion above.
 The smallest non-trivial 3-regular graph is <span
-class="math inline">\(K_4\)</span>. The next one must have at least 6
-vertices:</p>
+class="math inline"><em>K</em><sub>4</sub></span>. The next one must
+have at least 6 vertices:</p>
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(graph-count &#39;(<span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb17"><pre
@@ -260,9 +261,9 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dv">21065283747</span></span></code></pre></div>
 <h2 id="addendum">Addendum</h2>
 <p>Using the algorithm above, I’ll count the number of of 2-regular
-graphs on <span class="math inline">\(n\)</span> vertices from <span
-class="math inline">\(n=3\)</span> to <span
-class="math inline">\(n=12\)</span> below:</p>
+graphs on <span class="math inline"><em>n</em></span> vertices from
+<span class="math inline"><em>n</em> = 3</span> to <span
+class="math inline"><em>n</em> = 12</span> below:</p>
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">3</span> to <span class="dv">12</span> collect</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>     (graph-count (<span class="kw">loop</span> repeat i collect <span class="dv">2</span>)))</span></code></pre></div>
@@ -271,9 +272,9 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a
 <p>This is the sequence <a href="http://oeis.org/A001205">A001205</a> at
 <a href="http://oeis.org/">OEIS</a>. Next is <a
 href="http://oeis.org/A002829">A002829</a> the the number of 3-regular
-graph on <span class="math inline">\(2n\)</span> vertices from <span
-class="math inline">\(n=2\)</span> to <span
-class="math inline">\(n=11\)</span>.</p>
+graph on <span class="math inline">2<em>n</em></span> vertices from
+<span class="math inline"><em>n</em> = 2</span> to <span
+class="math inline"><em>n</em> = 11</span>.</p>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">2</span> to <span class="dv">11</span> collect</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>   (graph-count (<span class="kw">loop</span> repeat (<span class="op">*</span> <span class="dv">2</span> i) collect <span class="dv">3</span>)))</span></code></pre></div>

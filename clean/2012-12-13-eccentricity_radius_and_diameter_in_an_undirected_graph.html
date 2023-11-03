@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -59,15 +56,16 @@
 id="eccentricity-radius-and-diameter-in-an-undirected-graph">Eccentricity,
 Radius and Diameter in an Undirected Graph</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>Given an undirected connected graph <span class="math inline">\(G =
-(V,E)\)</span> without loops there is a well-defined notion of distance
-between two vertices <span class="math inline">\(x,y\in V\)</span>. The
-distance between <span class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span> (which I will denote by <span
-class="math inline">\(d(x,y)\)</span> is defined <em>geodesically</em>:
-it is the length of the shortest path between <span
-class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span>.</p>
+<p>Given an undirected connected graph <span
+class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span> without
+loops there is a well-defined notion of distance between two vertices
+<span class="math inline"><em>x</em>, <em>y</em> ∈ <em>V</em></span>.
+The distance between <span class="math inline"><em>x</em></span> and
+<span class="math inline"><em>y</em></span> (which I will denote by
+<span class="math inline"><em>d</em>(<em>x</em>,<em>y</em>)</span> is
+defined <em>geodesically</em>: it is the length of the shortest path
+between <span class="math inline"><em>x</em></span> and <span
+class="math inline"><em>y</em></span>.</p>
 <p>If the graph comes with weighed edges (i.e. carry numerical values),
 then instead of calculating the length of a path merely counting the
 number of edges in a path, we can calculate the total weight of a path
@@ -78,28 +76,29 @@ notion of the distance if we set the default weight of each edge to
 <p>Now, we can define the three notions that I am going to use in this
 post: the eccentricity of a vertex, the radius and diameter of a
 graph.</p>
-<p>Given a vertex <span class="math inline">\(x\in V\)</span>, the
+<p>Given a vertex <span
+class="math inline"><em>x</em> ∈ <em>V</em></span>, the
 <em>eccentricity</em> of a vertex is the maximum of all distances at
-<span class="math inline">\(x\)</span>. In other words <span
-class="math display">\[ Ecc(x) := \max
-\{d(x,y)\|\ y\in V \} \]</span> Now, we can also define the diameter and
-the radius of a graph as follows: <span class="math display">\[ rad(G)
-:= \min \{Ecc(x)\|\
-x\in V\} \]</span> <span class="math display">\[ diam(G) := \max
-\{Ecc(x)\|\ x\in V\} \]</span> There is a nice shortcut defining the
-diameter though <span class="math display">\[ diam(G) =
-\max_{x\in X}Ecc(x) = \max_{x\in X}\max_{y\in X} d(x,y) \]</span> In
-other words, the diameter is the maximum of all possible distances
+<span class="math inline"><em>x</em></span>. In other words <span
+class="math display"><em>E</em><em>c</em><em>c</em>(<em>x</em>) := max {<em>d</em>(<em>x</em>,<em>y</em>)∥ <em>y</em> ∈ <em>V</em>}</span>
+Now, we can also define the diameter and the radius of a graph as
+follows: <span
+class="math display"><em>r</em><em>a</em><em>d</em>(<em>G</em>) := min {<em>E</em><em>c</em><em>c</em>(<em>x</em>)∥ <em>x</em> ∈ <em>V</em>}</span>
+<span
+class="math display"><em>d</em><em>i</em><em>a</em><em>m</em>(<em>G</em>) := max {<em>E</em><em>c</em><em>c</em>(<em>x</em>)∥ <em>x</em> ∈ <em>V</em>}</span>
+There is a nice shortcut defining the diameter though <span
+class="math display"><em>d</em><em>i</em><em>a</em><em>m</em>(<em>G</em>) = max<sub><em>x</em> ∈ <em>X</em></sub><em>E</em><em>c</em><em>c</em>(<em>x</em>) = max<sub><em>x</em> ∈ <em>X</em></sub>max<sub><em>y</em> ∈ <em>X</em></sub><em>d</em>(<em>x</em>,<em>y</em>)</span>
+In other words, the diameter is the maximum of all possible distances
 between all pairs of vertices.</p>
 <p>Today, I would like to construct algorithms with functioning lisp
 code which calculate these quantities for a given undirected graph.</p>
 <h2 id="a-solution">A solution</h2>
 <h3 id="eccentricity-algorithm">Eccentricity algorithm</h3>
 <p>The algorithm for calculating the eccentricity of a vertex <span
-class="math inline">\(v\in V\)</span> is going to gradually remove
-vertices and edges until the graph is empty. The number of steps until
-the graph becomes empty will give us the eccentricity of that vertex.
-The pseudo-code is as follows:</p>
+class="math inline"><em>v</em> ∈ <em>V</em></span> is going to gradually
+remove vertices and edges until the graph is empty. The number of steps
+until the graph becomes empty will give us the eccentricity of that
+vertex. The pseudo-code is as follows:</p>
 <pre><code>function Ecc(x)
   A &lt;- {x}
   n &lt;- 0
@@ -114,61 +113,64 @@ The pseudo-code is as follows:</p>
   end while
   return n
 end function</code></pre>
-<p>The set <span class="math inline">\(A\)</span> initially contains
-only the vertex <span class="math inline">\(x\)</span>, and <span
-class="math inline">\(B\)</span> is the empty set. Our counter <span
-class="math inline">\(n\)</span> is initially <span
-class="math inline">\(0\)</span>. Now, for each vertex <span
-class="math inline">\(y\)</span> in <span
-class="math inline">\(A\)</span> we add the vertices connected to <span
-class="math inline">\(y\)</span> to the set <span
-class="math inline">\(B\)</span> and remove <span
-class="math inline">\(y\)</span> together with all edges adjacent to
-<span class="math inline">\(y\)</span>. Note that it is crucial that
-<span class="math inline">\(G\)</span> contains no loops as we do not
-want a vertex to be nieghboring itself via a loop. At the end of the
-<code>for each</code> loop <span class="math inline">\(B\)</span>
-contains the set of neighboring vertices to the vertices in <span
-class="math inline">\(A\)</span> and <span
-class="math inline">\(G\)</span> lost all edges adjacent to the vertices
-in <span class="math inline">\(A\)</span>. We increase the counting
-index by one.</p>
+<p>The set <span class="math inline"><em>A</em></span> initially
+contains only the vertex <span class="math inline"><em>x</em></span>,
+and <span class="math inline"><em>B</em></span> is the empty set. Our
+counter <span class="math inline"><em>n</em></span> is initially <span
+class="math inline">0</span>. Now, for each vertex <span
+class="math inline"><em>y</em></span> in <span
+class="math inline"><em>A</em></span> we add the vertices connected to
+<span class="math inline"><em>y</em></span> to the set <span
+class="math inline"><em>B</em></span> and remove <span
+class="math inline"><em>y</em></span> together with all edges adjacent
+to <span class="math inline"><em>y</em></span>. Note that it is crucial
+that <span class="math inline"><em>G</em></span> contains no loops as we
+do not want a vertex to be nieghboring itself via a loop. At the end of
+the <code>for each</code> loop <span
+class="math inline"><em>B</em></span> contains the set of neighboring
+vertices to the vertices in <span class="math inline"><em>A</em></span>
+and <span class="math inline"><em>G</em></span> lost all edges adjacent
+to the vertices in <span class="math inline"><em>A</em></span>. We
+increase the counting index by one.</p>
 <h3
 id="complexity-and-correctness-of-the-eccentricity-algorithm">Complexity
 and correctness of the eccentricity algorithm</h3>
 <p>Let me show that the algorithm works correctly. Consider the
 penultimate step in the algorithm. The set <span
-class="math inline">\(A\)</span> will contain vertices which will make
-the edge set empty when we remove the adjacent vertices. Let <span
-class="math inline">\(y\)</span> be one of these vertices in <span
-class="math inline">\(A\)</span> at this step. If there were a shorter
-path from <span class="math inline">\(x\)</span> to <span
-class="math inline">\(y\)</span> of length smaller than the value of the
-counter <span class="math inline">\(n\)</span>, we would have removed
-<span class="math inline">\(y\)</span> earlier and <span
-class="math inline">\(y\)</span> would not have appeared in <span
-class="math inline">\(A\)</span> in this step. In other words, a vertex
-is removed at step <span class="math inline">\(n+1\)</span> (i.e. when
-the counter is <span class="math inline">\(n\)</span>) when its distance
-to <span class="math inline">\(x\)</span> is <span
-class="math inline">\(n+1\)</span>. This means the distance between
-<span class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span> is <span
-class="math inline">\(n+1\)</span>. Hence <span
-class="math inline">\(Ecc(x)\geq n+1\)</span>. If the eccentricity of
-<span class="math inline">\(x\)</span> were strictly greater than <span
-class="math inline">\(n+1\)</span> caused by a vertex <span
-class="math inline">\(z\in V\)</span> with <span
-class="math inline">\(d(x,z)\&gt;n+1\)</span> this vertex could not have
-been removed earlier because the distance between <span
-class="math inline">\(z\)</span> and <span
-class="math inline">\(x\)</span> is greater than <span
-class="math inline">\(n+1\)</span>. If such a vertex exists then there
-are going to be edges remained after this step which is not possible. So
-<span class="math inline">\(Ecc(x)\leq n+1\)</span> too showing that the
-algorithm works correctly.</p>
+class="math inline"><em>A</em></span> will contain vertices which will
+make the edge set empty when we remove the adjacent vertices. Let <span
+class="math inline"><em>y</em></span> be one of these vertices in <span
+class="math inline"><em>A</em></span> at this step. If there were a
+shorter path from <span class="math inline"><em>x</em></span> to <span
+class="math inline"><em>y</em></span> of length smaller than the value
+of the counter <span class="math inline"><em>n</em></span>, we would
+have removed <span class="math inline"><em>y</em></span> earlier and
+<span class="math inline"><em>y</em></span> would not have appeared in
+<span class="math inline"><em>A</em></span> in this step. In other
+words, a vertex is removed at step <span
+class="math inline"><em>n</em> + 1</span> (i.e. when the counter is
+<span class="math inline"><em>n</em></span>) when its distance to <span
+class="math inline"><em>x</em></span> is <span
+class="math inline"><em>n</em> + 1</span>. This means the distance
+between <span class="math inline"><em>x</em></span> and <span
+class="math inline"><em>y</em></span> is <span
+class="math inline"><em>n</em> + 1</span>. Hence <span
+class="math inline"><em>E</em><em>c</em><em>c</em>(<em>x</em>) ≥ <em>n</em> + 1</span>.
+If the eccentricity of <span class="math inline"><em>x</em></span> were
+strictly greater than <span class="math inline"><em>n</em> + 1</span>
+caused by a vertex <span
+class="math inline"><em>z</em> ∈ <em>V</em></span> with <span
+class="math inline"><em>d</em>(<em>x</em>,<em>z</em>) <em>n</em> + 1</span>
+this vertex could not have been removed earlier because the distance
+between <span class="math inline"><em>z</em></span> and <span
+class="math inline"><em>x</em></span> is greater than <span
+class="math inline"><em>n</em> + 1</span>. If such a vertex exists then
+there are going to be edges remained after this step which is not
+possible. So <span
+class="math inline"><em>E</em><em>c</em><em>c</em>(<em>x</em>) ≤ <em>n</em> + 1</span>
+too showing that the algorithm works correctly.</p>
 <p>The time complexity of the algorithm is <span
-class="math inline">\(O(\|V\|\|E\|^2)\)</span>.</p>
+class="math inline"><em>O</em>(∥<em>V</em>∥∥<em>E</em>∥<sup>2</sup>)</span>.</p>
 <h3 id="the-distance-algorithm-and-its-correctness">The distance
 algorithm and its correctness</h3>
 <p>We can modify the eccentricity algorithm slightly to get the distance
@@ -209,18 +211,18 @@ radius and the diameter</h3>
 given set of edges</p>
 <pre><code>(defun vertices (x) (sort (remove-duplicates (reduce &#39;append x)) &#39;&lt;))
 VERTICES</code></pre>
-<p>Let us test it on <span class="math inline">\(G\)</span></p>
+<p>Let us test it on <span class="math inline"><em>G</em></span></p>
 <pre><code>(vertices G)
 (0 1 2 3 4 5 6)</code></pre>
 <p>Now, I need a function which lists the neighbors of a vertex <span
-class="math inline">\(x\)</span>.</p>
+class="math inline"><em>x</em></span>.</p>
 <pre><code>(defun neighbors (x G) 
    (let ((H (append G (mapcar &#39;reverse G)))
          res)
       (dolist (y H) (if (equal (cadr y) x) (push (car y) res)))
       (remove-duplicates res)))
 NEIGHBORS</code></pre>
-<p>Let us test it on <span class="math inline">\(G\)</span>.</p>
+<p>Let us test it on <span class="math inline"><em>G</em></span>.</p>
 <pre><code>(mapcar (lambda (x) (neighbors x G)) (vertices G))
 ((6 1) (3 2 0) (6 4 1) (5 4 1) (5 2 3) (3 4) (2 0))</code></pre>
 <p>Next, I am going to need a function which removes the edges adjacent
@@ -228,7 +230,7 @@ to a given vertex</p>
 <pre><code>(defun remove-adjacent (x G) 
    (remove-if (lambda (u) (or (equal (car u) x) (equal (cadr u) x))) G))
 REMOVE-ADJACENT</code></pre>
-<p>and we test if on <span class="math inline">\(G\)</span>.</p>
+<p>and we test if on <span class="math inline"><em>G</em></span>.</p>
 <pre><code>(remove-adjacent 2 G)
 ((0 1) (1 3) (3 4) (4 5) (3 5) (0 6))</code></pre>
 <figure data-orig-height="443" data-orig-width="215">
@@ -248,7 +250,7 @@ functions.</p>
          (dolist (y A) (setf H (remove-adjacent y H)))
          (setf A B))))
 ECCENTRICITY</code></pre>
-<p>And we test it on <span class="math inline">\(G\)</span>.</p>
+<p>And we test it on <span class="math inline"><em>G</em></span>.</p>
 <pre><code>(mapcar (lambda (x) (eccentricity x G)) (vertices G))
 (4 3 3 3 3 4 4)</code></pre>
 <p>That little piece of code is also the basis of our calculation of the
@@ -258,7 +260,7 @@ then the diameter as a list.</p>
     (let ((base (mapcar (lambda (x) (eccentricity x G)) (vertices G))))
        (list (reduce &#39;min base) (reduce &#39;max base))))
 RADIUS-DIAMETER</code></pre>
-<p>And we test it on <span class="math inline">\(G\)</span>.</p>
+<p>And we test it on <span class="math inline"><em>G</em></span>.</p>
 <pre><code>(radius-diameter G)
 (3 4)</code></pre>
 <h3 id="the-distance-function">The distance function</h3>
@@ -274,7 +276,7 @@ the implementation of the eccentricity function</p>
          (dolist (y A) (setf H (remove-adjacent y H)))
          (setf A B))))
 DISTANCE</code></pre>
-<p>Let us test this on <span class="math inline">\(G\)</span></p>
+<p>Let us test this on <span class="math inline"><em>G</em></span></p>
 <pre><code>(loop for i from 1 to 12 collect 
    (let ((x (random 6)) (y (random 6))) (list x y (distance x y G))))
 ((5 1 2) (3 0 2) (1 0 1) (3 1 1) (2 4 1) (4 5 1) (3 3 0) (5 5 0) (1 3 1)

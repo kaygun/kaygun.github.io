@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -63,22 +60,22 @@ lisp</h1>
 problem and the algorithm</h2>
 <p>The setup is the same as in my <a
 href="clean/2012-10-10-an.html">k-means clustering post</a>. I have a
-metric space <span class="math inline">\((X,d)\)</span> and a finite
-collection of points <span class="math inline">\(D =
-{x_1,\ldots,x_N}\)</span> which I would like to write as a union of
-disjoint subsets <span class="math display">\[ D = D_1 \sqcup \cdots
-\sqcup D_k \]</span> This time, unlike the k-means algorithm, the number
-k is not fixed at the beginning. This time we feed the algorithm a
-number which I will call <em>cluster diameter</em>.</p>
+metric space <span class="math inline">(<em>X</em>,<em>d</em>)</span>
+and a finite collection of points <span
+class="math inline"><em>D</em> = <em>x</em><sub>1</sub>, …, <em>x</em><sub><em>N</em></sub></span>
+which I would like to write as a union of disjoint subsets <span
+class="math display"><em>D</em> = <em>D</em><sub>1</sub> ⊔ ⋯ ⊔ <em>D</em><sub><em>k</em></sub></span>
+This time, unlike the k-means algorithm, the number k is not fixed at
+the beginning. This time we feed the algorithm a number which I will
+call <em>cluster diameter</em>.</p>
 <p>The diameter of a set of points in a metric space is defined by <span
-class="math display">\[
-diam© = \sup_{x,y\in C} d(x,y) \]</span> If <span
-class="math inline">\(C\)</span> happens to be finite then this is just
-the maximumum of all possible distances one can write using pairs of
-elements from the set <span class="math inline">\(C\)</span>. I will
-need an auxiliary function I will call <code>proximity</code> which is
-defined as <span class="math display">\[
-\text{proximity}(x,C) = \sup_{y\in C} d(x,y) \]</span></p>
+class="math display"><em>d</em><em>i</em><em>a</em><em>m</em>© = sup<sub><em>x</em>, <em>y</em> ∈ <em>C</em></sub><em>d</em>(<em>x</em>,<em>y</em>)</span>
+If <span class="math inline"><em>C</em></span> happens to be finite then
+this is just the maximumum of all possible distances one can write using
+pairs of elements from the set <span
+class="math inline"><em>C</em></span>. I will need an auxiliary function
+I will call <code>proximity</code> which is defined as <span
+class="math display">proximity(<em>x</em>,<em>C</em>) = sup<sub><em>y</em> ∈ <em>C</em></sub><em>d</em>(<em>x</em>,<em>y</em>)</span></p>
 <p>The fixed-radius near neighbor clustering algorithm will form
 clusters of points whose diameters are less than or equal to a given
 radius.</p>

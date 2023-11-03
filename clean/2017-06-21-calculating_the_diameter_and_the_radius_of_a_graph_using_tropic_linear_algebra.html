@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -64,14 +61,14 @@ the Diameter and the Radius of a Graph Using Tropic Linear Algebra</h1>
 is the length of the shortest path between x and y.</p>
 <p>Then we define the eccentricity of a vertex x as the maximum of all
 possible distances from x</p>
-<p><span class="math display">\[ Ecc(x)=max_{y\in V}d(x,y) \]</span></p>
+<p><span
+class="math display"><em>E</em><em>c</em><em>c</em>(<em>x</em>) = <em>m</em><em>a</em><em>x</em><sub><em>y</em> ∈ <em>V</em></sub><em>d</em>(<em>x</em>,<em>y</em>)</span></p>
 <p>Then the diameter and radius of the graph is defined as </p>
-<p><span class="math display">\[ Diam(G) = max_{x\in V} Ecc(x) =
-max_{x,y\in V} d(x,y) \]</span></p>
+<p><span
+class="math display"><em>D</em><em>i</em><em>a</em><em>m</em>(<em>G</em>) = <em>m</em><em>a</em><em>x</em><sub><em>x</em> ∈ <em>V</em></sub><em>E</em><em>c</em><em>c</em>(<em>x</em>) = <em>m</em><em>a</em><em>x</em><sub><em>x</em>, <em>y</em> ∈ <em>V</em></sub><em>d</em>(<em>x</em>,<em>y</em>)</span></p>
 <p>and</p>
-<p><span class="math display">\[ Rad(G) = min_{x\in V} Ecc(x) =
-min_{x\in V} max_{y\in V}
-d(x,y) \]</span></p>
+<p><span
+class="math display"><em>R</em><em>a</em><em>d</em>(<em>G</em>) = <em>m</em><em>i</em><em>n</em><sub><em>x</em> ∈ <em>V</em></sub><em>E</em><em>c</em><em>c</em>(<em>x</em>) = <em>m</em><em>i</em><em>n</em><sub><em>x</em> ∈ <em>V</em></sub><em>m</em><em>a</em><em>x</em><sub><em>y</em> ∈ <em>V</em></sub><em>d</em>(<em>x</em>,<em>y</em>)</span></p>
 <p>Today’s post is a amalgamation of my two previous posts: <a
 href="clean/2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited.html">one
 on eccentricity, radius and diameter of a graph</a> and <a
@@ -87,32 +84,35 @@ linear algebra?</p>
 <h2 id="tropic-multiplication-of-matrices">Tropic multiplication of
 matrices</h2>
 <p>Given two matrices of the correct dimensions, say <span
-class="math inline">\(a=(a_{ij})\)</span> and <span
-class="math inline">\(b=(b_{ij})\)</span>, their tropic product is
-computed as </p>
-<p><span class="math display">\[ c_{ij}=min_{k=1,...,N} a_{ik}+b_{kj}
-\]</span></p>
+class="math inline"><em>a</em> = (<em>a</em><sub><em>i</em><em>j</em></sub>)</span>
+and <span
+class="math inline"><em>b</em> = (<em>b</em><sub><em>i</em><em>j</em></sub>)</span>,
+their tropic product is computed as </p>
+<p><span
+class="math display"><em>c</em><sub><em>i</em><em>j</em></sub> = <em>m</em><em>i</em><em>n</em><sub><em>k</em> = 1, ..., <em>N</em></sub><em>a</em><sub><em>i</em><em>k</em></sub> + <em>b</em><sub><em>k</em><em>j</em></sub></span></p>
 <h2 id="adjacency-matrix-of-a-graph">Adjacency matrix of a graph</h2>
 <p>Given a graph G=(V,E) where |V|=n, one can represent G using an n×n
-matrix <span class="math inline">\(a=(a_{ij})\)</span> as follows: for
-every vertex i,j=1,…,n, if there is an edge between i and j then set the
-<span class="math inline">\(a_{ij}=a_{ji}=1\)</span>, and set it +∞ if
-there is no such an edge. Loops (self connecting edges) have weight
-0.</p>
+matrix <span
+class="math inline"><em>a</em> = (<em>a</em><sub><em>i</em><em>j</em></sub>)</span>
+as follows: for every vertex i,j=1,…,n, if there is an edge between i
+and j then set the <span
+class="math inline"><em>a</em><sub><em>i</em><em>j</em></sub> = <em>a</em><sub><em>j</em><em>i</em></sub> = 1</span>,
+and set it +∞ if there is no such an edge. Loops (self connecting edges)
+have weight 0.</p>
 <h2 id="the-tropic-powers-of-the-adjacency-matrix">The tropic powers of
 the adjacency matrix</h2>
 <p>If we multiply the adjacency matrix <span
-class="math inline">\(a\)</span> with itself tropically, we find the
-price of length 2 paths between vertices. Here the price of each edge is
-1. If we multiply <span class="math inline">\(a\)</span> with itself
-(n−1) times we would find the length of the cheapest path between any
-two vertices. This is an easy application of the <a
+class="math inline"><em>a</em></span> with itself tropically, we find
+the price of length 2 paths between vertices. Here the price of each
+edge is 1. If we multiply <span class="math inline"><em>a</em></span>
+with itself (n−1) times we would find the length of the cheapest path
+between any two vertices. This is an easy application of the <a
 href="https://en.wikipedia.org/wiki/Pigeonhole_principle">pigeon hole
 principle</a>: the longest path one can write without loops or cycles
 can be of length n−1 in a graph with n vertices.</p>
 <p>So, maximum of each colon in the (n−1)-st tropic power of <span
-class="math inline">\(a\)</span> will give us the eccentricity of the
-corresponding vertex.</p>
+class="math inline"><em>a</em></span> will give us the eccentricity of
+the corresponding vertex.</p>
 <h2 id="an-implementation-in-common-lisp">An implementation in Common
 Lisp</h2>
 <p>First, I am going to need a function that converts a graph given as a

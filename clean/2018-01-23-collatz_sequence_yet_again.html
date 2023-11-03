@@ -20,6 +20,7 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -46,10 +47,6 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -58,22 +55,25 @@
 <h1 id="collatz-sequence-yet-again">Collatz sequence (yet again)</h1>
 <h2 id="description-of-the-problem">Description of the problem:</h2>
 <p>I will consider the following function </p>
-<p><span class="math display">\[ f(1) = 1, \quad f(n) = f(n/2) \text{ if
-$n$ is even },\quad
-f(n) = 3n+1  \text{ otherwise } \]</span> </p>
-<p>and the recursive sequence <span class="math display">\[ a_{n+1} =
-f(a_n) \]</span> with an arbitrary initial value <span
-class="math inline">\(a_0\)</span>.</p>
+<p><span
+class="math display"><em>f</em>(1) = 1,  <em>f</em>(<em>n</em>) = <em>f</em>(<em>n</em>/2)
+if <em>n</em> is even ,  <em>f</em>(<em>n</em>) = 3<em>n</em> + 1
+otherwise </span> </p>
+<p>and the recursive sequence <span
+class="math display"><em>a</em><sub><em>n</em> + 1</sub> = <em>f</em>(<em>a</em><sub><em>n</em></sub>)</span> with
+an arbitrary initial value <span
+class="math inline"><em>a</em><sub>0</sub></span>.</p>
 <p>Famous Collatz conjecture states that this sequence always stabilizes
 with tail being an infinite sequence of 1’s.</p>
 <p>Today, I am interested in the expected value of the 2-part of the
 sequence until it terminates at 1. In particular, I would like to
-calculate <span class="math display">\[ E(a_0) = \frac{1}{\ell(a_0)}
-\sum_n \nu_2(a_n) \]</span> where <span class="math display">\[ \nu_2(n)
-= \max\{m\in\mathbb{N}\mid 2^m \text{
-divides } n\} \]</span> and <span
-class="math inline">\(\ell(a_0)\)</span> is the length of the Collatz
-sequence starting at <span class="math inline">\(a_0\)</span>.</p>
+calculate <span class="math display">$$ E(a_0) = \frac{1}{\ell(a_0)}
+\sum_n \nu_2(a_n) $$</span> where <span
+class="math display"><em>ν</em><sub>2</sub>(<em>n</em>) = max {<em>m</em> ∈ ℕ ∣ 2<sup><em>m</em></sup>
+divides <em>n</em>}</span> and <span
+class="math inline">ℓ(<em>a</em><sub>0</sub>)</span> is the length of
+the Collatz sequence starting at <span
+class="math inline"><em>a</em><sub>0</sub></span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>Let us write our functions</p>
 <pre><code>(defun f(n)
