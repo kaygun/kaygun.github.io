@@ -21,6 +21,69 @@
       vertical-align: middle;
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -52,6 +115,182 @@
   <![endif]-->
 </head>
 <body>
+<h1 id="graph-algorithms-in-jgrapht-with-common-lisp">Graph Algorithms
+in JGraphT with Common Lisp</h1>
+<h2 id="description-of-the-problem">Description of the problem</h2>
+<p>I <a
+href="https://kaygun.github.io/clean/2023-01-14-graph_algorithms_in_clojure_with_jgrapht.html">wrote
+earlier</a> about interfacing with <a
+href="https://jgrapht.org">jgrapht</a> library from clojure. Today it’s
+common lisp’s turn :)</p>
+<h2 id="java-interop-with-abcl">Java Interop with ABCL</h2>
+<p>If you need to build a bridge between a java library and lisp, your
+best option is <a href="https://abcl.org">abcl</a>, or <a
+href="https://www.gnu.org/software/kawa">kawa</a> if you prefer writing
+in scheme. I’ve used it before with <a
+href="https://kaygun.github.io/clean/2016-08-13-using_weka_within_lisp.html">Weka</a>
+and <a
+href="https://kaygun.github.io/clean/2016-04-24-using_word2vec_from_common_lisp.html">Word2Vec</a>.
+So, for today’s post I am using ABCL.</p>
+<h2 id="loading-up-jgrapht">Loading up JGraphT</h2>
+<p>Let us start with loading up the libraries we need:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">mapc</span> <span class="op">#&#39;</span>require &#39;(:abcl-asdf :java))</span></code></pre></div>
+<p>I like the <a href="">thread first macro</a> from clojure, and I am
+going to use this quite a lot today.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defmacro</span><span class="fu"> -&gt; </span>(x &amp;<span class="kw">rest</span> forms)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">dolist</span> (f forms x)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">if</span> (<span class="kw">listp</span> f)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">setf</span> x (<span class="kw">append</span> (<span class="kw">list</span> (<span class="kw">car</span> f) x) (<span class="kw">cdr</span> f)))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">setf</span> x (<span class="kw">list</span> f x)))))</span></code></pre></div>
+<p>Next up the java stuff we need:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(-&gt; <span class="st">&quot;org.jgrapht/jgrapht-core&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    abcl-asdf:resolve </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    abcl-asdf:as-classpath</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    java:add-to-classpath)</span></code></pre></div>
+<h2 id="random-graphs">Random Graphs</h2>
+<p>JGraphT has some good <a
+href="https://jgrapht.org/javadoc-SNAPSHOT/org.jgrapht.core/org/jgrapht/generate/package-summary.html">graph
+generation functions</a>, especially the <a
+href="https://jgrapht.org/javadoc-SNAPSHOT/org.jgrapht.core/org/jgrapht/generate/NamedGraphGenerator.html">named
+graph generation functions</a>. You should check them out. For today’s
+purposes the following two should be enough:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> random-graph </span>(n p &amp;optional</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                           (graph-class :SimpleGraph)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                           (directed-p <span class="kw">nil</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let*</span> ((supplier (-&gt; :SupplierUtil jss:find-java-class jnew))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>         (G (jnew (jss:find-java-class graph-class)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                  (#<span class="st">&quot;createIntegerSupplier&quot;</span> supplier)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                  (#<span class="st">&quot;createDefaultEdgeSupplier&quot;</span> supplier)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                  (jnew (java:jclass <span class="st">&quot;java.lang.Boolean&quot;</span>) directed-p))))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    (-&gt; :GnpRandomGraphGenerator jss:find-java-class (jnew <span class="dv">20</span> <span class="fl">0.3</span>) (#<span class="st">&quot;generateGraph&quot;</span> G))</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    G))</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> random-weighted-graph </span>(n p &amp;optional</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                                   (graph-class :SimpleWeightedGraph)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                                   (directed-p <span class="kw">nil</span>))</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let*</span> ((supplier (-&gt; :SupplierUtil jss:find-java-class jnew))</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>         (G (jnew (jss:find-java-class graph-class)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                  (#<span class="st">&quot;createIntegerSupplier&quot;</span> supplier)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                  (#<span class="st">&quot;createDefaultWeightedEdgeSupplier&quot;</span> supplier))))</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    (-&gt; :GnpRandomGraphGenerator jss:find-java-class (jnew <span class="dv">20</span> <span class="fl">0.3</span>) (#<span class="st">&quot;generateGraph&quot;</span> G))</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    G))</span></code></pre></div>
+<h2 id="minimum-spanning-trees">Minimum Spanning Trees</h2>
+<p>I’ll start with two minimum spanning tree algorithms: <a
+href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm">Kruskal’s</a>
+and <a
+href="https://en.wikipedia.org/wiki/Prim%27s_algorithm">Prim’s</a>
+algorithms. I did Kruskal’s algorithm in <a
+href="https://kaygun.github.io/clean/2021-02-14-kruskals_algorithm_in_common_lisp.html">lisp</a>
+and in <a
+href="https://kaygun.github.io/clean/2021-02-13-kruskals_algorithm_implemented_in_clojure.html">clojure</a>
+here.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-graph <span class="dv">40</span> <span class="fl">0.3</span> :SimpleGraph))</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>       (tree (-&gt; :KruskalMinimumSpanningTree jss:find-java-class (jnew G) (#<span class="st">&quot;getSpanningTree&quot;</span>))))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">mapcar</span> #<span class="st">&quot;toString&quot;</span> (jss:set-to-list (#<span class="st">&quot;getEdges&quot;</span> tree))))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="st">&quot;(3 : 16)&quot;</span> <span class="st">&quot;(3 : 14)&quot;</span> <span class="st">&quot;(3 : 10)&quot;</span> <span class="st">&quot;(1 : 3)&quot;</span> <span class="st">&quot;(5 : 7)&quot;</span> <span class="st">&quot;(1 : 12)&quot;</span> <span class="st">&quot;(0 : 11)&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;(2 : 15)&quot;</span> <span class="st">&quot;(1 : 19)&quot;</span> <span class="st">&quot;(0 : 3)&quot;</span> <span class="st">&quot;(0 : 8)&quot;</span> <span class="st">&quot;(4 : 18)&quot;</span> <span class="st">&quot;(6 : 17)&quot;</span> <span class="st">&quot;(0 : 2)&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;(0 : 9)&quot;</span> <span class="st">&quot;(2 : 7)&quot;</span> <span class="st">&quot;(2 : 13)&quot;</span> <span class="st">&quot;(4 : 17)&quot;</span> <span class="st">&quot;(0 : 4)&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-graph <span class="dv">40</span> <span class="fl">0.3</span> :SimpleGraph))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>      (tree (-&gt; :PrimMinimumSpanningTree jss:find-java-class (jnew G) (#<span class="st">&quot;getSpanningTree&quot;</span>))))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">mapcar</span> #<span class="st">&quot;toString&quot;</span> (jss:set-to-list (#<span class="st">&quot;getEdges&quot;</span> tree))))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="st">&quot;(10 : 14)&quot;</span> <span class="st">&quot;(1 : 8)&quot;</span> <span class="st">&quot;(7 : 17)&quot;</span> <span class="st">&quot;(0 : 13)&quot;</span> <span class="st">&quot;(3 : 11)&quot;</span> <span class="st">&quot;(12 : 14)&quot;</span>  <span class="st">&quot;(6 : 13)&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;(5 : 6)&quot;</span> <span class="st">&quot;(0 : 8)&quot;</span> <span class="st">&quot;(6 : 14)&quot;</span> <span class="st">&quot;(13 : 19)&quot;</span> <span class="st">&quot;(0 : 3)&quot;</span> <span class="st">&quot;(2 : 13)&quot;</span> <span class="st">&quot;(6 : 9)&quot;</span> <span class="st">&quot;(1 : 7)&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;(13 : 16)&quot;</span> <span class="st">&quot;(8 : 15)&quot;</span> <span class="st">&quot;(3 : 18)&quot;</span> <span class="st">&quot;(4 : 6)&quot;</span>)</span></code></pre></div>
+<h2 id="stoer-wagner-minimum-cut">Stoer-Wagner Minimum Cut</h2>
+<p>I wrote <a
+href="https://en.wikipedia.org/wiki/Stoer%E2%80%93Wagner_algorithm">Stoer-Wagner</a>
+in <a
+href="https://kaygun.github.io/clean/2021-02-24-stoer-wagner_algorithm_in_clojure.html">Clojure</a>.
+Let us see how this is done in ABCL:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-graph <span class="dv">30</span> <span class="fl">0.9</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>       (cut (-&gt; :StoerWagnerMinimumCut jss:find-java-class (jnew G) (#<span class="st">&quot;minCut&quot;</span>))))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  (#<span class="st">&quot;toString&quot;</span> cut))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;[16]&quot;</span></span></code></pre></div>
+<h2 id="shortest-path-algorithms">Shortest Path Algorithms</h2>
+<p>I did not implement Dijkstra in lisp on this blog. But I did some
+interesting <a
+href="https://kaygun.github.io/clean/2015-07-22-cheapest_paths_via_tropic_matrices.html">tropic
+semi-ring matrix implementation of shortest path</a>.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-graph <span class="dv">140</span> <span class="fl">0.8</span> :SimpleDirectedGraph))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>       (S (jss:set-to-list (#<span class="st">&quot;vertexSet&quot;</span> G)))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>       (a (<span class="kw">car</span> S))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>       (b (<span class="kw">car</span> (<span class="kw">reverse</span> S)))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>       (path (-&gt; :DijkstraShortestPath jss:find-java-class (jnew G) (#<span class="st">&quot;getPath&quot;</span> a b))))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  (#<span class="st">&quot;toString&quot;</span> path))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;[(0 : 3), (3 : 19)]&quot;</span></span></code></pre></div>
+<p>Here is an extra: <a
+href="https://en.wikipedia.org/wiki/Johnson%27s_algorithm#:~:text=Johnson&#39;s%20algorithm%20is%20a%20way,negative%2Dweight%20cycles%20may%20exist.">Johnson’s
+shortest path algorithm</a></p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-graph <span class="dv">200</span> <span class="fl">0.4</span> :SimpleDirectedGraph))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>       (S (jss:set-to-list (#<span class="st">&quot;vertexSet&quot;</span> G)))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>       (a (<span class="kw">car</span> S))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>       (b (<span class="kw">car</span> (<span class="kw">reverse</span> S)))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>       (path (-&gt; :JohnsonShortestPaths jss:find-java-class (jnew G) (#<span class="st">&quot;getPath&quot;</span> a b))))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  (#<span class="st">&quot;toString&quot;</span> path))</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;[(0 : 7), (7 : 19)]&quot;</span></span></code></pre></div>
+<h2 id="maximum-flow-algorithms">Maximum Flow Algorithms</h2>
+<p>I did <a
+href="https://en.wikipedia.org/wiki/Edmonds%E2%80%93Karp_algorithm">Edmond-Karp</a>
+in <a
+href="https://kaygun.github.io/clean/2014-11-22-an_implementation_of_ford-fulkerson_algorithm_in_common_lisp.html">lisp</a>
+and <a
+href="https://kaygun.github.io/clean/2019-05-01-an_implementation_of_ford-fulkerson_algorithm_in_clojure.html">Clojure</a>
+here. Let’s see how this looks like in JGraphT.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-weighted-graph <span class="dv">120</span> <span class="fl">0.5</span> :SimpleWeightedGraph))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>       (S (-&gt; G (#<span class="st">&quot;vertexSet&quot;</span>) jss:set-to-list (<span class="kw">sort</span> <span class="op">#&#39;</span>&lt;)))</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>       (a (<span class="kw">car</span> S))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>       (b (<span class="kw">car</span> (<span class="kw">reverse</span> S)))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>       (flow (-&gt; :EdmondsKarpMFImpl jss:find-java-class (jnew G) (#<span class="st">&quot;getMaximumFlow&quot;</span> a b))))</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  (#<span class="st">&quot;toString&quot;</span> flow))</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;Flow Value: 7.0</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="st">Flow map:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">{(1 : 2)=0.0, (6 : 18)=0.0, (1 : 10)=1.0, (2 : 19)=1.0, (0 : 2)=1.0, (8 : 11)=0.0, (15 : 18)=0.0, (4 : 11)=1.0, (0 : 10)=1.0, (3 : 9)=0.0, (4 : 19)=1.0, (13 : 19)=0.0, (4 : 13)=0.0, (1 : 16)=1.0, (1 : 3)=0.0, (4 : 14)=0.0, (5 : 19)=1.0, (15 : 17)=0.0, (4 : 8)=0.0, (12 : 18)=0.0, (5 : 14)=0.0, (6 : 7)=0.0, (12 : 19)=1.0, (3 : 10)=0.0, (18 : 19)=1.0, (0 : 18)=1.0, (1 : 18)=0.0, (10 : 15)=0.0, (16 : 17)=0.0, (5 : 11)=0.0, (6 : 9)=0.0, (8 : 17)=0.0, (10 : 18)=0.0, (4 : 18)=0.0, (1 : 4)=0.0, (8 : 12)=0.0, (2 : 9)=0.0, (7 : 13)=0.0, (1 : 19)=1.0, (3 : 15)=0.0, (9 : 11)=0.0, (3 : 14)=0.0, (1 : 5)=1.0, (7 : 18)=0.0, (4 : 15)=1.0, (12 : 17)=0.0, (1 : 13)=0.0, (0 : 12)=1.0, (6 : 11)=0.0, (0 : 4)=1.0, (4 : 16)=0.0, (5 : 9)=0.0, (11 : 19)=1.0, (0 : 16)=1.0, (2 : 17)=0.0, (7 : 16)=0.0, (2 : 15)=0.0, (0 : 15)=1.0, (9 : 16)=0.0, (7 : 8)=0.0, (12 : 15)=0.0, (8 : 14)=0.0}&quot;</span></span></code></pre></div>
+<p>Here is an extra.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-weighted-graph <span class="dv">120</span> <span class="fl">0.5</span> :SimpleWeightedGraph))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>       (S (-&gt; G (#<span class="st">&quot;vertexSet&quot;</span>) jss:set-to-list (<span class="kw">sort</span> <span class="op">#&#39;</span>&lt;)))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>       (a (<span class="kw">car</span> S))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>       (b (<span class="kw">car</span> (<span class="kw">reverse</span> S)))</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>       (flow (-&gt; :PushRelabelMFImpl jss:find-java-class (jnew G) (#<span class="st">&quot;getMaximumFlow&quot;</span> a b))))</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  (#<span class="st">&quot;toString&quot;</span> flow))</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;Flow Value: 4.0</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="st">Flow map:</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="st">{(16 : 18)=0.0, (4 : 13)=0.0, (5 : 7)=0.0, (2 : 15)=0.0, (1 : 13)=1.0, (1 : 9)=0.0, (11 : 13)=1.0, (3 : 18)=0.0, (5 : 13)=0.0, (5 : 12)=1.0, (5 : 15)=0.0, (12 : 14)=0.0, (6 : 18)=0.0, (9 : 17)=0.0, (6 : 12)=0.0, (1 : 4)=0.0, (1 : 17)=0.0, (12 : 19)=1.0, (1 : 3)=0.0, (1 : 15)=0.0, (1 : 12)=0.0, (10 : 19)=0.0, (0 : 13)=1.0, (5 : 9)=0.0, (0 : 2)=1.0, (7 : 9)=0.0, (3 : 17)=0.0, (17 : 19)=1.0, (13 : 18)=0.0, (13 : 19)=1.0, (3 : 10)=0.0, (0 : 17)=1.0, (6 : 7)=0.0, (0 : 11)=1.0, (2 : 18)=0.0, (8 : 19)=0.0, (5 : 11)=1.0, (8 : 18)=0.0, (2 : 11)=1.0, (7 : 15)=0.0, (7 : 11)=0.0, (9 : 18)=0.0, (1 : 19)=1.0, (5 : 17)=0.0, (10 : 14)=0.0, (3 : 15)=0.0, (9 : 11)=0.0, (6 : 19)=0.0, (4 : 7)=0.0, (8 : 17)=0.0, (8 : 9)=0.0, (16 : 17)=0.0, (15 : 17)=0.0, (11 : 14)=0.0}&quot;</span></span></code></pre></div>
+<h2 id="clique-finding">Clique Finding</h2>
+<p>I did <a
+href="https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm">Bron-Kerbosch</a>
+in <a
+href="https://kaygun.github.io/clean/2019-05-06-bron-kerbosch_algorithm_in_clojure.html">clojure</a>
+here. Let us see how this looks like in JGraphT:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((G (random-graph <span class="dv">140</span> <span class="fl">0.5</span> :SimpleGraph))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>       (cliques (-&gt; :BronKerboschCliqueFinder jss:find-java-class (jnew G) (#<span class="st">&quot;maximumIterator&quot;</span>)))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>       (res <span class="kw">nil</span>))</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">do</span> ((clique (#<span class="st">&quot;next&quot;</span> cliques) (#<span class="st">&quot;next&quot;</span> cliques)))</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="kw">not</span> (#<span class="st">&quot;hasNext&quot;</span> cliques)) res)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">push</span> (jss:set-to-list clique) res)))</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>((<span class="dv">18</span> <span class="dv">13</span> <span class="dv">14</span>) (<span class="dv">13</span> <span class="dv">14</span> <span class="dv">15</span>) (<span class="dv">18</span> <span class="dv">11</span> <span class="dv">14</span>) (<span class="dv">16</span> <span class="dv">10</span> <span class="dv">15</span>) (<span class="dv">10</span> <span class="dv">13</span> <span class="dv">15</span>) (<span class="dv">9</span> <span class="dv">13</span> <span class="dv">15</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> (<span class="dv">17</span> <span class="dv">7</span> <span class="dv">14</span>) (<span class="dv">16</span> <span class="dv">7</span> <span class="dv">12</span>) (<span class="dv">7</span> <span class="dv">12</span> <span class="dv">14</span>) (<span class="dv">16</span> <span class="dv">7</span> <span class="dv">10</span>) (<span class="dv">7</span> <span class="dv">9</span> <span class="dv">12</span>) (<span class="dv">18</span> <span class="dv">6</span> <span class="dv">14</span>) (<span class="dv">17</span> <span class="dv">6</span> <span class="dv">14</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> (<span class="dv">18</span> <span class="dv">6</span> <span class="dv">8</span>) (<span class="dv">6</span> <span class="dv">8</span> <span class="dv">9</span>) (<span class="dv">18</span> <span class="dv">19</span> <span class="dv">5</span>) (<span class="dv">18</span> <span class="dv">5</span> <span class="dv">11</span>) (<span class="dv">16</span> <span class="dv">5</span> <span class="dv">7</span>) (<span class="dv">17</span> <span class="dv">3</span> <span class="dv">6</span>) (<span class="dv">2</span> <span class="dv">19</span> <span class="dv">14</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a> (<span class="dv">17</span> <span class="dv">2</span> <span class="dv">14</span>) (<span class="dv">16</span> <span class="dv">1</span> <span class="dv">15</span>) (<span class="dv">16</span> <span class="dv">1</span> <span class="dv">12</span>) (<span class="dv">16</span> <span class="dv">1</span> <span class="dv">5</span>) (<span class="dv">0</span> <span class="dv">16</span> <span class="dv">15</span>) (<span class="dv">0</span> <span class="dv">16</span> <span class="dv">5</span>))</span></code></pre></div>
 <div id="footer">
 <p><span id="timestamp">November 03, 2023 09:45:59 PM</span></p>
 </div>
