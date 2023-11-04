@@ -127,16 +127,20 @@ common lisp’s turn :)</p>
 best option is <a href="https://abcl.org">abcl</a>, or <a
 href="https://www.gnu.org/software/kawa">kawa</a> if you prefer writing
 in scheme. I’ve used it before with <a
-href="https://kaygun.github.io/clean/2016-08-13-using_weka_within_lisp.html">Weka</a>
+href="https://kaygun.github.io/clean/2016-08-13-using_weka_within_lisp.html">Weka</a>,
+<a
+href="https://kaygun.github.io/clean/2016-04-24-using_word2vec_from_common_lisp.html">Word2Vec</a>
 and <a
-href="https://kaygun.github.io/clean/2016-04-24-using_word2vec_from_common_lisp.html">Word2Vec</a>.
+href="https://kaygun.github.io/clean/2020-04-01-using_javaplex_with_clojure.html">JavaPlex</a>.
 So, for today’s post I am using ABCL.</p>
 <h2 id="loading-up-jgrapht">Loading up JGraphT</h2>
 <p>Let us start with loading up the libraries we need:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">mapc</span> <span class="op">#&#39;</span>require &#39;(:abcl-asdf :java))</span></code></pre></div>
-<p>I like the <a href="">thread first macro</a> from clojure, and I am
-going to use this quite a lot today.</p>
+<p>I like the <a
+href="https://kaygun.github.io/clean/2015-05-03-threading_macros_in_common_lisp.html">thread
+first macro</a> from clojure, and I am going to use this quite a lot
+today.</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defmacro</span><span class="fu"> -&gt; </span>(x &amp;<span class="kw">rest</span> forms)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">dolist</span> (f forms x)</span>
