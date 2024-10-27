@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="invertingformalpowerseries">Inverting formal power series</h1>
@@ -82,9 +80,9 @@ applies to the case with real or imaginary coefficients.</p>
 <p>Imagine we have an integer sequence <span
 class="math inline">\(a_n\)</span> for <span class="math inline">\(n\in
 {\mathbb N}\)</span> and I formed a generating function <span
-class="math inline">\(\sum_{n\in{\mathbb N}} a_n t^n\)</span>. What I
-want to do is to invert the series with respect to multiplication. That
-is, I want another formal power series <span
+class="math inline">\(\sum_{n\in{\mathbb N}} a_n
+t^n\)</span>. What I want to do is to invert the series with respect to
+multiplication. That is, I want another formal power series <span
 class="math inline">\(\sum_{n\in{\mathbb N}} b_n t^n\)</span> such that
 <span class="math display">\[ 1 =
 \sum_{n=0}^\infty \delta^0_n t^n = \left(\sum_{n\in {\mathbb
@@ -127,8 +125,9 @@ integer sequence.</p>
 
      return(res)</code></pre>
 <p>Let us check the algorithm on few known cases. Let us start with
-<span class="math inline">\(f(t) = 1 - t\)</span> whose inverse is the
-geometric series <span class="math inline">\(\sum_{n=0}^\infty
+<span class="math inline">\(f(t)
+= 1 - t\)</span> whose inverse is the geometric series <span
+class="math inline">\(\sum_{n=0}^\infty
 t^n\)</span>. I will print only the first 24 coefficients. Since this
 the recursion tree is complex, the computation time is abysmal.</p>
 <pre><code> print [inv(i,[1,-1]) for i in range(24)]

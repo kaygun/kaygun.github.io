@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="a-topology-problem">A topology problem</h1>
@@ -79,9 +77,10 @@ compact normal.</p>
 subset <span class="math inline">\(K\)</span> of <span
 class="math inline">\(X\)</span> is compact.</h3>
 <p>Assume <span class="math inline">\(K\subseteq X\)</span> is compact,
-and consider <span class="math inline">\(\pi( K )\subseteq Y\)</span>.
-Take an open cover <span class="math inline">\(\mathcal{U}\)</span> of
-<span class="math inline">\(\pi( K )\)</span>. Then <span
+and consider <span class="math inline">\(\pi( K )\subseteq
+Y\)</span>. Take an open cover <span
+class="math inline">\(\mathcal{U}\)</span> of <span
+class="math inline">\(\pi( K )\)</span>. Then <span
 class="math display">\[
 \pi^{-1}\mathcal{U} = \left\{\pi^{-1}(U)\mid U\in\mathcal{U}
 \right\} \]</span> is an open cover of <span
@@ -161,11 +160,12 @@ subsets <span class="math inline">\(U_i\)</span> for <span
 class="math inline">\(i=1,2\)</span> such that <span
 class="math inline">\(\pi^{-1}(A_i)\subseteq U_i\)</span>. Then since
 <span class="math inline">\(\pi\)</span> is surjective we get <span
-class="math inline">\(A_i^c = \pi\pi^{-1}(A_i^c) \supseteq
-\pi(U_i^c)\)</span>. Since <span class="math inline">\(\pi\)</span> is a
-closed map, <span class="math inline">\(\pi(U_i^c)\)</span> is closed,
-and therefore, <span class="math inline">\(\pi(U_i^c)^c\)</span> is open
-with the property that <span class="math inline">\(A_i\subseteq
+class="math inline">\(A_i^c = \pi\pi^{-1}(A_i^c)
+\supseteq \pi(U_i^c)\)</span>. Since <span
+class="math inline">\(\pi\)</span> is a closed map, <span
+class="math inline">\(\pi(U_i^c)\)</span> is closed, and therefore,
+<span class="math inline">\(\pi(U_i^c)^c\)</span> is open with the
+property that <span class="math inline">\(A_i\subseteq
 \pi(U_i^c)^c\)</span>. All that remains is to check the disjointness of
 <span class="math inline">\(\pi(U_1^c)^c\)</span> and <span
 class="math inline">\(\pi(U_2^c)^c\)</span>. We get <span

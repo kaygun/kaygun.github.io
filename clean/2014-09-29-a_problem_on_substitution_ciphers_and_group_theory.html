@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="a-problem-on-substitution-ciphers-and-group-theory">A Problem on
@@ -115,8 +113,8 @@ posed:</p>
 <p>What is the smallest <span
 class="math inline">\(m\in\mathbb{N}\)</span> such that for every
 permutation <span class="math inline">\(\sigma\in \Sigma_{36}\)</span>
-the permutation <span class="math inline">\(\sigma^ m\)</span> is the
-unit permutation?</p>
+the permutation <span class="math inline">\(\sigma^
+m\)</span> is the unit permutation?</p>
 </blockquote>
 <h2 id="somegrouptheory">Some group theory</h2>
 <p>Now, because of <a
@@ -213,8 +211,8 @@ better way.</p>
 of a collection of numbers <span class="math inline">\(x_1\)</span>
 through <span class="math inline">\(x_\ell\)</span> such that the sum
 <span class="math inline">\(x_1 + \cdots + x_\ell = 36\)</span> where we
-want that <span class="math inline">\(1\leq x_1\leq \cdots \leq
-x_\ell\leq 36\)</span>.</p>
+want that <span class="math inline">\(1\leq x_1\leq
+\cdots \leq x_\ell\leq 36\)</span>.</p>
 <p>Today, I will use the brute-force method because I need to teach soon
 and I don’t have much time, and 36 is relatively small.</p>
 <p>The following function returns the list of all possible k-partitions

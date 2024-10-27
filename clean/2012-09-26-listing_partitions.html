@@ -46,21 +46,19 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="listingpartitions">Listing partitions</h1>
 <h2 id="descriptionoftheproblem">Description of the problem</h2>
 <p>Given a natural number N, an ordered k-partition of N is a sequence
 <span class="math inline">\(a_1,\ldots,a_k\)</span> of natural numbers
-such that <span class="math inline">\(N = a_1 + \cdots + a_k\)</span>.
-For the purposes of this note, we assume <span
+such that <span class="math inline">\(N = a_1 + \cdots +
+a_k\)</span>. For the purposes of this note, we assume <span
 class="math inline">\(a_i\geq 0\)</span>. In this decomposition, we may
 assume that the sequence is ordered, that is, we are not allowed to
 alter the order of the terms <span class="math inline">\(a_i\)</span>.
@@ -238,9 +236,10 @@ memoization:</p>
 <p>The recursion looks different from the previous case. The reason is
 that when we get the list of <span
 class="math inline">\((k-1)\)</span>-partitions of <span
-class="math inline">\(N + k - 1 - k\cdot a_1\)</span> we must shift each
-of the terms by <span class="math inline">\((a_1-1)\)</span> to get an
-admissible partition. This is reflected in the code.</p>
+class="math inline">\(N + k - 1 - k\cdot
+a_1\)</span> we must shift each of the terms by <span
+class="math inline">\((a_1-1)\)</span> to get an admissible partition.
+This is reflected in the code.</p>
 <p>Let me test the code: the special case with an odd <span
 class="math inline">\(N\)</span></p>
 <pre><code> print UnOrdPart(5,2)

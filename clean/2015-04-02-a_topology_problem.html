@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="a-topology-problem">A Topology Problem</h1>
@@ -104,9 +102,9 @@ class="math inline">\(f(a)=a\)</span> is a fixed point.</p>
 <h2 id="anythingweaker">Anything weaker?</h2>
 <p>The answer is no! If we relax the contraction condition and assume
 <span class="math inline">\(d(f(x),f(y))\leq d(x,y)\)</span> the
-statement fails: take <span class="math inline">\(X = \{-1,1\}\)</span>
-and <span class="math inline">\(f(x)=-x\)</span> then <span
-class="math inline">\(f\)</span> is and isometry but <span
+statement fails: take <span class="math inline">\(X =
+\{-1,1\}\)</span> and <span class="math inline">\(f(x)=-x\)</span> then
+<span class="math inline">\(f\)</span> is and isometry but <span
 class="math inline">\(f\)</span> has no fixed point. On the other hand,
 if we relax the condition on compactness the statement again fails: take
 <span class="math inline">\(X=\{\frac{1}{n}\|\
@@ -114,8 +112,9 @@ n=1,2,\ldots\}\)</span> with the ambient metric in <span
 class="math inline">\(\mathbb{R}\)</span>. Define <span
 class="math inline">\(f(x) = \frac{x}{x+1}\)</span>, then <span
 class="math inline">\(f(x)\)</span> satifies <span
-class="math inline">\(d(f(x),f(y)) &lt; d(x,y)\)</span> for every <span
-class="math inline">\(x,y\in X\)</span> and there is no fixed point.</p>
+class="math inline">\(d(f(x),f(y)) &lt;
+d(x,y)\)</span> for every <span class="math inline">\(x,y\in X\)</span>
+and there is no fixed point.</p>
 <div id="footer">
 <p><span id="timestamp">April 2nd, 2015 11:16am</span></p>
 </div>

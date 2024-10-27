@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="partition-a-sequence">Partition a sequence</h1>
@@ -62,7 +60,8 @@ predicate <span class="math inline">\(f(x,y)\)</span>, we want to split
 the sequence into subsequences <span
 class="math inline">\((a_{n+i})_{i=0}^k\)</span> with the property that
 <span class="math inline">\(f(a_j,a_{j+1})\equiv T\)</span> for every
-<span class="math inline">\(n\leq j\leq n+i-1\)</span>.</p>
+<span class="math inline">\(n\leq j\leq
+n+i-1\)</span>.</p>
 <h2 id="atailrecursivefunctionalimplementation">A tail recursive
 functional implementation</h2>
 <p>The following is a tail recursive implementation of a solution of the

@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="strictly-increasing-labellings-of-directed-graphs">Strictly
@@ -105,26 +103,26 @@ starting at <span class="math inline">\(s\)</span>. The remaining graph
 class="math inline">\(n\)</span> vertices and has no oriented cycles
 like <span class="math inline">\(G\)</span>. Then because of the
 induction hypothesis we can find a one-to-one labelling <span
-class="math inline">\(\psi\colon V\setminus\{s\}\to \mathbb{N}\)</span>
-such that on every path in <span class="math inline">\(G&#39;\)</span>
-the labels are strictly increasing. Now define <span
-class="math inline">\(\phi\colon V\to \mathbb{N}\)</span> by letting
-<span class="math inline">\(\phi(s) = 1\)</span> and <span
-class="math inline">\(\phi(v) = \psi(v) + 2\)</span> if <span
-class="math inline">\(v\neq s\)</span>.</p>
+class="math inline">\(\psi\colon V\setminus\{s\}\to
+\mathbb{N}\)</span> such that on every path in <span
+class="math inline">\(G&#39;\)</span> the labels are strictly
+increasing. Now define <span class="math inline">\(\phi\colon V\to
+\mathbb{N}\)</span> by letting <span class="math inline">\(\phi(s) =
+1\)</span> and <span class="math inline">\(\phi(v) = \psi(v) +
+2\)</span> if <span class="math inline">\(v\neq s\)</span>.</p>
 <p>Assume <span class="math inline">\(\phi(v)=\phi(w)\)</span> for some
 vertices in <span class="math inline">\(G\)</span>. There are two cases:
 (1) either one of these vertices is <span
 class="math inline">\(s\)</span>, or (2) <span
-class="math inline">\(v,w\in V\setminus\{s\}\)</span>. In the first case
-assume without loss of generality that <span
-class="math inline">\(v=s\)</span> then <span
+class="math inline">\(v,w\in
+V\setminus\{s\}\)</span>. In the first case assume without loss of
+generality that <span class="math inline">\(v=s\)</span> then <span
 class="math inline">\(\phi(v)=1=\phi(w)\)</span>. This will yield <span
 class="math inline">\(w=s\)</span> as well because in this labelling the
 only vertex with the label <span class="math inline">\(1\)</span> is
 <span class="math inline">\(s\)</span>. In the second case <span
-class="math inline">\(\phi(v) = \psi(v)+2 = \psi(w)+2 = \phi(w)\)</span>
-since neither elements are the source <span
+class="math inline">\(\phi(v) = \psi(v)+2 = \psi(w)+2
+= \phi(w)\)</span> since neither elements are the source <span
 class="math inline">\(s\)</span>. Then we get <span
 class="math inline">\(v=w\)</span> as <span
 class="math inline">\(\psi\)</span> was one-to-one. This finishes the

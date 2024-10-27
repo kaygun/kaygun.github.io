@@ -33,7 +33,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -109,13 +109,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="the-shoelace-formula-for-the-area-of-a-polygon">The Shoelace
@@ -151,7 +149,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a 
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fl">1.0</span></span></code></pre></div>
 <p>and on an equilateral triangle</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">=</span> (shoelace (<span class="kw">list</span> (<span class="kw">cons</span> <span class="fl">0.5</span> <span class="dv">0</span>) (<span class="kw">cons</span> -0<span class="fl">.5</span> <span class="dv">0</span>) (<span class="kw">cons</span> <span class="dv">0</span> (<span class="op">/</span> (<span class="kw">sqrt</span> <span class="dv">3</span>) <span class="fl">2.0</span>))))</span>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="op">=</span> (shoelace (<span class="kw">list</span> (<span class="kw">cons</span> <span class="fl">0.5</span> <span class="dv">0</span>) (<span class="kw">cons</span> <span class="op">-</span><span class="fl">0.5</span> <span class="dv">0</span>) (<span class="kw">cons</span> <span class="dv">0</span> (<span class="op">/</span> (<span class="kw">sqrt</span> <span class="dv">3</span>) <span class="fl">2.0</span>))))</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>   (<span class="op">/</span> (<span class="kw">sqrt</span> <span class="dv">3</span>) <span class="fl">4.0</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>T</span></code></pre></div>

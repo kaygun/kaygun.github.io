@@ -33,7 +33,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -109,9 +109,7 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
+  <section>
 </head>
 <body>
 <h1 id="optimization-with-gnu-scientific-library-for-lisp">Optimization
@@ -138,7 +136,7 @@ class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb2-
 <p>Next, let us define the function we are going to optimize:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> fn </span>(x)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="op">+</span> (<span class="kw">expt</span> x <span class="dv">4</span>) (<span class="op">*</span> -1<span class="fl">.4</span>d1 (<span class="kw">expt</span> x <span class="dv">3</span>)) (<span class="op">*</span> <span class="fl">6.0</span>d1 (<span class="kw">expt</span> x <span class="dv">2</span>)) (<span class="op">*</span> -7<span class="fl">.0</span>d1 x)))</span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="op">+</span> (<span class="kw">expt</span> x <span class="dv">4</span>) (<span class="op">*</span> <span class="op">-</span><span class="fl">1.4</span>d1 (<span class="kw">expt</span> x <span class="dv">3</span>)) (<span class="op">*</span> <span class="fl">6.0</span>d1 (<span class="kw">expt</span> x <span class="dv">2</span>)) (<span class="op">*</span> <span class="op">-</span><span class="fl">7.0</span>d1 x)))</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode commonlisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>FN</span></code></pre></div>
 <p>In GSLL, I need to create an minimizer which takes a function, an

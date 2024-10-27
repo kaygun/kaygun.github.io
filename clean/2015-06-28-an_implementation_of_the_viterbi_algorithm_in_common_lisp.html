@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="an-implementation-of-the-viterbi-algorithm-in-common-lisp">An
@@ -73,7 +71,8 @@ class="math inline">\(y\)</span> as <span
 class="math inline">\(p(y&#39;\|y)\)</span>.</p>
 <h2 id="the-problem">The problem</h2>
 <p>Find an assignment of labels <span class="math inline">\(\ell\colon
-\{1,\ldots,n\}\to \{1,\ldots,m\}\)</span> such that the sequence <span
+\{1,\ldots,n\}\to
+\{1,\ldots,m\}\)</span> such that the sequence <span
 class="math display">\[
 y_{\ell(1)},\ldots,y_{\ell(n)} \]</span> is the most likely among all
 such sequences.</p>

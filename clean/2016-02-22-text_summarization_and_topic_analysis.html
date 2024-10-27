@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="text-summarization-and-topic-analysis">Text Summarization and
@@ -139,12 +137,12 @@ occurences of the word <span class="math inline">\(w_j\)</span> within
 the sentence <span class="math inline">\(s_i\)</span>.</p>
 <p>The best thing about this matrix is that <span
 class="math inline">\(A A^t\)</span> is the <span
-class="math inline">\(n\times n\)</span> matrix that gives us the matrix
-of measuring common words between sentences. On the other hand, <span
-class="math inline">\(A^t A\)</span> is the <span
-class="math inline">\(m\times m\)</span> matrix whose entries marked by
-pairs of words that gives us the number of sentences that pair of words
-cooccur.</p>
+class="math inline">\(n\times
+n\)</span> matrix that gives us the matrix of measuring common words
+between sentences. On the other hand, <span class="math inline">\(A^t
+A\)</span> is the <span class="math inline">\(m\times m\)</span> matrix
+whose entries marked by pairs of words that gives us the number of
+sentences that pair of words cooccur.</p>
 <p><a
 href="https://en.wikipedia.org/wiki/Singular_value_decomposition">Singular
 Value Decomposition</a> of this matrix analyzes these matrices,

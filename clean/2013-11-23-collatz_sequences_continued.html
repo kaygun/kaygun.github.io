@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="collatz-sequences-continued">Collatz Sequences (Continued)</h1>
@@ -70,7 +68,8 @@ non-archimedian norms</h2>
 href="http://www.proofwiki.org/wiki/Definition:Non-Archimedean">non-archimedian
 norm</a> is a function which associates a length <span
 class="math inline">\(\|\|x\|\|\)</span> for elements <span
-class="math inline">\(x\in X\)</span> in an ablian group (assume <span
+class="math inline">\(x\in
+X\)</span> in an ablian group (assume <span
 class="math inline">\(X\)</span> has addition) which satisfies <span
 class="math display">\[
 \|\|x+y\|\|\leq \max(\|\|x\|\|,\|\|y\|\|) \]</span> as opposed to the
@@ -123,12 +122,12 @@ follows: let <span class="math inline">\(x_0\in S^1\)</span>, and let
 \]</span> Then this sequence stabilizes at 1 for every starting point
 <span class="math inline">\(x_0\in S^1\)</span>. In this example <span
 class="math inline">\(a(x)\)</span> is analogous to <span
-class="math inline">\(x\mapsto x+\epsilon\)</span> and <span
-class="math inline">\(b(x)\)</span> is analogous to <span
-class="math inline">\(x\mapsto x/\|x\|\)</span>. The proof of the fact
-that all sequences stabilize is straight-forward once one realizes that
-there is an inequality of the form <span class="math display">\[
-d(x_{n+1},1)
+class="math inline">\(x\mapsto
+x+\epsilon\)</span> and <span class="math inline">\(b(x)\)</span> is
+analogous to <span class="math inline">\(x\mapsto x/\|x\|\)</span>. The
+proof of the fact that all sequences stabilize is straight-forward once
+one realizes that there is an inequality of the form <span
+class="math display">\[ d(x_{n+1},1)
 \leq \frac{d(x_n,1)}{2} \]</span> for every <span
 class="math inline">\(n\)</span> and starting value <span
 class="math inline">\(x_0\in S^1\)</span> where <span
@@ -138,9 +137,10 @@ angle between the points <span class="math inline">\(x\)</span> and
 <span class="math inline">\(y\)</span> on the unit circle</em>)</p>
 <p>So, it is a good idea to check to see if there is a pattern in the
 p-norms of the elements appearing in the recursive sequence <span
-class="math inline">\(x_{n+1} = ab(x_n)\)</span> and <span
-class="math inline">\(y_{n+1} = ba(y_n)\)</span> for any starting point
-<span class="math inline">\(x_0\in\mathbb{Z}\)</span> and <span
+class="math inline">\(x_{n+1} =
+ab(x_n)\)</span> and <span class="math inline">\(y_{n+1} =
+ba(y_n)\)</span> for any starting point <span
+class="math inline">\(x_0\in\mathbb{Z}\)</span> and <span
 class="math inline">\(y_0\in\mathbb{Z}\)</span>.</p>
 <h2 id="anexperiment">An experiment</h2>
 <p>I need to measure the 2-part of a positive integer. I will write a

@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="an-additively-recursive-definition-of-the-moebius-function">An
@@ -85,7 +83,8 @@ The key fact I am going to use is <span class="math display">\[
 \begin{cases} 1 &amp; \text{ if }
 q\|m\\ 0 &amp; \text{ otherwise} \end{cases} \]</span> Then
 <p>Since the inner sum <span class="math inline">\(\sum_{m=q}^n\nu(m,q)
-= \left\lfloor\frac{n}{q}\right\rfloor\)</span> we get <span
+=
+\left\lfloor\frac{n}{q}\right\rfloor\)</span> we get <span
 class="math display">\[ 1 =
 \sum_{q=1}^n\mu(q)\left\lfloor\frac{n}{q}\right\rfloor \]</span> By
 re-arranging the terms we get <span class="math display">\[ \mu(n) = 1 -

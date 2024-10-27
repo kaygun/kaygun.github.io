@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="local-rings-idempotents-and-non-invertible-elements">Local
@@ -75,8 +73,9 @@ class="math inline">\(1\)</span>.</li>
 <p>Assume that <span class="math inline">\(A\setminus A^\times\)</span>
 is a two sided ideal. Let <span class="math inline">\(I\)</span> be an
 arbitrary non-trivial left ideal. Since <span
-class="math inline">\(I\cap A^\times = \emptyset\)</span>, we can
-conclude that <span class="math inline">\(I\subseteq A\setminus
+class="math inline">\(I\cap A^\times =
+\emptyset\)</span>, we can conclude that <span
+class="math inline">\(I\subseteq A\setminus
 A^\times\)</span>. This means all ideals lie in <span
 class="math inline">\(A\setminus A^\times\)</span>, including all
 maximal ideals. This forces the existence of a unique maximal ideal.</p>
@@ -168,13 +167,14 @@ href="https://en.wikipedia.org/wiki/Hopkins%E2%80%93Levitzki_theorem">Hopkins-Le
 Theorem</a>. So the ascending chain of annihilator ideals also
 stabilize. Then I can find an natural number <span
 class="math inline">\(N\in\mathbb{N}\)</span> such that <span
-class="math inline">\(Ax^{N+1} = Ax^N\)</span> and <span
-class="math inline">\(Ann_L(x^{N+1}) = Ann_L(x^N)\)</span> at the same
-time. Now, since <span class="math inline">\(Ax^{2N} = Ax^N\)</span>,
-there must be an element <span class="math inline">\(a\in A\)</span>
-such that <span class="math inline">\(ax^{2N} = x^{N}\)</span>. This
-means <span class="math display">\[ (1-ax^N) x^N = 0 \]</span> and
-therefore <span class="math inline">\(1-ax^N\)</span> is in <span
+class="math inline">\(Ax^{N+1} =
+Ax^N\)</span> and <span class="math inline">\(Ann_L(x^{N+1}) =
+Ann_L(x^N)\)</span> at the same time. Now, since <span
+class="math inline">\(Ax^{2N} = Ax^N\)</span>, there must be an element
+<span class="math inline">\(a\in A\)</span> such that <span
+class="math inline">\(ax^{2N} = x^{N}\)</span>. This means <span
+class="math display">\[ (1-ax^N) x^N = 0 \]</span> and therefore <span
+class="math inline">\(1-ax^N\)</span> is in <span
 class="math inline">\(Ann_L(x^N)\)</span>. This means for every <span
 class="math inline">\(z\in A\)</span> we can write <span
 class="math display">\[ z = zax^N + z(1-ax^N) \in Ax^N +
@@ -223,10 +223,10 @@ class="math inline">\(1\)</span> are the only idempotent. Now, we get
 another contradiction.</p></li>
 </ol>
 <p>This final statement tells us that we can not let <span
-class="math inline">\(x+y\in A^\times\)</span>. Hence we get <span
-class="math inline">\(x+y\in A\setminus A^\times\)</span> when <span
-class="math inline">\(x\)</span> and <span
-class="math inline">\(y\)</span> are chosen from <span
+class="math inline">\(x+y\in
+A^\times\)</span>. Hence we get <span class="math inline">\(x+y\in
+A\setminus A^\times\)</span> when <span class="math inline">\(x\)</span>
+and <span class="math inline">\(y\)</span> are chosen from <span
 class="math inline">\(A\setminus A^\times\)</span>. This finishes the
 proof that <span class="math inline">\(A\setminus A^\times\)</span> is
 an abelian group under addition.</p>

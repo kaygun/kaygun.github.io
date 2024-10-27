@@ -46,13 +46,11 @@
   <p><a href="https://web.itu.edu.tr/kaygun">Atabey Kaygun</a></p>
   </div>
 
+  <section>
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
 </head>
 <body>
 <h1 id="mccarthy91-terminates">McCarthy91 Terminates</h1>
@@ -87,9 +85,9 @@ as</p>
 that <span class="math inline">\((m-1)a &lt; c \leq ma\)</span>. Then
 the number of f’s we applied starts decreasing until we hit a point
 where we find another number <span class="math inline">\(\ell\)</span>
-such that <span class="math inline">\(ma-\ell b &lt; c \leq ma -
-(\ell-1)b\)</span>. If at this point the number of f’s on the stack is 0
-then we stop. Otherwise, we repeat this 2-step procedure.</p>
+such that <span class="math inline">\(ma-\ell b &lt; c \leq
+ma - (\ell-1)b\)</span>. If at this point the number of f’s on the stack
+is 0 then we stop. Otherwise, we repeat this 2-step procedure.</p>
 <p>I will change the problem, and make it slightly more general. Assume
 we define a recursive sequence of pairs of integers <span
 class="math inline">\((x_n,y_n)\)</span> as follows <span
@@ -114,14 +112,15 @@ class="math inline">\(y_i \&gt; 0\)</span> more than the cases <span
 class="math inline">\(x_i \geq c\)</span> with <span
 class="math inline">\(y_i \&gt; 0\)</span>. Respectively, let <span
 class="math inline">\(r\)</span> be the number of the cases <span
-class="math inline">\(x_i &lt; c\)</span> and let <span
-class="math inline">\(\ell\)</span> be the number of cases <span
-class="math inline">\(x_i \geq c\)</span> from <span
-class="math inline">\(i=n\)</span> to <span
+class="math inline">\(x_i
+&lt; c\)</span> and let <span class="math inline">\(\ell\)</span> be the
+number of cases <span class="math inline">\(x_i \geq c\)</span> from
+<span class="math inline">\(i=n\)</span> to <span
 class="math inline">\(i=m\)</span>. Then we get that <span
 class="math inline">\(r \geq \ell\)</span> by our assumption and <span
 class="math display">\[ x_n = x_m = x_n + ra - \ell b \]</span> which is
-impossible as <span class="math inline">\(a \&gt; b\)</span>.</p>
+impossible as <span class="math inline">\(a
+\&gt; b\)</span>.</p>
 <p><strong>Proposition:</strong> For every <span
 class="math inline">\(x\in\{0,1,\ldots,c-1\}\)</span> the recursive
 sequence we defined above for every initial value of the form <span
@@ -138,14 +137,16 @@ becomes smaller than <span class="math inline">\(c\)</span>. Thus if the
 sequence is not stationary it must visit the region <span
 class="math inline">\(\{0,1,\ldots,c-1\}\)</span> infinitely often. Then
 by <em>pigeon-hole</em> principle there must be a number <span
-class="math inline">\(z\in \{0,1,\ldots,c-1\}\)</span> which our
-sequence <span class="math inline">\((x_n)\)</span> must visit
-infinitely often. That is, there must be a subsequence <span
-class="math inline">\(n_1 &lt; n_2 &lt; \cdots &lt; n_k &lt;
-\cdots\)</span> such that <span class="math inline">\(x_{n_i} =
-z\)</span>. But then the Lemma above indicates that we have a strictly
-decreasing sequence of natural numbers <span class="math display">\[
-y_{n_1} \&gt; y_{n_2} \&gt; \cdots \&gt; y_{n_k} \&gt;
+class="math inline">\(z\in
+\{0,1,\ldots,c-1\}\)</span> which our sequence <span
+class="math inline">\((x_n)\)</span> must visit infinitely often. That
+is, there must be a subsequence <span class="math inline">\(n_1 &lt; n_2
+&lt;
+\cdots &lt; n_k &lt; \cdots\)</span> such that <span
+class="math inline">\(x_{n_i} = z\)</span>. But then the Lemma above
+indicates that we have a strictly decreasing sequence of natural numbers
+<span class="math display">\[ y_{n_1} \&gt; y_{n_2} \&gt; \cdots \&gt;
+y_{n_k} \&gt;
 \cdots \geq 0 \]</span> which is impossible. Thus the sequence <span
 class="math inline">\((y_n)\)</span> must stabilize which is possible
 only when <span class="math inline">\(y_n=0\)</span> after some
