@@ -197,10 +197,10 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a 
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">null</span> G)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>      <span class="dv">0</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let*</span> ((vs (vertices G))</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>         (v (<span class="kw">car</span> vs))</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>         (ns (neighbors G v)))</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">max</span> (independence (delete-vertices G (<span class="kw">list</span> v)))</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>         (<span class="op">1+</span> (independence (delete-vertices G ns)))))))</span></code></pre></div>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>             (v (<span class="kw">car</span> vs))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>             (ns (neighbors G v)))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">max</span> (independence (delete-vertices G (<span class="kw">list</span> v)))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>              (<span class="op">1+</span> (independence (delete-vertices G ns)))))))</span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>INDEPENDENCE</span></code></pre></div>
 <p>and let us test on <span class="math inline">\(G\)</span> we defined
