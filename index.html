@@ -120,7 +120,7 @@ Simple Graph</h1>
 href="https://kaygun.github.io/clean/2024-10-28-maximum-independent-set.html">yesterday</a>,
 assume we have a simple graph <span
 class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span>. A
-clique is a collection of vertices <span
+<em>clique</em> is a collection of vertices <span
 class="math inline"><em>U</em> ⊆ <em>V</em></span> such that every pair
 of elements <span class="math inline"><em>u</em> ≠ <em>v</em></span>
 form an edge, i.e. <span
@@ -128,13 +128,13 @@ class="math inline">{<em>u</em>, <em>v</em>} ∈ <em>E</em></span>. Notice
 that <span class="math inline"><em>U</em></span> is a clique if <span
 class="math inline"><em>U</em></span> is an independent set in the
 complement graph <span
-class="math inline">$G^c=\left(V,\binom{V}{2}\setminus E\right)$</span>.
+class="math inline"><em>G</em><sup><em>c</em></sup> = (<em>V</em>,<em>E</em><sup><em>c</em></sup>)</span>.
 A maximal clique is a maximal element (with respect to inclusion) in the
 collection of all cliques contained in <span
 class="math inline"><em>G</em></span>.</p>
 <p>Our problem today is to calculate the size of a maximal clique in a
 given graph <span class="math inline"><em>G</em></span>. This number is
-called <em>the clique umber</em> of <span
+called <em>the clique number</em> of <span
 class="math inline"><em>G</em></span>, and is usually denoted by <span
 class="math inline"><em>ω</em>(<em>G</em>)</span>.</p>
 <h2 id="a-recursive-algorithm">A recursive algorithm</h2>
@@ -333,7 +333,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb35-1"><a
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span> <span class="dv">7</span> <span class="dv">8</span> <span class="dv">9</span> <span class="dv">10</span> <span class="dv">11</span> <span class="dv">12</span> <span class="dv">13</span> <span class="dv">14</span> <span class="dv">15</span> <span class="dv">16</span> <span class="dv">17</span> <span class="dv">18</span> <span class="dv">19</span> <span class="dv">20</span>)</span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">October 29, 2024 11:05:24 PM</span></p>
+<p><span id="timestamp">October 29, 2024 11:21:36 PM</span></p>
 </div>
 </body>
 </html>
