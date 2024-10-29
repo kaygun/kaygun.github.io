@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -111,6 +110,10 @@
   </div>
 
   <section>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
 </head>
 <body>
 <h1 id="the-clique-number-of-a-simple-graph">The Clique Number of a
@@ -119,53 +122,47 @@ Simple Graph</h1>
 <p>As <a
 href="https://kaygun.github.io/clean/2024-10-28-maximum-independent-set.html">yesterday</a>,
 assume we have a simple graph <span
-class="math inline"><em>G</em> = (<em>V</em>,<em>E</em>)</span>. A
-clique is a collection of vertices <span
-class="math inline"><em>U</em> ⊆ <em>V</em></span> such that every pair
-of elements <span class="math inline"><em>u</em> ≠ <em>v</em></span>
-form an edge, i.e. <span
-class="math inline">{<em>u</em>, <em>v</em>} ∈ <em>E</em></span>. Notice
-that <span class="math inline"><em>U</em></span> is a clique if <span
-class="math inline"><em>U</em></span> is an independent set in the
-complement graph <span
-class="math inline">$G^c=\left(V,\binom{V}{2}\setminus E\right)$</span>.
-A maximal clique is a maximal element (with respect to inclusion) in the
-collection of all cliques contained in <span
-class="math inline"><em>G</em></span>.</p>
+class="math inline">\(G=(V,E)\)</span>. A clique is a collection of
+vertices <span class="math inline">\(U\subseteq V\)</span> such that
+every pair of elements <span class="math inline">\(u\neq v\)</span> form
+an edge, i.e. <span class="math inline">\(\{u,v\}\in E\)</span>. Notice
+that <span class="math inline">\(U\)</span> is a clique if <span
+class="math inline">\(U\)</span> is an independent set in the complement
+graph <span class="math inline">\(G^c=\left(V,\binom{V}{2}\setminus
+E\right)\)</span>. A maximal clique is a maximal element (with respect
+to inclusion) in the collection of all cliques contained in <span
+class="math inline">\(G\)</span>.</p>
 <p>Our problem today is to calculate the size of a maximal clique in a
-given graph <span class="math inline"><em>G</em></span>. This number is
+given graph <span class="math inline">\(G\)</span>. This number is
 called <em>the clique umber</em> of <span
-class="math inline"><em>G</em></span>, and is usually denoted by <span
-class="math inline"><em>ω</em>(<em>G</em>)</span>.</p>
+class="math inline">\(G\)</span>, and is usually denoted by <span
+class="math inline">\(\omega(G)\)</span>.</p>
 <h2 id="a-recursive-algorithm">A recursive algorithm</h2>
-<p>Given a vertex <span class="math inline"><em>v</em></span> and a
-maximal clique <span class="math inline"><em>C</em></span> we have two
-options: either <span class="math inline"><em>v</em></span> is an
-element in <span class="math inline"><em>C</em></span> or <span
-class="math inline"><em>v</em></span> is not in <span
-class="math inline"><em>C</em></span>. In the first case, <span
-class="math inline"><em>C</em></span> is a clique in the subgraph
-induced by the vertex <span class="math inline"><em>v</em></span> and
-all of its neighbors. So, the clique number is 1 plus the clique number
-of the subgraph induced by the set of neighbors. In the second case,
-<span class="math inline"><em>C</em></span> is a clique of the graph
-obtained by removing <span class="math inline"><em>v</em></span> and all
-edges incident to <span class="math inline"><em>v</em></span>. So, we
-get a recursive formula that give us the clique number.</p>
-<p><span
-class="math display"><em>ω</em>(<em>G</em>) = max (<em>ω</em>(<em>G</em>−<em>v</em>),1+<em>ω</em>(<em>I</em><em>n</em><em>d</em><sub><em>G</em></sub>(<em>N</em>(<em>v</em>))−<em>v</em>))</span>
-where</p>
+<p>Given a vertex <span class="math inline">\(v\)</span> and a maximal
+clique <span class="math inline">\(C\)</span> we have two options:
+either <span class="math inline">\(v\)</span> is an element in <span
+class="math inline">\(C\)</span> or <span
+class="math inline">\(v\)</span> is not in <span
+class="math inline">\(C\)</span>. In the first case, <span
+class="math inline">\(C\)</span> is a clique in the subgraph induced by
+the vertex <span class="math inline">\(v\)</span> and all of its
+neighbors. So, the clique number is 1 plus the clique number of the
+subgraph induced by the set of neighbors. In the second case, <span
+class="math inline">\(C\)</span> is a clique of the graph obtained by
+removing <span class="math inline">\(v\)</span> and all edges incident
+to <span class="math inline">\(v\)</span>. So, we get a recursive
+formula that give us the clique number.</p>
+<p><span class="math display">\[ \omega(G) = \max( \omega(G-v), 1 +
+\omega( Ind_G(N(v))-v ) ) \]</span> where</p>
 <ol type="1">
-<li><p><span class="math inline"><em>G</em> − <em>v</em></span> is the
-graph obtained from <span class="math inline"><em>G</em></span> by
-removing <span class="math inline"><em>v</em></span> and all edges
-incident to <span class="math inline"><em>v</em></span></p></li>
-<li><p><span
-class="math inline"><em>I</em><em>n</em><em>d</em><sub><em>G</em></sub>(<em>N</em>(<em>v</em>))</span>
-is the subgraph of <span class="math inline"><em>G</em></span> induced
-by the set of neighbors <span
-class="math inline"><em>N</em>(<em>v</em>)</span> of <span
-class="math inline"><em>v</em></span>.</p></li>
+<li><p><span class="math inline">\(G-v\)</span> is the graph obtained
+from <span class="math inline">\(G\)</span> by removing <span
+class="math inline">\(v\)</span> and all edges incident to <span
+class="math inline">\(v\)</span></p></li>
+<li><p><span class="math inline">\(Ind_G(N(v))\)</span> is the subgraph
+of <span class="math inline">\(G\)</span> induced by the set of
+neighbors <span class="math inline">\(N(v)\)</span> of <span
+class="math inline">\(v\)</span>.</p></li>
 </ol>
 <h2 id="an-implementation-in-lisp">An implementation in Lisp</h2>
 <p>I will use list of edges to represent graphs. However, to accomodate
@@ -230,8 +227,8 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>             (<span class="op">1+</span> (clique-number (induced-subgraph H (neighbors G v))))))))</span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>CLIQUE-NUMBER</span></code></pre></div>
-<p>and let us test on <span class="math inline"><em>G</em></span> we
-defined at the beginning:</p>
+<p>and let us test on <span class="math inline">\(G\)</span> we defined
+at the beginning:</p>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(clique-number G)</span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre
@@ -239,7 +236,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a
 <h2 id="a-list-of-standard-graphs">A list of standard graphs</h2>
 <p>First, let me write some functions that return a standard list of
 graphs: The discrete graph (vertices without any edges) on <span
-class="math inline"><em>n</em></span> vertices:</p>
+class="math inline">\(n\)</span> vertices:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> discrete </span>(n)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">loop</span> for i from <span class="dv">0</span> below n</span>
@@ -249,7 +246,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>DISCRETE</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span>) (<span class="dv">1</span> <span class="dv">1</span>) (<span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">3</span> <span class="dv">3</span>) (<span class="dv">4</span> <span class="dv">4</span>))</span></code></pre></div>
-<p>The star graph on <span class="math inline"><em>n</em></span>
+<p>The star graph on <span class="math inline">\(n\)</span>
 vertices:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> star </span>(n)</span>
@@ -261,7 +258,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>STAR</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span>) (<span class="dv">1</span> <span class="dv">1</span>) (<span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">3</span> <span class="dv">3</span>) (<span class="dv">4</span> <span class="dv">4</span>) (<span class="dv">0</span> <span class="dv">4</span>) (<span class="dv">1</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">4</span>) (<span class="dv">3</span> <span class="dv">4</span>))</span></code></pre></div>
-<p>The line graph on <span class="math inline"><em>n</em></span>
+<p>The line graph on <span class="math inline">\(n\)</span>
 vertices:</p>
 <div class="sourceCode" id="cb19"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> line </span>(n)</span>
@@ -273,7 +270,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>LINE</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span>) (<span class="dv">1</span> <span class="dv">1</span>) (<span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">3</span> <span class="dv">3</span>) (<span class="dv">0</span> <span class="dv">1</span>) (<span class="dv">1</span> <span class="dv">2</span>) (<span class="dv">2</span> <span class="dv">3</span>))</span></code></pre></div>
-<p>The complete graph on <span class="math inline"><em>n</em></span>
+<p>The complete graph on <span class="math inline">\(n\)</span>
 vertices:</p>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> complete </span>(n)</span>
@@ -285,8 +282,8 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>COMPLETE</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span>) (<span class="dv">0</span> <span class="dv">1</span>) (<span class="dv">0</span> <span class="dv">2</span>) (<span class="dv">0</span> <span class="dv">3</span>) (<span class="dv">1</span> <span class="dv">1</span>) (<span class="dv">1</span> <span class="dv">2</span>) (<span class="dv">1</span> <span class="dv">3</span>) (<span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">2</span> <span class="dv">3</span>) (<span class="dv">3</span> <span class="dv">3</span>))</span></code></pre></div>
-<p>The graph on <span class="math inline"><em>n</em></span> vertices on
-a cycle:</p>
+<p>The graph on <span class="math inline">\(n\)</span> vertices on a
+cycle:</p>
 <div class="sourceCode" id="cb23"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> cycle </span>(n)</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">append</span> (line n) (<span class="kw">list</span> (<span class="kw">list</span> <span class="dv">0</span> (<span class="op">1-</span> n)))))</span>
@@ -295,7 +292,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb23-1"><a
 <div class="sourceCode" id="cb24"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>CYCLE</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span>) (<span class="dv">1</span> <span class="dv">1</span>) (<span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">3</span> <span class="dv">3</span>) (<span class="dv">0</span> <span class="dv">1</span>) (<span class="dv">1</span> <span class="dv">2</span>) (<span class="dv">2</span> <span class="dv">3</span>) (<span class="dv">0</span> <span class="dv">3</span>))</span></code></pre></div>
-<p>And the wheel graph on <span class="math inline"><em>n</em></span>
+<p>And the wheel graph on <span class="math inline">\(n\)</span>
 vertices</p>
 <div class="sourceCode" id="cb25"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> wheel </span>(n)</span>
@@ -339,9 +336,6 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb36-1"><a
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
-<p>[<strong>2024-10-28</strong>] <a
-href="clean/2024-10-28-maximum-independent-set.html">The Size of
-Maximally Independent Subsets in a Graph</a></p>
 <p>[<strong>2023-11-03</strong>] <a
 href="clean/2023-11-03-jgrapht-interop-with-common-lisp.html">Graph
 Algorithms in JGraphT with Common Lisp</a></p>
