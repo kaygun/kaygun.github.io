@@ -148,6 +148,18 @@ class="math inline">\(v\)</span> and the set of neighbors <span
 class="math inline">\(N(v)\)</span> of <span
 class="math inline">\(v\)</span>.</p></li>
 </ol>
+<p>The formula comes from the following simple idea: fix a vertex <span
+class="math inline">\(v\)</span>. Given a maximal independent subset
+<span class="math inline">\(U\)</span> there are two cases. Either <span
+class="math inline">\(v\in U\)</span>, or <span
+class="math inline">\(v\not\in U\)</span>. In the first case no
+neighbors of <span class="math inline">\(v\)</span> is in <span
+class="math inline">\(U\)</span>. In that case <span
+class="math inline">\(U\setminus\{v\}\)</span> is an independent set in
+<span class="math inline">\(G-v-N(V)\)</span>. If <span
+class="math inline">\(v\not\in U\)</span> then <span
+class="math inline">\(U\)</span> is an independent set in <span
+class="math inline">\(G-v\)</span>.</p>
 <h2 id="an-implementation-in-lisp">An implementation in Lisp</h2>
 <p>I will use list of edges to represent graphs. However, to accomodate
 graphs without edges, I will need loops.</p>
