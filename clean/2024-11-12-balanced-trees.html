@@ -20,7 +20,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { line-height: 1.25; }
@@ -111,6 +110,10 @@
   </div>
 
   <section>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
 </head>
 <body>
 <h1 id="hosoya-index-of-balanced-trees">Hosoya Index of Balanced
@@ -118,8 +121,8 @@ Trees</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I would like to look at the Hosoya index of balanced binary
 trees. For that first, I need to generate all balanced binary trees on
-<span class="math inline"><em>n</em></span> leaves for all <span
-class="math inline"><em>n</em> ≥ 1</span>.</p>
+<span class="math inline">\(n\)</span> leaves for all <span
+class="math inline">\(n\geq 1\)</span>.</p>
 <h2 id="an-implementation">An implementation</h2>
 <p>Some utility functions first</p>
 <div class="sourceCode" id="cb1"><pre
@@ -216,9 +219,6 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a 
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
-<p>[<strong>2024-11-11</strong>] <a
-href="clean/2024-11-11-hosoya-index.html">Hosoya Index of a
-Graph</a></p>
 <p>[<strong>2024-10-29</strong>] <a
 href="clean/2024-10-29-clique-number.html">The Clique Number of a Simple
 Graph</a></p>
