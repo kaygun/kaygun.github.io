@@ -122,8 +122,8 @@ class="math inline"><em>n</em> = 0, 1, …</span>. A planted ternary tre
 is a rooted tree in which every internal vertex has degree 3. The leaves
 and the root have degree 1.</p>
 <p>There is a simple recurrence relation for this number: <span
-class="math display">$$ T(n) = \sum_{(\1\leq p\leq q\leq r)\\ p+q+r=n}
-T(p)T(q)T(r) $$</span> with base cases <span
+class="math display">$$ T(n) = \sum_{\substack{1\leq p\leq q\leq r\\
+p+q+r=n}} T(p)T(q)T(r) $$</span> with base cases <span
 class="math inline"><em>T</em>(1) = 0</span> and <span
 class="math inline"><em>T</em>(2) = 1</span>.</p>
 <h2 id="implementation">Implementation</h2>
