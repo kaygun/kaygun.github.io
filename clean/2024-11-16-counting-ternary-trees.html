@@ -127,8 +127,8 @@ the root have degree 1.</p>
 <p>There is a simple recurrence relation for this number: <span
 class="math display">\[ T(n) = \sum_{\substack{1\leq p\leq q\leq r\\
 p+q+r=n}} T(p)T(q)T(r) \]</span> with base cases <span
-class="math inline">\(T(1)=0\)</span> and <span
-class="math inline">\(T(2)=1\)</span>.</p>
+class="math inline">\(T(1)=1\)</span> and <span
+class="math inline">\(T(2)=0\)</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>For my implementation, I am going to need a function that returns all
 partitions of an integers. I wrote that <a
