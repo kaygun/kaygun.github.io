@@ -120,15 +120,15 @@
 Isomorphism Classes of Ternary Trees</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>Today, I am going to count the number of planted ternary trees on
-<span class="math inline">\(2n+1\)</span> leaves for <span
-class="math inline">\(n=0,1,\ldots\)</span>. A planted ternary tree is a
+<span class="math inline">\(n\)</span> leaves for <span
+class="math inline">\(n\geq 0\)</span>. A planted ternary tree is a
 rooted tree in which every internal vertex has degree 4. The leaves and
 the root have degree 1.</p>
 <p>There is a simple recurrence relation for this number: <span
 class="math display">\[ T(n) = \sum_{\substack{1\leq p\leq q\leq r\\
 p+q+r=n}} T(p)T(q)T(r) \]</span> with base cases <span
-class="math inline">\(T(1)=1\)</span> and <span
-class="math inline">\(T(2)=0\)</span>.</p>
+class="math inline">\(T(1)=0\)</span> and <span
+class="math inline">\(T(2)=1\)</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>For my implementation, I am going to need a function that returns all
 partitions of an integers. I wrote that <a
@@ -166,20 +166,22 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a 
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">2</span>) <span class="dv">0</span>)</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> n table)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">setf</span> (<span class="kw">gethash</span> n table)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">reduce</span> <span class="op">#&#39;</span>* (<span class="kw">mapcar</span> <span class="op">#&#39;</span>ternary xs)))</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                   (partitions n <span class="dv">3</span>)))))))))</span></code></pre></div>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> n table)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">reduce</span> <span class="op">#&#39;</span>* (<span class="kw">mapcar</span> <span class="op">#&#39;</span>ternary xs)))</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n <span class="dv">3</span>)))))))))</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TERNARY</span></code></pre></div>
-<p>Let us run:</p>
+<p>I’ll check only the odd numbers since <span
+class="math inline">\(T(n)=0\)</span> when <span
+class="math inline">\(n\)</span> is even.</p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">41</span> by <span class="dv">2</span> collect (ternary i))</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">51</span> by <span class="dv">2</span> collect (ternary i))</span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">8</span> <span class="dv">17</span> <span class="dv">40</span> <span class="dv">91</span> <span class="dv">221</span> <span class="dv">531</span> <span class="dv">1317</span> <span class="dv">3241</span> <span class="dv">8233</span> <span class="dv">20659</span> <span class="dv">53148</span> <span class="dv">135779</span> <span class="dv">352589</span> <span class="dv">910369</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">2389213</span> <span class="dv">6224321</span>)</span></code></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">2389213</span> <span class="dv">6224321</span> <span class="dv">16433633</span> <span class="dv">43182593</span> <span class="dv">114661750</span> <span class="dv">303040077</span> <span class="dv">808946283</span>)</span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">November 16, 2024 11:38:00 PM</span></p>
+<p><span id="timestamp">November 17, 2024 12:43:31 PM</span></p>
 </div>
 </body>
 </html>
