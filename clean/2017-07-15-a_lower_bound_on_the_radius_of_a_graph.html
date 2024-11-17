@@ -20,6 +20,69 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {  background-color: #f8f8f8; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ef2929; } /* Alert */
+    code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #204a87; } /* Attribute */
+    code span.bn { color: #0000cf; } /* BaseN */
+    code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4e9a06; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #8f5902; font-style: italic; } /* Comment */
+    code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+    code span.dt { color: #204a87; } /* DataType */
+    code span.dv { color: #0000cf; } /* DecVal */
+    code span.er { color: #a40000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #0000cf; } /* Float */
+    code span.fu { color: #204a87; font-weight: bold; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+    code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+    code span.ot { color: #8f5902; } /* Other */
+    code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+    code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+    code span.ss { color: #4e9a06; } /* SpecialString */
+    code span.st { color: #4e9a06; } /* String */
+    code span.va { color: #000000; } /* Variable */
+    code span.vs { color: #4e9a06; } /* VerbatimString */
+    code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
   <html>
@@ -60,7 +123,7 @@ radius of a graph</h1>
 class="math inline">\(G\)</span> given as a pair of sets <span
 class="math inline">\((V,E)\)</span> where <span
 class="math inline">\(V\)</span> is a finite set of vertices and <span
-class="math inline">\(E\subset\binom{V}{2}\)</span> is a collection of
+class="math inline">\(E\subset \binom{V}{2}\)</span> is a collection of
 subsets of <span class="math inline">\(V\)</span> each of size 2
 denoting the set of edges.</p>
 <p>The <a
@@ -70,22 +133,20 @@ these vertices. <a
 href="https://en.wikipedia.org/wiki/Distance_(graph_theory)">Eccentricity
 of a vertex</a> is defined to be the largest distance from that
 vertex.</p>
-<p><span class="math display">\[ Ecc(x)=max_{y\in V} d(x,y)
+<p><span class="math display">\[ Ecc(x) = \max_{y\in V} d(x,y)
 \]</span></p>
 <p>Now, we can define <a
 href="https://en.wikipedia.org/wiki/Distance_(graph_theory)">the radius
 and diameter of a graph</a> as</p>
-<p><span class="math display">\[ Rad(G)=min_{x\in V} Ecc(x) \quad\text{
-and }\quad\
-Diam(G)=max_{x\in V} Ecc(x) \]</span></p>
+<p><span class="math display">\[ Rad(G) = \min_{x\in V} Ecc(x) \text{
+and } Diam(G) = \max_{x\in V} Ecc(x) \]</span></p>
 <p>Today, I would like to find a lower bound on the radius of <span
 class="math inline">\(G\)</span> by calculating two cheaper quantities:
-the number of vertices and the largest degree in the graph. Let us
-recall that the degree of a vertex is the number of edges connected to
-that vertex.</p>
+the number of vertices and the largest degree in the graph. The degree
+of a vertex is the number of edges connected to that vertex.</p>
 <h2 id="eccentricity">Eccentricity</h2>
 <p>Here is an <a
-href="clean/2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited.html">algorithm</a>
+href="https://kaygun.github.io/clean/2015-03-06-eccentricity_radius_and_diameter_in_a_graph_revisited.html">algorithm</a>
 that I used earlier to calculate the eccentricity of a vertex <span
 class="math inline">\(x\)</span>:</p>
 <pre><code>Function Eccentricity
@@ -96,7 +157,7 @@ Begin
   Initialize W = {x}
   Initialize V = Vertices of G \ {x}
   While V is non-empty
-    Let W = the intersection of V and the set of 
+    Let W = the intesection of V and the set of 
             vertices adjacent to a vertex in W
     Let V = V \ W
     Increase R
@@ -104,152 +165,166 @@ Begin
   Return R
 End</code></pre>
 <p>which I re-implemented in common lisp as follows:</p>
-<pre><code>(defun eccentricity (x G)
-   (labels ((vicinity (u)
-               (delete u
-                  (remove-duplicates
-                     (vertices
-                        (remove-if-not (lambda (e) (member u e)) G))))))
-      (let* ((A (vertices G))
-             (size (length A)))
-         (do ((n 0 (1+ n))
-              (V (delete x A) (set-difference V W))
-              (W (vicinity x)
-                 (intersection V (mapcan #&#39;vicinity W))))
-             ((or (null V) (&gt; n size)) n)))))`&lt;/pre&gt;
-
-VERTICES
-ECCENTRICITY</code></pre>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> vertices </span>(H)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">remove-duplicates</span> (<span class="kw">reduce</span> <span class="op">#&#39;</span>append H)))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> eccentricity </span>(x G)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">labels</span> ((vicinity (u)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">delete</span> u</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                  (<span class="kw">remove-duplicates</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                     (vertices</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                        (<span class="kw">remove-if-not</span> (<span class="kw">lambda</span> (e) (<span class="kw">member</span> u e)) G))))))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let*</span> ((A (vertices G))</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>             (size (<span class="kw">length</span> A)))</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">do</span> ((n <span class="dv">0</span> (<span class="op">1+</span> n))</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>              (V (<span class="kw">delete</span> x A) (<span class="kw">set-difference</span> V W))</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>              (W (vicinity x)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">intersection</span> V (<span class="kw">mapcan</span> <span class="op">#&#39;</span>vicinity W))))</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>             ((<span class="kw">or</span> (<span class="kw">null</span> V) (<span class="op">&gt;</span> n size)) n)))))</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>VERTICES</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ECCENTRICITY</span></code></pre></div>
 <p>For this implementation, a graph is represented as a list of edges
 where and edge is a list that contains two vertices. Using this
 implementation, now I can define the radius as:</p>
-<pre><code>(defun radius (G)
-  (reduce #&#39;min (mapcar (lambda (v) (eccentricity v G)) (vertices G))))
-
-RADIUS</code></pre>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> radius </span>(G)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">reduce</span> <span class="op">#&#39;</span>min (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (v) (eccentricity v G)) (vertices G))))</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>RADIUS</span></code></pre></div>
 <p>Let me test this on the following tree</p>
-<pre><code>(defvar tree &#39;((-3 -1) (-4 -1) (-5 -2) (-6 -2) (-1 0) (-2 0) (0 1) 
-               (1 2) (1 3) (2 4) (2 5) (3 6) (3 7) (4 8) (4 9) (5 10) 
-               (5 11) (6 12) (6 13) (7 14) (7 15)))
-
-TREE</code></pre>
-<figure data-orig-width="175" data-orig-height="190">
-<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_0.png" data-orig-width="175"
-data-orig-height="190" />
-</figure>
-<pre><code>(mapcar (lambda (v) (eccentricity v tree)) (vertices tree))
-(radius tree)
-
-(6 6 6 6 5 5 4 3 4 4 6 5 6 6 5 6 6 5 6 6 5 6)
-3</code></pre>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defvar</span><span class="fu"> tree </span>&#39;((<span class="op">-</span><span class="dv">3</span> <span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">4</span> <span class="op">-</span><span class="dv">1</span>) (<span class="op">-</span><span class="dv">5</span> <span class="op">-</span><span class="dv">2</span>) (<span class="op">-</span><span class="dv">6</span> <span class="op">-</span><span class="dv">2</span>) (<span class="op">-</span><span class="dv">1</span> <span class="dv">0</span>) (<span class="op">-</span><span class="dv">2</span> <span class="dv">0</span>) (<span class="dv">0</span> <span class="dv">1</span>) </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>               (<span class="dv">1</span> <span class="dv">2</span>) (<span class="dv">1</span> <span class="dv">3</span>) (<span class="dv">2</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">5</span>) (<span class="dv">3</span> <span class="dv">6</span>) (<span class="dv">3</span> <span class="dv">7</span>) (<span class="dv">4</span> <span class="dv">8</span>) (<span class="dv">4</span> <span class="dv">9</span>) (<span class="dv">5</span> <span class="dv">10</span>) </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>               (<span class="dv">5</span> <span class="dv">11</span>) (<span class="dv">6</span> <span class="dv">12</span>) (<span class="dv">6</span> <span class="dv">13</span>) (<span class="dv">7</span> <span class="dv">14</span>) (<span class="dv">7</span> <span class="dv">15</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>TREE</span></code></pre></div>
+<p><img src="../media/2017-07-15-a-bound-on-radius-graph2.png" /></p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">mapcar</span> (<span class="kw">lambda</span> (v) (eccentricity v tree)) (vertices tree))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(radius tree)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">6</span> <span class="dv">6</span> <span class="dv">6</span> <span class="dv">6</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">6</span> <span class="dv">5</span> <span class="dv">6</span> <span class="dv">6</span> <span class="dv">5</span> <span class="dv">6</span> <span class="dv">6</span> <span class="dv">5</span> <span class="dv">6</span> <span class="dv">6</span> <span class="dv">5</span> <span class="dv">6</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span></span></code></pre></div>
 <h2 id="a-lower-bound-on-the-radius">A lower bound on the radius</h2>
 <p>In the first step of the eccentricity algorithm, we delete one
-vertex. Assume we have <span class="math display">\[ k = \max_{v\in V}
-deg(v) \]</span> Then in the second step we delete less than or equal to
-<span class="math inline">\(k\)</span> vertices. But at each next step,
-the number of edges we deleted is multiplied at most by <span
-class="math inline">\(k-1\)</span>. Thus we obtain <span
-class="math display">\[ \|V\| \leq 1 + k + k(k-1) + \cdots
-k(k-1)^{Ecc(v)-1} = 1 + \sum_{i=0}^{Ecc(v)-1} k(k-1)^i \]</span> Let us
-distinguish two cases: <span class="math inline">\(k=2\)</span> and
-<span class="math inline">\(k\&gt;2\)</span>. In the first case we get
-<span class="math display">\[ \|V\| \leq 1 + k\cdot Ecc(v) \]</span>
-which means <span class="math display">\[ Ecc(v) \geq
-\frac{\|V\|-1}{k} \]</span> In the second case we have <span
-class="math display">\[ \|V\| \leq 1 +
-\frac{k\left((k-1)^{Ecc(v)}-1\right)}{k-2} \]</span> Playing with the
-equation, we get <span class="math display">\[ Ecc(v)\geq
-\frac{\log\left((\|V\|-1)\left(1-\frac{2}{k}\right)+1\right)}{\log(k-1)}
-\]</span> The inequality holds for every vertex <span
-class="math inline">\(v\)</span>. Thus we get </p>
-<p><span class="math display">\[ \min_{v\in V}Ecc(v) = Rad(G)\geq
-\begin{cases}
-\frac{\|V\|-1}{k} &amp; \text{ if }
-k=2\\ \frac{\log\left((\|V\|-1)\left(1-\frac{2}{k}\right)+1\right)}{\log(k-1)}
-&amp; \text{ if } k\&gt;2 \end{cases} \]</span></p>
-<p>Let us look at some examples. First, our approximation function:</p>
-<pre><code>(defun approx (G)
-   (labels ((degree (x) (length (remove-if-not (lambda (e) (member x e :test #&#39;equal)) G))))
-       (let* ((vertices (remove-duplicates (reduce #&#39;append G)))
-              (k (reduce #&#39;max (mapcar #&#39;degree vertices)))
-              (n (length vertices)))
-          (cond ((&lt; k 2) nil)
-                ((= k 2) (ceiling (/ (- n 1.0) 2)))
-                (t (ceiling (/ (log (+ 1.0d0 (* (1- n) (/ (- k 2) k))))
-                               (log (- k 1.0d0)))))))))
-
-APPROX</code></pre>
-<p>Let us see first for <span class="math inline">\(K_5\)</span>:</p>
-<figure data-orig-height="83" data-orig-width="97" data-orig-src>
-<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_1.png" data-orig-height="83"
-data-orig-width="97" data-orig-src="" />
-</figure>
-<pre><code>(radius K5)
-(approx K5)
-
-1
-1</code></pre>
-<p>The inequality is indeed an equality. For the binary tree we used
-earlier</p>
-<figure data-orig-height="190" data-orig-width="175" data-orig-src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_0.png">
-<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_2.png" data-orig-height="190"
-data-orig-width="175" data-orig-src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_0.png" />
-</figure>
+vertex. Assume we have $ k = _{vV} deg(v) $. Then in the second step we
+remove <span class="math inline">\(k\)</span> vertices. Then at each
+next step, the number of edges we deleted is multiplied at most by <span
+class="math inline">\(k-1\)</span>. Let us assume <span
+class="math inline">\(|V|&gt;2\)</span> and therefore we can deduce
+<span class="math inline">\(k&gt;1\)</span>. We distinguish two cases:
+(i) <span class="math inline">\(k=2\)</span> and (ii) <span
+class="math inline">\(k&gt;2\)</span>. For the first case</p>
+<p><span class="math display">\[ |V| \leq 1 + 2 Ecc(v) \]</span></p>
+<p>For the case <span class="math inline">\(k&gt;2\)</span> we
+obtain</p>
+<p><span class="math display">\[ |V| \leq 1 + k + k(k-1) + \cdots +
+k(k-1)^{Ecc(v)-1} = 1 + k \sum_{i=0}^{Ecc(v)-1} (k-1)^i = 1 + k
+\frac{(k-1)^{Ecc(v)}-1}{k-2} \]</span></p>
+<p>Playing with the equation, we get</p>
+<p><span class="math display">\[ Ecc(v)\geq
+\frac{\log((|V|-1)(1-2/k)+1)}{\log(k-1)} \]</span></p>
+<p>The inequality holds for every vertex <span
+class="math inline">\(v\)</span>. So, we get</p>
+<p><span class="math display">\[ Rad(G) = \min_{v\in V} Ecc(v) \geq
+\frac{\log((|V|-1)(1 - 2/k)+1)}{\log(k-1)} \]</span></p>
+<p>when <span class="math inline">\(k\geq 3\)</span>.</p>
+<h2 id="examples">Examples</h2>
+<p>I am going to implement our approximation function as follows.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> approx </span>(G)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">labels</span> ((degree (x) (<span class="kw">length</span> (<span class="kw">remove-if-not</span> (<span class="kw">lambda</span> (e) (<span class="kw">member</span> x e <span class="bu">:test</span> <span class="op">#&#39;</span>equal)) G))))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>       (<span class="kw">let*</span> ((vertices (<span class="kw">remove-duplicates</span> (<span class="kw">reduce</span> <span class="op">#&#39;</span>append G)))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>              (k (<span class="kw">reduce</span> <span class="op">#&#39;</span>max (<span class="kw">mapcar</span> <span class="op">#&#39;</span>degree vertices)))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>              (n (<span class="kw">length</span> vertices)))</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">cond</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>             ((<span class="op">&lt;</span> k <span class="dv">2</span>) <span class="kw">nil</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>             ((<span class="op">=</span> k <span class="dv">2</span>) (<span class="kw">floor</span> (<span class="op">1-</span> n) <span class="dv">2</span>))</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">t</span> (<span class="kw">ceiling</span> (<span class="op">/</span> (<span class="kw">log</span> (<span class="op">1+</span> (<span class="op">*</span> (<span class="op">1-</span> n) (<span class="op">-</span> <span class="dv">1</span> (<span class="op">/</span> <span class="dv">2</span> k)))))</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                            (<span class="kw">log</span> (<span class="op">1-</span> k)))))))))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>APPROX</span></code></pre></div>
+<p>We start with the complete graph on 5 vertices <span
+class="math inline">\(K_5\)</span>:</p>
+<p><img
+src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_1.png" /></p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(radius K5)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>(approx K5)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div>
+<p>So, the inequality is actually an equality. For the binary tree we
+used earlier</p>
+<p><img
+src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_2.png" /></p>
 <p>we get</p>
-<pre><code>(radius tree)
-(approx tree)
-
-3
-3</code></pre>
-<p>So, the inequality is tight in this direction too. For graphs of type
-<span class="math inline">\(A_n\)</span> and <span
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(radius tree)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>(approx tree)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span></span></code></pre></div>
+<p>So, the inequality is tight in this direction too. On the other hand,
+for graphs of type <span class="math inline">\(A_n\)</span> and <span
 class="math inline">\(C_n\)</span>, we have <span
 class="math inline">\(k=2\)</span>.</p>
-<figure data-orig-height="30" data-orig-width="201" data-orig-src>
-<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_3.png" data-orig-height="30"
-data-orig-width="201" data-orig-src="" />
-</figure>
-<pre><code>(radius A7)
-(approx A7)
-
-4
-4</code></pre>
+<p><img
+src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_3.png" /></p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(radius A7)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>(approx A7)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span></span></code></pre></div>
 <p>In other words, the inequality is still the best we can hope for for
 these graphs too.</p>
 <p>Ok. Now, for a random graph:</p>
-<figure data-orig-height="201" data-orig-width="196" data-orig-src>
-<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_4.png" data-orig-height="201"
-data-orig-width="196" data-orig-src="" />
-</figure>
-<pre><code>(radius graph)
-(approx graph)
-
-4
-3</code></pre>
+<p><img
+src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_4.png" /></p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(radius graph)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>(approx graph)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span></span></code></pre></div>
 <h2 id="an-analysis">An analysis</h2>
 <p>For highly connected graphs, the lower bound is going to be worse
 since we would be badly overestimating the number of vertices we deleted
 in each step of the algorithm. For example for the following graph we
 get</p>
-<figure data-orig-height="239" data-orig-width="244" data-orig-src>
-<img src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_5.png" data-orig-height="239"
-data-orig-width="244" data-orig-src="" />
-</figure>
-<pre><code>(radius graph1)
-(approx graph1)
-
-6
-3</code></pre>
+<p><img
+src="../media/2017-07-15-a_lower_bound_on_the_radius_of_a_graph_5.png" /></p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(radius graph1)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>(approx graph1)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dv">6</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span></span></code></pre></div>
 <p>The complete graphs <span class="math inline">\(K_n\)</span> are
 exempt from the overestimation since our algorithm terminates at step 1
 already.</p>
 <div id="footer">
-<p><span id="timestamp">July 15th, 2017 12:57pm</span></p>
+<p><span id="timestamp">November 18, 2024 01:03:53 AM</span></p>
 </div>
 </body>
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
+<p>[<strong>2024-11-12</strong>] <a
+href="clean/2024-11-12-balanced-trees.html">Hosoya Index of Balanced
+Binary Trees</a></p>
+<p>[<strong>2024-11-11</strong>] <a
+href="clean/2024-11-11-hosoya-index.html">Hosoya Index of a
+Graph</a></p>
+<p>[<strong>2024-10-29</strong>] <a
+href="clean/2024-10-29-clique-number.html">The Clique Number of a Simple
+Graph</a></p>
+<p>[<strong>2024-10-28</strong>] <a
+href="clean/2024-10-28-maximum-independent-set.html">The Size of
+Maximally Independent Subsets in a Graph</a></p>
 <p>[<strong>2023-11-03</strong>] <a
 href="clean/2023-11-03-jgrapht-interop-with-common-lisp.html">Graph
 Algorithms in JGraphT with Common Lisp</a></p>
