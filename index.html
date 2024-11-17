@@ -127,8 +127,8 @@ the root have degree 1.</p>
 <p>There is a simple recurrence relation for this number: <span
 class="math display">\[ T(n) = \sum_{\substack{1\leq p\leq q\leq r\\
 p+q+r=n}} T(p)T(q)T(r) \]</span> with base cases <span
-class="math inline">\(T(1)=0\)</span> and <span
-class="math inline">\(T(2)=1\)</span>.</p>
+class="math inline">\(T(1)=1\)</span> and <span
+class="math inline">\(T(2)=0\)</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>For my implementation, I am going to need a function that returns all
 partitions of an integers. I wrote that <a
@@ -181,7 +181,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a 
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">8</span> <span class="dv">17</span> <span class="dv">40</span> <span class="dv">91</span> <span class="dv">221</span> <span class="dv">531</span> <span class="dv">1317</span> <span class="dv">3241</span> <span class="dv">8233</span> <span class="dv">20659</span> <span class="dv">53148</span> <span class="dv">135779</span> <span class="dv">352589</span> <span class="dv">910369</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">2389213</span> <span class="dv">6224321</span> <span class="dv">16433633</span> <span class="dv">43182593</span> <span class="dv">114661750</span> <span class="dv">303040077</span> <span class="dv">808946283</span>)</span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">November 17, 2024 12:43:31 PM</span></p>
+<p><span id="timestamp">November 17, 2024 12:46:16 PM</span></p>
 </div>
 </body>
 </html>
