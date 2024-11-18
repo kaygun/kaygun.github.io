@@ -123,12 +123,53 @@ Isomorphism Classes of Ternary Trees</h1>
 <span class="math inline">\(n\)</span> leaves for <span
 class="math inline">\(n\geq 0\)</span>. A planted ternary tree is a
 rooted tree in which every internal vertex has degree 4. The leaves and
-the root have degree 1.</p>
-<p>There is a simple recurrence relation for this number: <span
-class="math display">\[ T(n) = \sum_{\substack{1\leq p\leq q\leq r\\
-p+q+r=n}} T(p)T(q)T(r) \]</span> with base cases <span
-class="math inline">\(T(1)=1\)</span> and <span
-class="math inline">\(T(2)=0\)</span>.</p>
+the root have degree 1. Below, when we talk about the size of a tree, we
+will specifically mean the number of leaves.</p>
+<h2 id="a-first-approximation">A first approximation</h2>
+<p>In a ternary tree, every internal vertex has degree 4. So, if we
+split a ternary tree into subtrees at the vertex adjacent to the root,
+we get 3 ternary trees. Let us write <span
+class="math inline">\(T(p,q,r)\)</span> for the number of ternary trees
+whose splitting as three subtrees of sizes <span
+class="math inline">\(p\)</span>, <span
+class="math inline">\(q\)</span>, and <span
+class="math inline">\(r\)</span>. Thus one may think that <span
+class="math display">\[ T(p,q,r) = T(p)T(q)T(r) \]</span> with base
+cases <span class="math inline">\(T(1)=1\)</span> and <span
+class="math inline">\(T(2n)=0\)</span> for every <span
+class="math inline">\(n\)</span>. Thus we can assume that <span
+class="math inline">\(p\)</span>, <span
+class="math inline">\(q\)</span>, and <span
+class="math inline">\(r\)</span> are all odd.</p>
+<p>There is a big problem with this count: assume we have a splitting of
+the form <span class="math inline">\(ABC\)</span>. In the best case, all
+<span class="math inline">\(A\)</span>, <span
+class="math inline">\(B\)</span>, and <span
+class="math inline">\(C\)</span> have different number of leaves, hence
+no overcounting. However, if any two consecutive subtrees have the same
+size, then both decompositions <span class="math inline">\(ABC\)</span>
+an <span class="math inline">\(BAC\)</span> are counted as separate
+trees since the product <span class="math inline">\(T(p)T(q)\)</span>
+counts <strong>ordered pairs of trees</strong> <span
+class="math inline">\(AB\)</span> with sizes <span
+class="math inline">\(p\)</span> and <span
+class="math inline">\(q\)</span>, respectively. We need to count
+<strong>unordered triples</strong> of subtrees. Thus we need to be
+careful about 3 subcases: (i) <span
+class="math inline">\(p=q&lt;r\)</span>, (ii) <span
+class="math inline">\(p&lt;q=r\)</span>, and (iii) <span
+class="math inline">\(p=q=r\)</span>. In the first two cases, we are
+taking multi-subsets of size 2 from the collection of all trees of the
+same size. In the last case, we are taking multi-subsets of size 3 from
+the collection of all trees of the same size.</p>
+<p><span class="math display">\[ T(p,q,r) =
+   \begin{cases}
+     T(p)T(q)T(r) &amp; \text{ if $p$, $q$, and $r$ are pairwise
+distinct,}\\
+     (T(p)+1)T(p)T(r) &amp; \text{ if } p=q&lt;r \\
+     T(p)(T(q)+1)T(q) &amp; \text{ if } p&lt;q=r \\
+     \frac{1}{2}(T(p)+2)(T(p)+1)T(p) &amp; \text{ if } p=q=r
+   \end{cases}\]</span></p>
 <h2 id="implementation">Implementation</h2>
 <p>For my implementation, I am going to need a function that returns all
 partitions of an integers. I wrote that <a
@@ -146,42 +187,87 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a 
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>         (partitions-with-zeros (<span class="op">-</span> n (<span class="op">*</span> k i)) (<span class="op">1-</span> k) (<span class="op">+</span> a i) (<span class="kw">cons</span> (<span class="op">+</span> a i) acc))))))</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> partitions </span>(n k)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>   (partitions-with-zeros (<span class="op">-</span> n k) k <span class="dv">1</span>))</span></code></pre></div>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>   (partitions-with-zeros (<span class="op">-</span> n k) k <span class="dv">1</span>))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> odd-partitions </span>(n k)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> ((alpha (<span class="kw">floor</span> (<span class="op">+</span> n k) <span class="dv">2</span>)))</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (<span class="op">1+</span> (<span class="op">*</span> <span class="dv">2</span> x))) xs))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        (partitions-with-zeros (<span class="op">-</span> n alpha) k))))</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PARTITIONS-WITH-ZEROS</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>PARTITIONS</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>PARTITIONS</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ODD-PARTITIONS</span></code></pre></div>
 <p>Let me test the code:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(partitions-with-zeros <span class="dv">10</span> <span class="dv">3</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>(partitions <span class="dv">10</span> <span class="dv">3</span>)</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(partitions-with-zeros <span class="dv">11</span> <span class="dv">3</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>(partitions <span class="dv">11</span> <span class="dv">3</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>(odd-partitions <span class="dv">11</span> <span class="dv">3</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>((<span class="dv">3</span> <span class="dv">3</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">4</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">3</span> <span class="dv">5</span>) (<span class="dv">2</span> <span class="dv">2</span> <span class="dv">6</span>) (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">5</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">6</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">1</span> <span class="dv">8</span>) (<span class="dv">0</span> <span class="dv">5</span> <span class="dv">5</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> (<span class="dv">0</span> <span class="dv">4</span> <span class="dv">6</span>) (<span class="dv">0</span> <span class="dv">3</span> <span class="dv">7</span>) (<span class="dv">0</span> <span class="dv">2</span> <span class="dv">8</span>) (<span class="dv">0</span> <span class="dv">1</span> <span class="dv">9</span>) (<span class="dv">0</span> <span class="dv">0</span> <span class="dv">10</span>))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>((<span class="dv">3</span> <span class="dv">3</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">4</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">3</span> <span class="dv">5</span>) (<span class="dv">2</span> <span class="dv">2</span> <span class="dv">6</span>) (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">5</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">6</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">1</span> <span class="dv">8</span>))</span></code></pre></div>
-<p>Now, my implementation with memoization:</p>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>((<span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span>) (<span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span>) (<span class="dv">2</span> <span class="dv">4</span> <span class="dv">5</span>) (<span class="dv">2</span> <span class="dv">3</span> <span class="dv">6</span>) (<span class="dv">2</span> <span class="dv">2</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">5</span> <span class="dv">5</span>) (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">6</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">8</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> (<span class="dv">1</span> <span class="dv">1</span> <span class="dv">9</span>) (<span class="dv">0</span> <span class="dv">5</span> <span class="dv">6</span>) (<span class="dv">0</span> <span class="dv">4</span> <span class="dv">7</span>) (<span class="dv">0</span> <span class="dv">3</span> <span class="dv">8</span>) (<span class="dv">0</span> <span class="dv">2</span> <span class="dv">9</span>) (<span class="dv">0</span> <span class="dv">1</span> <span class="dv">10</span>) (<span class="dv">0</span> <span class="dv">0</span> <span class="dv">11</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>((<span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span>) (<span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span>) (<span class="dv">2</span> <span class="dv">4</span> <span class="dv">5</span>) (<span class="dv">2</span> <span class="dv">3</span> <span class="dv">6</span>) (<span class="dv">2</span> <span class="dv">2</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">5</span> <span class="dv">5</span>) (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">6</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">8</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a> (<span class="dv">1</span> <span class="dv">1</span> <span class="dv">9</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>((<span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span>) (<span class="dv">1</span> <span class="dv">5</span> <span class="dv">5</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">7</span>) (<span class="dv">1</span> <span class="dv">1</span> <span class="dv">9</span>))</span></code></pre></div>
+<p>Next, I need a function that deals with counting multi-subsets. This
+is far more general than I need.</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span>)))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> ternary </span>(n)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">2</span>) <span class="dv">0</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> n table)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> n table)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">reduce</span> <span class="op">#&#39;</span>* (<span class="kw">mapcar</span> <span class="op">#&#39;</span>ternary xs)))</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n <span class="dv">3</span>)))))))))</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> binom </span>(n k)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">or</span> (<span class="op">&lt;</span> n <span class="dv">0</span>) (<span class="op">&lt;</span> k <span class="dv">0</span>) (<span class="op">&lt;</span> n k)) <span class="dv">0</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    ((<span class="op">=</span> n k) <span class="dv">1</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">zerop</span> k) <span class="dv">1</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    ((<span class="op">&lt;</span> (<span class="op">-</span> n k) k) (binom n (<span class="op">-</span> n k)))</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">t</span> (<span class="op">*</span> (<span class="op">/</span> n k) (binom (<span class="op">1-</span> n) (<span class="op">1-</span> k))))))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> handle </span>(xs &amp;optional (k <span class="dv">0</span>) (carry <span class="dv">1</span>))</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span> ((<span class="kw">null</span> xs) carry)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        ((<span class="kw">equal</span> (<span class="kw">car</span> xs) (<span class="kw">cadr</span> xs))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>         (handle (<span class="kw">cdr</span> xs) (<span class="kw">incf</span> k) carry))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">t</span> (handle (<span class="kw">cdr</span> xs)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                   <span class="dv">0</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                   (<span class="op">*</span> carry (<span class="kw">if</span> (<span class="kw">zerop</span> k)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                                (<span class="kw">car</span> xs)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                                (binom (<span class="op">+</span> (<span class="kw">car</span> xs) k) (<span class="op">1+</span> k))))))))</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TERNARY</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>BINOM</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>HANDLE</span></code></pre></div>
+<p>Let us test:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(handle &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>(handle &#39;(<span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">5</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>(handle &#39;(<span class="dv">5</span> <span class="dv">5</span> <span class="dv">5</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>(handle &#39;(<span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dv">20</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dv">35</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dv">21</span></span></code></pre></div>
+<p>Now, my implementation with memoization:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span>)))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> ternary </span>(n) </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">2</span>) <span class="dv">0</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> n table)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> n table)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (handle (<span class="kw">mapcar</span> <span class="op">#&#39;</span>ternary xs)))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>                                   (odd-partitions n <span class="dv">3</span>)))))))))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>TERNARY</span></code></pre></div>
 <p>I’ll check only the odd numbers since <span
 class="math inline">\(T(n)=0\)</span> when <span
 class="math inline">\(n\)</span> is even.</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">51</span> by <span class="dv">2</span> collect (ternary i))</span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">8</span> <span class="dv">17</span> <span class="dv">40</span> <span class="dv">91</span> <span class="dv">221</span> <span class="dv">531</span> <span class="dv">1317</span> <span class="dv">3241</span> <span class="dv">8233</span> <span class="dv">20659</span> <span class="dv">53148</span> <span class="dv">135779</span> <span class="dv">352589</span> <span class="dv">910369</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">2389213</span> <span class="dv">6224321</span> <span class="dv">16433633</span> <span class="dv">43182593</span> <span class="dv">114661750</span> <span class="dv">303040077</span> <span class="dv">808946283</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">51</span> by <span class="dv">2</span> collect (ternary i))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">8</span> <span class="dv">17</span> <span class="dv">39</span> <span class="dv">89</span> <span class="dv">211</span> <span class="dv">507</span> <span class="dv">1238</span> <span class="dv">3057</span> <span class="dv">7639</span> <span class="dv">19241</span> <span class="dv">48865</span> <span class="dv">124906</span> <span class="dv">321198</span> <span class="dv">830219</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a> <span class="dv">2156010</span> <span class="dv">5622109</span> <span class="dv">14715813</span> <span class="dv">38649152</span> <span class="dv">101821927</span> <span class="dv">269010485</span> <span class="dv">712566567</span>)</span></code></pre></div>
+<p>This is <a href="https://oeis.org/search?q=A000598">A000598</a> on <a
+href="https://oeis.org/">OEIS</a>.</p>
 <div id="footer">
-<p><span id="timestamp">November 17, 2024 12:46:16 PM</span></p>
+<p><span id="timestamp">November 18, 2024 04:21:31 PM</span></p>
 </div>
 </body>
 </html>
