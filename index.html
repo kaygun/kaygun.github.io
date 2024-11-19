@@ -142,16 +142,10 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a 
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         (partitions-with-zeros (<span class="op">-</span> n (<span class="op">*</span> k i)) (<span class="op">1-</span> k) (<span class="op">+</span> a i) (<span class="kw">cons</span> (<span class="op">+</span> a i) acc))))))</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> partitions </span>(n k)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>   (partitions-with-zeros (<span class="op">-</span> n k) k <span class="dv">1</span>))</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> odd-partitions </span>(n k)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> ((alpha (<span class="kw">floor</span> (<span class="op">+</span> n k) <span class="dv">2</span>)))</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (<span class="op">1+</span> (<span class="op">*</span> <span class="dv">2</span> x))) xs))</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        (partitions-with-zeros (<span class="op">-</span> n alpha) k))))</span></code></pre></div>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>   (partitions-with-zeros (<span class="op">-</span> n k) k <span class="dv">1</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PARTITIONS-WITH-ZEROS</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>PARTITIONS</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ODD-PARTITIONS</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>PARTITIONS</span></code></pre></div>
 <p>Next, the coed for counting with multisets:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> binom </span>(n k)</span>
@@ -179,70 +173,50 @@ as well. But for this, we need to modify the counting function with the
 correct base cases.</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span>)))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> binary </span>(n) </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> quaternary </span>(n) </span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">2</span>) <span class="dv">1</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">&lt;</span> n <span class="dv">4</span>) <span class="dv">0</span>)</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> n table)</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> n table)</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (handle (<span class="kw">mapcar</span> <span class="op">#&#39;</span>binary xs)))</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n <span class="dv">2</span>)))))))))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (handle (<span class="kw">mapcar</span> <span class="op">#&#39;</span>quaternary xs)))</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n <span class="dv">4</span>)))))))))</span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">30</span> collect (binary i))</span></code></pre></div>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">60</span> by <span class="dv">3</span> collect (quaternary i))</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>BINARY</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">6</span> <span class="dv">11</span> <span class="dv">23</span> <span class="dv">46</span> <span class="dv">98</span> <span class="dv">207</span> <span class="dv">451</span> <span class="dv">983</span> <span class="dv">2179</span> <span class="dv">4850</span> <span class="dv">10905</span> <span class="dv">24631</span> <span class="dv">56011</span> <span class="dv">127912</span> <span class="dv">293547</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> <span class="dv">676157</span> <span class="dv">1563372</span> <span class="dv">3626149</span> <span class="dv">8436379</span> <span class="dv">19680277</span> <span class="dv">46026618</span> <span class="dv">107890609</span> <span class="dv">253450711</span> <span class="dv">596572387</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">1406818759</span>)</span></code></pre></div>
-<p>This is <a href="https://oeis.org/A036718">A001190</a> on <a
-href="https://oeis.org">OEIS</a>. As for quaternary trees:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span>)))</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> quaternary </span>(n) </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">&lt;</span> n <span class="dv">4</span>) <span class="dv">0</span>)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> n table)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> n table)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (handle (<span class="kw">mapcar</span> <span class="op">#&#39;</span>quaternary xs)))</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n <span class="dv">4</span>)))))))))</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">60</span> by <span class="dv">3</span> collect (quaternary i))</span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>QUATERNARY</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">19</span> <span class="dv">45</span> <span class="dv">106</span> <span class="dv">260</span> <span class="dv">643</span> <span class="dv">1624</span> <span class="dv">4138</span> <span class="dv">10683</span> <span class="dv">27790</span> <span class="dv">72917</span> <span class="dv">192548</span> <span class="dv">511624</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> <span class="dv">1366424</span> <span class="dv">3666930</span>)</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>QUATERNARY</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">19</span> <span class="dv">45</span> <span class="dv">106</span> <span class="dv">260</span> <span class="dv">643</span> <span class="dv">1624</span> <span class="dv">4138</span> <span class="dv">10683</span> <span class="dv">27790</span> <span class="dv">72917</span> <span class="dv">192548</span> <span class="dv">511624</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> <span class="dv">1366424</span> <span class="dv">3666930</span>)</span></code></pre></div>
 <p>And this is <a href="https://oeis.org/A036718">A036718</a> on <a
 href="https://oeis.org">OEIS</a>. Then the general case can be handled
 by</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> m-ary </span>(n m) </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">&lt;</span> n m) <span class="dv">0</span>)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n m) table)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n m) table)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (handle (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (m-ary x m)) xs)))</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n m)))))))))</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">58</span> by (<span class="op">1-</span> <span class="dv">4</span>) collect (m-ary i <span class="dv">4</span>))</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">77</span> by (<span class="op">1-</span> <span class="dv">5</span>) collect (m-ary i <span class="dv">5</span>))</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">99</span> by (<span class="op">1-</span> <span class="dv">6</span>) collect (m-ary i <span class="dv">6</span>))</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">110</span> by (<span class="op">1-</span> <span class="dv">7</span>) collect (m-ary i <span class="dv">7</span>))</span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>M-ARY</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">19</span> <span class="dv">45</span> <span class="dv">106</span> <span class="dv">260</span> <span class="dv">643</span> <span class="dv">1624</span> <span class="dv">4138</span> <span class="dv">10683</span> <span class="dv">27790</span> <span class="dv">72917</span> <span class="dv">192548</span> <span class="dv">511624</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a> <span class="dv">1366424</span> <span class="dv">3666930</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">20</span> <span class="dv">47</span> <span class="dv">112</span> <span class="dv">277</span> <span class="dv">693</span> <span class="dv">1766</span> <span class="dv">4547</span> <span class="dv">11852</span> <span class="dv">31146</span> <span class="dv">82534</span> <span class="dv">220149</span> <span class="dv">590834</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">1593951</span> <span class="dv">4320723</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">20</span> <span class="dv">48</span> <span class="dv">114</span> <span class="dv">283</span> <span class="dv">710</span> <span class="dv">1816</span> <span class="dv">4690</span> <span class="dv">12267</span> <span class="dv">32338</span> <span class="dv">85978</span> <span class="dv">230080</span> <span class="dv">619521</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a> <span class="dv">1676808</span> <span class="dv">4560286</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">20</span> <span class="dv">48</span> <span class="dv">115</span> <span class="dv">285</span> <span class="dv">716</span> <span class="dv">1833</span> <span class="dv">4740</span> <span class="dv">12410</span> <span class="dv">32754</span> <span class="dv">87176</span> <span class="dv">233547</span> <span class="dv">629540</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a> <span class="dv">1705809</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((table (<span class="kw">make-hash-table</span> <span class="bu">:test</span> <span class="op">#&#39;</span>equal)))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">defun</span><span class="fu"> m-ary </span>(n m) </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">cond</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">=</span> n <span class="dv">1</span>) <span class="dv">1</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      ((<span class="op">&lt;</span> n m) <span class="dv">0</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">t</span> (<span class="kw">or</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n m) table)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">setf</span> (<span class="kw">gethash</span> (<span class="kw">list</span> n m) table)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">reduce</span> <span class="op">#&#39;</span>+</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (handle (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (m-ary x m)) xs)))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                                   (partitions n m)))))))))</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">58</span> by (<span class="op">1-</span> <span class="dv">4</span>) collect (m-ary i <span class="dv">4</span>))</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">77</span> by (<span class="op">1-</span> <span class="dv">5</span>) collect (m-ary i <span class="dv">5</span>))</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">99</span> by (<span class="op">1-</span> <span class="dv">6</span>) collect (m-ary i <span class="dv">6</span>))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">110</span> by (<span class="op">1-</span> <span class="dv">7</span>) collect (m-ary i <span class="dv">7</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>M-ARY</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">19</span> <span class="dv">45</span> <span class="dv">106</span> <span class="dv">260</span> <span class="dv">643</span> <span class="dv">1624</span> <span class="dv">4138</span> <span class="dv">10683</span> <span class="dv">27790</span> <span class="dv">72917</span> <span class="dv">192548</span> <span class="dv">511624</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> <span class="dv">1366424</span> <span class="dv">3666930</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">20</span> <span class="dv">47</span> <span class="dv">112</span> <span class="dv">277</span> <span class="dv">693</span> <span class="dv">1766</span> <span class="dv">4547</span> <span class="dv">11852</span> <span class="dv">31146</span> <span class="dv">82534</span> <span class="dv">220149</span> <span class="dv">590834</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">1593951</span> <span class="dv">4320723</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">20</span> <span class="dv">48</span> <span class="dv">114</span> <span class="dv">283</span> <span class="dv">710</span> <span class="dv">1816</span> <span class="dv">4690</span> <span class="dv">12267</span> <span class="dv">32338</span> <span class="dv">85978</span> <span class="dv">230080</span> <span class="dv">619521</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a> <span class="dv">1676808</span> <span class="dv">4560286</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">20</span> <span class="dv">48</span> <span class="dv">115</span> <span class="dv">285</span> <span class="dv">716</span> <span class="dv">1833</span> <span class="dv">4740</span> <span class="dv">12410</span> <span class="dv">32754</span> <span class="dv">87176</span> <span class="dv">233547</span> <span class="dv">629540</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a> <span class="dv">1705809</span>)</span></code></pre></div>
 <p>The first is <a href="https://oeis.org/A036718">A036718</a> as
 before. The other three are <a
 href="https://oeis.org/A036722">A036721</a>, <a
@@ -251,7 +225,7 @@ href="https://oeis.org/A182378">A182378</a>. The number of isomorphism
 classes of <span class="math inline">\(m\)</span>-ary trees can be found
 in <a href="https://oeis.org/A299038">A299038</a>.</p>
 <div id="footer">
-<p><span id="timestamp">November 18, 2024 04:50:59 PM</span></p>
+<p><span id="timestamp">November 19, 2024 10:53:22 AM</span></p>
 </div>
 </body>
 </html>
