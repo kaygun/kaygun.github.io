@@ -141,6 +141,7 @@ class="math inline">\(n\)</span>. Thus we can assume that <span
 class="math inline">\(p\)</span>, <span
 class="math inline">\(q\)</span>, and <span
 class="math inline">\(r\)</span> are all odd.</p>
+<h2 id="correction">Correction</h2>
 <p>There is a big problem with this count: assume we have a splitting of
 the form <span class="math inline">\(ABC\)</span>. In the best case, all
 <span class="math inline">\(A\)</span>, <span
@@ -166,9 +167,9 @@ the collection of all trees of the same size.</p>
    \begin{cases}
      T(p)T(q)T(r) &amp; \text{ if $p$, $q$, and $r$ are pairwise
 distinct,}\\
-     (T(p)+1)T(p)T(r) &amp; \text{ if } p=q&lt;r \\
-     T(p)(T(q)+1)T(q) &amp; \text{ if } p&lt;q=r \\
-     \frac{1}{2}(T(p)+2)(T(p)+1)T(p) &amp; \text{ if } p=q=r
+     \frac{1}{2}(T(p)+1)T(p)T(r) &amp; \text{ if } p=q&lt;r \\
+     \frac{1}{2}T(p)(T(q)+1)T(q) &amp; \text{ if } p&lt;q=r \\
+     \frac{1}{6}(T(p)+2)(T(p)+1)T(p) &amp; \text{ if } p=q=r
    \end{cases}\]</span></p>
 <h2 id="implementation">Implementation</h2>
 <p>For my implementation, I am going to need a function that returns all
@@ -267,12 +268,15 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a
 <p>This is <a href="https://oeis.org/search?q=A000598">A000598</a> on <a
 href="https://oeis.org/">OEIS</a>.</p>
 <div id="footer">
-<p><span id="timestamp">November 18, 2024 04:21:31 PM</span></p>
+<p><span id="timestamp">November 19, 2024 10:40:15 AM</span></p>
 </div>
 </body>
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
+<p>[<strong>2024-11-16</strong>] <a
+href="clean/2024-11-16-counting-ternary-trees.html">Number of
+Isomorphism Classes of Ternary Trees</a></p>
 <p>[<strong>2024-11-12</strong>] <a
 href="clean/2024-11-12-balanced-trees.html">Hosoya Index of Balanced
 Binary Trees</a></p>
