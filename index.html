@@ -142,10 +142,16 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a 
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         (partitions-with-zeros (<span class="op">-</span> n (<span class="op">*</span> k i)) (<span class="op">1-</span> k) (<span class="op">+</span> a i) (<span class="kw">cons</span> (<span class="op">+</span> a i) acc))))))</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> partitions </span>(n k)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>   (partitions-with-zeros (<span class="op">-</span> n k) k <span class="dv">1</span>))</span></code></pre></div>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>   (partitions-with-zeros (<span class="op">-</span> n k) k <span class="dv">1</span>))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> odd-partitions </span>(n k)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> ((alpha (<span class="kw">floor</span> (<span class="op">+</span> n k) <span class="dv">2</span>)))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (xs) (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (<span class="op">1+</span> (<span class="op">*</span> <span class="dv">2</span> x))) xs))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        (partitions-with-zeros (<span class="op">-</span> n alpha) k))))</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PARTITIONS-WITH-ZEROS</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>PARTITIONS</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>PARTITIONS</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ODD-PARTITIONS</span></code></pre></div>
 <p>Next, the coed for counting with multisets:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> binom </span>(n k)</span>
