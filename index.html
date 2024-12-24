@@ -128,6 +128,16 @@ formulation is <em>the number of isomorphism classes of simple graphs on
 gave yesterday has a horrendous time complexity (approximately <span
 class="math inline">\(\mathcal{O}(n!)\)</span>). Today, I am going to
 improve on it.</p>
+<h2 id="a-recap">A recap</h2>
+<p>The number I wanted to compute was <span class="math display">\[
+\frac{1}{n!} \sum_{g\in S_n} 2^{\ell(g)} \]</span></p>
+<p>where <span class="math inline">\(\ell(g)\)</span> was the number of
+disjoint orbits of the action of <span class="math inline">\(g\)</span>
+on the set of edges of the complete graph <span
+class="math inline">\(K_n\)</span>. One observation I made was that
+<span class="math inline">\(\ell(g)\)</span> depends on the shape of
+<span class="math inline">\(g\)</span> in terms of cycle decomposition
+of <span class="math inline">\(g\)</span>.</p>
 <h2 id="some-group-theory">Some group theory</h2>
 <p>There are many different ways of representing permutations on <span
 class="math inline">\(n\)</span>-objects. Mathematicians view them as
@@ -345,7 +355,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a 
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>             (perm (permutation part)))</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">incf</span> sum (<span class="op">*</span> size (<span class="kw">expt</span> <span class="dv">2</span> (number-of-orbits perm edges))))))))</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">28</span> collect (experiment i)))</span></code></pre></div>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">35</span> collect (experiment i)))</span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>EXPERIMENT</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">11</span> <span class="dv">34</span> <span class="dv">156</span> <span class="dv">1044</span> <span class="dv">12346</span> <span class="dv">274668</span> <span class="dv">12005168</span> <span class="dv">1018997864</span> <span class="dv">165091172592</span></span>
@@ -359,15 +369,23 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a> <span class="dv">131331393569895519432161548405816890146389214706146483380458576384</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a> <span class="dv">169487618400693135671278778610295749756246061427513800357039083537927168</span></span>
 <span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">421260006519643885757174107650953992882782878952295704539600450662355704738816</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a> <span class="dv">2019295999678571395728328980890810345860807065053566265347514137546665672316696821760</span>)</span></code></pre></div>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a> <span class="dv">2019295999678571395728328980890810345860807065053566265347514137546665672316696821760</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a> <span class="dv">18691352722478956041683441055221773100906878077027397169675907651818104181986752359177684992</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a> <span class="dv">334494316309257669249439569928080028956631479935393064329967834887217734534880582749030521599504384</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a> <span class="dv">11585815044205812673379511928863764381265040141261061227725971383046167307510698791401041768792169368940544</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a> <span class="dv">777510571865055903406188374366190476598442307924741916354899631006385898637671205231827093391614863192904415807488</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a> <span class="dv">101193386573463039354269401142741027463145963826790815082084909468028166503553807396859190074836698829732761747606799118336</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a> <span class="dv">25566013871397723851094108820013106182843555852275358804907199250742354688175618766408178934854794054153633107026075263960686854144</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a> <span class="dv">12549164197724499332787928665161136748157345371749938537602740270461084253679848281438831503478413083988473184510534726477777359587588087808</span>)</span></code></pre></div>
 <h2 id="an-analysis">An analysis</h2>
 <p><a
 href="https://kaygun.github.io/clean/2024-12-22-counting-graphs.html">Yesterday</a>,
 it took about 10 seconds to calculate the number of isomorphism classes
 up to 10 vertices. Today, it took roughly less than a second to the same
-calculation. It took about 20 seconds up to 28 vertices.</p>
+calculation. It took about a minute and a half for up to 25
+vertices.</p>
 <div id="footer">
-<p><span id="timestamp">December 24, 2024 01:21:02 PM</span></p>
+<p><span id="timestamp">December 24, 2024 04:06:24 PM</span></p>
 </div>
 </body>
 </html>
