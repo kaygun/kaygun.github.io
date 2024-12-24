@@ -154,7 +154,7 @@ class="math inline">\(5\)</span></p>
 mapped to <span class="math inline">\(2\)</span>, <span
 class="math inline">\(2\)</span> is mapped to <span
 class="math inline">\(3\)</span> …’’ etc.</p>
-<h3 id="cycles">Cycles</h3>
+<h2 id="cycles">Cycles</h2>
 <p>There is another way of representing permutations by objects called
 <a
 href="https://mathworld.wolfram.com/PermutationCycle.html"><em>cycles</em></a>.
@@ -202,7 +202,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a 
 representation of a permutation as a specific ordering of numbers from
 <span class="math inline">\(1\)</span> to <span
 class="math inline">\(n\)</span>.</p>
-<h3 id="conjugation">Conjugation</h3>
+<h2 id="conjugation">Conjugation</h2>
 <p>Given two permutations <span class="math inline">\(\sigma\)</span>
 and <span class="math inline">\(\mu\)</span>, there is an operation
 called conjugation <span
@@ -213,10 +213,10 @@ its cycle decomposition but it relabels the numbers in <span
 class="math inline">\(\mu\)</span> using the order defined by <span
 class="math inline">\(\sigma\)</span>. Thus one can see that we can
 conjugate any permutation into something like</p>
-<p><span class="math display">\[ (1\cdots a_1)(a_1\cdots
-a_2)\cdots(a_m\cdots n) \]</span></p>
+<p><span class="math display">\[ (1\cdots a_1)((a_1+1)\cdots
+a_2)\cdots((a_{m-1}+1)\cdots a_m)((a_m+1)\cdots n) \]</span></p>
 <p>where numbers satisfy <span
-class="math inline">\(a_1&lt;\cdots&lt;a_2&lt;\cdots&lt;a_m&lt;\cdots&lt;n\)</span>
+class="math inline">\(1&lt;a_1&lt;\cdots&lt;a_2&lt;\cdots&lt;a_m&lt;\cdots&lt;n\)</span>
 as in our example. Here are all of the permutations that have the same
 shape as our example:</p>
 <p><span class="math display">\[ (123)(45), (132)(45), (124)(35),
@@ -382,10 +382,10 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a
 href="https://kaygun.github.io/clean/2024-12-22-counting-graphs.html">Yesterday</a>,
 it took about 10 seconds to calculate the number of isomorphism classes
 up to 10 vertices. Today, it took roughly less than a second to the same
-calculation. It took about a minute and a half for up to 35
+calculation. It took about a minute and a half seconds up to 25
 vertices.</p>
 <div id="footer">
-<p><span id="timestamp">December 24, 2024 04:06:24 PM</span></p>
+<p><span id="timestamp">December 24, 2024 05:23:50 PM</span></p>
 </div>
 </body>
 </html>
