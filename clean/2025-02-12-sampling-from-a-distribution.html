@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>2025-01-29-markov-triples</title>
+  <title>2025-02-12-sampling-from-a-distribution</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -117,115 +117,303 @@
   type="text/javascript"></script>
 </head>
 <body>
-<h1 id="markov-numbers">Markov Numbers</h1>
+<h1 id="sampling-from-a-random-variable">Sampling from a Random
+Variable</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p><a href="https://en.wikipedia.org/wiki/Markov_number#Markov_tree">A
-Markov triple</a> <span
-class="math inline">\((x,y,z)\in\mathbb{Z}^3\)</span> is a solution to
-the Markov Diophantine equation</p>
-<p><span class="math display">\[ x^2 + y^2 + z^2 = 3xyz \]</span></p>
-<p>There is <a
-href="https://www.ams.org/journals/mcom/1982-39-160/S0025-5718-1982-0669663-7/">a
-very informative paper</a> by <a
-href="https://en.wikipedia.org/wiki/Don_Zagier">Don Zagier</a> on it
-that I recommend highly.</p>
-<p>There are two <em>singular</em> solutions <span
-class="math inline">\((1,1,1)\)</span> and <span
-class="math inline">\((1,1,2)\)</span>. Then we have the first
-non-singular one <span class="math inline">\((1,2,5)\)</span>.
-Strangely, given a non-trivial solution <span
-class="math inline">\((x,y,z)\)</span> we have 3 (new) solutions:</p>
-<ul>
-<li>(y, z, 3<em>y</em>z - x)</li>
-<li>(x, z, 3<em>x</em>z - y)</li>
-<li>(x, y, 3<em>x</em>y - z)</li>
-</ul>
-<p>Thus, we can place all of these solutions on a binary tree. Today, I
-am going to write lisp code that generates all Markov triples on this
-tree up to a certain depth.</p>
-<h2 id="implementation">Implementation</h2>
+<p><a href="https://en.wikipedia.org/wiki/Random_variable">A random
+variable</a> is essentially a <a
+href="https://en.wikipedia.org/wiki/Probability_measure">probability
+density function (PDF)</a> <span class="math inline">\(p\colon \Omega\to
+[0,\infty)\)</span> (or sometimes just referred as a <a
+href="https://en.wikipedia.org/wiki/Probability_measure">probability
+measure</a> or as a <a
+href="https://en.wikipedia.org/wiki/Distribution_(mathematics)">(probability)
+distribution</a>) defined on a <a
+href="https://en.wikipedia.org/wiki/Measurable_space">measurable
+space</a>. The notation for such a choice is <span
+class="math inline">\(X\sim p\)</span> if <span
+class="math inline">\(X\)</span> is a random variable taking values in a
+measurable space <span class="math inline">\(\Omega\)</span> with a PDF
+<span class="math inline">\(p\)</span>. Today, I’ll keep things simple
+and work with random variables which take values in the set of real
+numbers. These are usually referred as <em>continuous random
+variables</em>.</p>
+<p>Here is the problem I am going to tackle today: We would like to take
+a finite sample of numbers <span
+class="math inline">\(x_1,\ldots,x_N\)</span> in such a way that the
+number of samples <span class="math inline">\(N_{a,b}\)</span> in an
+interval <span class="math inline">\([a,b]\)</span> is roughly <span
+class="math inline">\(N\)</span> times the probability of the random
+variable <span class="math inline">\(X\)</span> being in <span
+class="math inline">\([a,b]\)</span>. This number can be written as an
+integral <span class="math display">\[ N_{a,b} \approx N \int_a^b p(x)
+dx \]</span></p>
+<h2 id="uniform-random-sampling">Uniform random sampling</h2>
+<p>Simulating random numbers, or random sampling from a finite
+collection of elements, on a computer is a <a
+href="http://www0.cs.ucl.ac.uk/staff/D.Jones/GoodPracticeRNG.pdf">tricky
+business</a>. What I am going to do today assumes that I have a
+<em>good</em> uniform random sampling simulation.</p>
+<p>The uniform PDF is a density function that looks the same at every
+point. So, I want to have a uniform random variable on the interval
+<span class="math inline">\([a,b]\)</span> my PDF should be <span
+class="math inline">\(p(x) = 0\)</span> when <span
+class="math inline">\(x\)</span> is outside of the interval <span
+class="math inline">\([a,b]\)</span>, and <span
+class="math inline">\(p(x)\)</span> must be the constant <span
+class="math inline">\(\frac{1}{b-a}\)</span> when <span
+class="math inline">\(x\)</span> is in <span
+class="math inline">\([a,b]\)</span>. The choice of the constant is
+dictated by the fact that <span class="math inline">\(p(x)\)</span>
+should integrate to 1 on the whole space. For sampling simulation from a
+uniform random variable in <span class="math inline">\([0,1]\)</span> I
+am going to use lisp’s <a
+href="http://clhs.lisp.se/Body/f_random.htm"><code>random</code></a>
+function:</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> markov </span>(depth)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">labels</span> ((helper (x y z n)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">append</span> (<span class="kw">list</span> (<span class="kw">list</span> x y z))</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">if</span> (<span class="op">&gt;</span> n <span class="dv">0</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                         (<span class="kw">append</span> (<span class="kw">if</span> (<span class="op">&gt;=</span> z x) (helper x z (<span class="op">-</span> (<span class="op">*</span> <span class="dv">3</span> x z) y) (<span class="op">1-</span> n)))</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                 (<span class="kw">if</span> (<span class="op">&gt;=</span> z y) (helper y z (<span class="op">-</span> (<span class="op">*</span> <span class="dv">3</span> y z) x) (<span class="op">1-</span> n))))))))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">append</span> (<span class="kw">list</span> &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>) &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span>))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            (helper <span class="dv">1</span> <span class="dv">2</span> <span class="dv">5</span> depth))))</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">loop</span> repeat <span class="dv">10</span> collect (<span class="kw">random</span> <span class="fl">1.0</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>MARKOV</span></code></pre></div>
-<p>Let us test:</p>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.24052</span> <span class="fl">0.6231128</span> <span class="fl">0.20052421</span> <span class="fl">0.74887836</span> <span class="fl">0.345209</span> <span class="fl">0.107444644</span> <span class="fl">0.18069339</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.8515891</span> <span class="fl">0.5105244</span> <span class="fl">0.76619613</span>)</span></code></pre></div>
+<h2 id="sampling-from-a-specific-random-variable.">Sampling from a
+specific random variable.</h2>
+<p>OK. Assuming we have a good uniform sampling simulation, how can we
+simulate sampling from a random variable <span
+class="math inline">\(X\sim p\)</span>?</p>
+<p>Now, each PDF <span class="math inline">\(p(x)\)</span> has a <a
+href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">cumulative
+distribution function (CDF)</a> defined via an integral <span
+class="math display">\[
+c(x) = \int_{-\infty}^x p(t)dt \]</span> Since PDF function <span
+class="math inline">\(p(t)\)</span> is positive, the function defined by
+the integral is non-decreasing which means the CDF function <span
+class="math inline">\(c(x)\)</span> is invertible <a
+href="https://en.wikipedia.org/wiki/Almost_everywhere"><em>almost
+everywhere</em></a> if <span class="math inline">\(p(x)\)</span> is nice
+enough. Moreover, if <span class="math inline">\(x_1,\ldots,x_N\)</span>
+is a sample from the uniform distribution on <span
+class="math inline">\([0,1]\)</span>, the numbers <span
+class="math display">\[ c^{-1}(x_1),\ldots,c^{-1}(x_N) \]</span> is a
+sample from <span class="math inline">\(X\sim p\)</span>.</p>
+<h2 id="approximating-cdf">Approximating CDF</h2>
+<p>Now, let us assume we have the PDF <span
+class="math inline">\(p(x)\)</span> on a fixed finite interval <span
+class="math inline">\([a,b]\)</span>, and let us subdivide the interval
+into equal pieces of length <span
+class="math inline">\(\epsilon&gt;0\)</span> <span
+class="math display">\[ x_i = a + i\cdot \epsilon \text{ where }
+i=0,\ldots,\lfloor (b-a)/\epsilon \rfloor \]</span> and consider the
+numbers <span class="math inline">\(p(x_1),\ldots,p(x_N)\)</span>. We
+can approximate the CDF via a Riemann sum</p>
+<p><span class="math display">\[ c(x) \approx
+\epsilon\sum_{i=0}^{\lfloor x/\epsilon \rfloor} p(x_i) \]</span></p>
+<p>I can do that in lisp. First, I’ll need a reduce function which
+returns the partial applications.</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;~{~A~%~}&quot;</span> (markov <span class="dv">5</span>))</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> reduce-with-intermediates </span>(fn xs &amp;optional carry)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">null</span> xs)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">nreverse</span> carry)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let</span> ((res (<span class="kw">if</span> (<span class="kw">null</span> carry)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">funcall</span> fn (<span class="kw">car</span> xs))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">funcall</span> fn (<span class="kw">car</span> xs) (<span class="kw">car</span> carry)))))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        (reduce-with-intermediates fn (<span class="kw">cdr</span> xs) (<span class="kw">cons</span> res carry)))))</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">5</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">5</span> <span class="dv">13</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">13</span> <span class="dv">34</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">34</span> <span class="dv">89</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">89</span> <span class="dv">233</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">233</span> <span class="dv">610</span>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>(<span class="dv">89</span> <span class="dv">233</span> <span class="dv">62210</span>)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>(<span class="dv">34</span> <span class="dv">89</span> <span class="dv">9077</span>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>(<span class="dv">34</span> <span class="dv">9077</span> <span class="dv">925765</span>)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>(<span class="dv">89</span> <span class="dv">9077</span> <span class="dv">2423525</span>)</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">34</span> <span class="dv">1325</span>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">1325</span> <span class="dv">51641</span>)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">51641</span> <span class="dv">2012674</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1325</span> <span class="dv">51641</span> <span class="dv">205272962</span>)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>(<span class="dv">34</span> <span class="dv">1325</span> <span class="dv">135137</span>)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>(<span class="dv">34</span> <span class="dv">135137</span> <span class="dv">13782649</span>)</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1325</span> <span class="dv">135137</span> <span class="dv">537169541</span>)</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">13</span> <span class="dv">194</span>)</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">194</span> <span class="dv">2897</span>)</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">2897</span> <span class="dv">43261</span>)</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">43261</span> <span class="dv">646018</span>)</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2897</span> <span class="dv">43261</span> <span class="dv">375981346</span>)</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>(<span class="dv">194</span> <span class="dv">2897</span> <span class="dv">1686049</span>)</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>(<span class="dv">194</span> <span class="dv">1686049</span> <span class="dv">981277621</span>)</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2897</span> <span class="dv">1686049</span> <span class="dv">14653451665</span>)</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">194</span> <span class="dv">7561</span>)</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">7561</span> <span class="dv">294685</span>)</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">294685</span> <span class="dv">11485154</span>)</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>(<span class="dv">7561</span> <span class="dv">294685</span> <span class="dv">6684339842</span>)</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>(<span class="dv">194</span> <span class="dv">7561</span> <span class="dv">4400489</span>)</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>(<span class="dv">194</span> <span class="dv">4400489</span> <span class="dv">2561077037</span>)</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>(<span class="dv">7561</span> <span class="dv">4400489</span> <span class="dv">99816291793</span>)</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2</span> <span class="dv">5</span> <span class="dv">29</span>)</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2</span> <span class="dv">29</span> <span class="dv">169</span>)</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2</span> <span class="dv">169</span> <span class="dv">985</span>)</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2</span> <span class="dv">985</span> <span class="dv">5741</span>)</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>(<span class="dv">2</span> <span class="dv">5741</span> <span class="dv">33461</span>)</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>(<span class="dv">985</span> <span class="dv">5741</span> <span class="dv">16964653</span>)</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>(<span class="dv">169</span> <span class="dv">985</span> <span class="dv">499393</span>)</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>(<span class="dv">169</span> <span class="dv">499393</span> <span class="dv">253191266</span>)</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>(<span class="dv">985</span> <span class="dv">499393</span> <span class="dv">1475706146</span>)</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>(<span class="dv">29</span> <span class="dv">169</span> <span class="dv">14701</span>)</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>(<span class="dv">29</span> <span class="dv">14701</span> <span class="dv">1278818</span>)</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>(<span class="dv">29</span> <span class="dv">1278818</span> <span class="dv">111242465</span>)</span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>(<span class="dv">14701</span> <span class="dv">1278818</span> <span class="dv">56399710225</span>)</span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>(<span class="dv">169</span> <span class="dv">14701</span> <span class="dv">7453378</span>)</span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>(<span class="dv">169</span> <span class="dv">7453378</span> <span class="dv">3778847945</span>)</span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>(<span class="dv">14701</span> <span class="dv">7453378</span> <span class="dv">328716329765</span>)</span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">29</span> <span class="dv">433</span>)</span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">433</span> <span class="dv">6466</span>)</span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">6466</span> <span class="dv">96557</span>)</span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">96557</span> <span class="dv">1441889</span>)</span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>(<span class="dv">6466</span> <span class="dv">96557</span> <span class="dv">1873012681</span>)</span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>(<span class="dv">433</span> <span class="dv">6466</span> <span class="dv">8399329</span>)</span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>(<span class="dv">433</span> <span class="dv">8399329</span> <span class="dv">10910721905</span>)</span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>(<span class="dv">6466</span> <span class="dv">8399329</span> <span class="dv">162930183509</span>)</span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>(<span class="dv">29</span> <span class="dv">433</span> <span class="dv">37666</span>)</span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>(<span class="dv">29</span> <span class="dv">37666</span> <span class="dv">3276509</span>)</span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>(<span class="dv">29</span> <span class="dv">3276509</span> <span class="dv">285018617</span>)</span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>(<span class="dv">37666</span> <span class="dv">3276509</span> <span class="dv">370238963953</span>)</span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>(<span class="dv">433</span> <span class="dv">37666</span> <span class="dv">48928105</span>)</span>
-<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>(<span class="dv">433</span> <span class="dv">48928105</span> <span class="dv">63557570729</span>)</span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>(<span class="dv">37666</span> <span class="dv">48928105</span> <span class="dv">5528778008357</span>)</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>REDUCE-WITH-INTERMEDIATES</span></code></pre></div>
+<p>Let us test. I am going to convert the sine function into PDF</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defparameter</span><span class="fu"> epsilon </span><span class="fl">0.0001</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defparameter</span><span class="fu"> sine-cdf-xs </span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">loop</span> for x from <span class="dv">0</span> to <span class="fl">1.0</span> by epsilon collect x))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defparameter</span><span class="fu"> sine-cdf-ys</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>   (reduce-with-intermediates</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>           <span class="op">#&#39;</span>+</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (<span class="op">*</span> epsilon (<span class="op">/</span> <span class="kw">pi</span> <span class="fl">2.0</span>) (<span class="kw">sin</span> (<span class="op">*</span> <span class="kw">pi</span> x)))) </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                   sine-cdf-xs)))</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>EPSILON</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>SINE-CDF-XS</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>SINE-CDF-YS</span></code></pre></div>
+<p>I did have to modify the sine function by a suitable constant to make
+this look like a CDF.</p>
+<p>So, we get a sample of outputs from <code>sine-cdf</code> function.
+But, we don’t want to approximate <code>sine-cdf</code>, we want the
+inverse of it. Before we dive into it, let us first discuss
+interpolation.</p>
+<h2 id="interpolation">Interpolation</h2>
+<p>Given a list of pairs <span
+class="math inline">\((x_1,y_1),\ldots,(x_N,y_N)\)</span> if we want a
+function <span class="math inline">\(f(x)\)</span> that interpolates
+these points we would need the interval <span
+class="math inline">\(i\)</span> with <span class="math inline">\(x\in
+[x_i,x_{i+1}]\)</span> and then we would write <span
+class="math display">\[ f(x) = \frac{x_{i+1}-x}{x_{i+1}-x_i} y_i +
+\frac{x-x_i}{x_{i+1}-x_i} y_{i+1} \]</span> if we wanted to linearly
+interpolate. However, I am going to use a much simpler scheme: I’ll use
+the left-end-point <span class="math display">\[ f(x) = y_i
+\]</span></p>
+<p>Let us implement that:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> middle </span>(a b)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">let</span> ((c (<span class="op">+</span> a b)))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">if</span> (<span class="kw">evenp</span> c)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>          (<span class="op">/</span> c <span class="dv">2</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>          (<span class="op">/</span> (<span class="op">1-</span> c) <span class="dv">2</span>))))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> place </span>(x xs &amp;optional (a <span class="dv">0</span>) (b (<span class="kw">length</span> xs)))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">let</span> ((c (middle a b)))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">cond</span> ((<span class="op">&lt;=</span> (<span class="op">-</span> b a) <span class="dv">1</span>) a)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            ((<span class="op">&gt;=</span> x (<span class="kw">elt</span> xs c)) (place x xs c b))</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">t</span> (place x xs a c)))))</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> interpolate </span>(xs ys)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">lambda</span> (x) (<span class="kw">elt</span> ys (place x xs))))</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>MIDDLE</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>PLACE</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>INTERPOLATE</span></code></pre></div>
+<p>Let us test on the sine function</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((xs (<span class="kw">sort</span> (<span class="kw">loop</span> repeat <span class="dv">500</span> collect (<span class="kw">random</span> <span class="kw">pi</span>)) <span class="op">#&#39;</span>&lt;))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>       (ys (<span class="kw">mapcar</span> <span class="op">#&#39;</span>sin xs))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>       (approx (interpolate xs ys))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>       (zs (<span class="kw">loop</span> repeat <span class="dv">20</span> collect (<span class="kw">random</span> <span class="kw">pi</span>))))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;~{~{~2,4f ~2,4f~%~}~}&quot;</span> (<span class="kw">mapcar</span> <span class="op">#&#39;</span>list (<span class="kw">mapcar</span> <span class="op">#&#39;</span>sin zs) (<span class="kw">mapcar</span> approx zs))))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9527</span> .<span class="dv">9526</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7193</span> .<span class="dv">7226</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3221</span> .<span class="dv">3220</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9819</span> .<span class="dv">9814</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2509</span> .<span class="dv">2636</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2576</span> .<span class="dv">2636</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9685</span> .<span class="dv">9691</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2978</span> .<span class="dv">3008</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8657</span> .<span class="dv">8691</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3628</span> .<span class="dv">3625</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9984</span> .<span class="dv">9982</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0427</span> .<span class="dv">0367</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9509</span> .<span class="dv">9503</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>.<span class="dv">4417</span> .<span class="dv">4583</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8723</span> .<span class="dv">8688</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9999</span> <span class="fl">1.0000</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7360</span> .<span class="dv">7405</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3575</span> .<span class="dv">3626</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>.<span class="dv">1077</span> .<span class="dv">1046</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8791</span> .<span class="dv">8792</span></span></code></pre></div>
+<h2 id="interpolation-of-inverse-functions">Interpolation of inverse
+functions</h2>
+<p>For inverse functions, we do something very similar: we find the
+interval number <span class="math inline">\(i\)</span> that satisfies
+<span class="math inline">\(x\in [f(x_i),f(x_{i+1})]\)</span> then let
+<span class="math inline">\(f^{-1}(x)\)</span> be an interpolation of
+<span class="math inline">\(x_i\)</span> and <span
+class="math inline">\(x_{i+1}\)</span>: <span class="math display">\[
+f^{-1}(x) = \frac{f(x_{i+1})-x}{f(x_{i+1})-f(x_i)}x_i +
+\frac{x-f(x_i)}{f(x_{i+1})-f(x_i)}x_{i+1} \]</span> However, in our case
+this would be the left-end-point: <span class="math display">\[
+f^{-1}(x) = x_i \]</span></p>
+<p>In other words, in both cases, we interpolate the inverse function by
+reversing <span class="math inline">\((x_i,y_i)\)</span>’s to <span
+class="math inline">\((y_i,x_i)\)</span>’s.</p>
+<p>Let us test on the sine function again. But remember that sine is
+invertible only on <span class="math inline">\([0,\pi/2]\)</span>:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((xs (<span class="kw">sort</span> (<span class="kw">loop</span> repeat <span class="dv">500</span> collect (<span class="kw">random</span> (<span class="op">/</span> <span class="kw">pi</span> <span class="dv">2</span>))) <span class="op">#&#39;</span>&lt;))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>       (ys (<span class="kw">mapcar</span> <span class="op">#&#39;</span>sin xs))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>       (approx (interpolate ys xs))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>       (zs (<span class="kw">sort</span> (<span class="kw">loop</span> repeat <span class="dv">20</span> collect (<span class="kw">random</span> <span class="fl">1.0</span>d0)) <span class="op">#&#39;</span>&lt;)))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;~{~{~2,4f ~2,4f~%~}~}&quot;</span> (<span class="kw">mapcar</span> <span class="op">#&#39;</span>list (<span class="kw">mapcar</span> <span class="op">#&#39;</span>asin zs) (<span class="kw">mapcar</span> approx zs))))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0297</span> .<span class="dv">0280</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0479</span> .<span class="dv">0451</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0861</span> .<span class="dv">0777</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>.<span class="dv">1197</span> .<span class="dv">1144</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>.<span class="dv">1353</span> .<span class="dv">1352</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2970</span> .<span class="dv">2968</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3188</span> .<span class="dv">3186</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3216</span> .<span class="dv">3186</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>.<span class="dv">4984</span> .<span class="dv">4926</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7063</span> .<span class="dv">7009</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7110</span> .<span class="dv">7068</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8620</span> .<span class="dv">8552</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8935</span> .<span class="dv">8909</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9680</span> .<span class="dv">9629</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="fl">1.0176</span> <span class="fl">1.0126</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fl">1.1661</span> <span class="fl">1.1652</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="fl">1.2155</span> <span class="fl">1.2144</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="fl">1.2319</span> <span class="fl">1.2256</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="fl">1.2635</span> <span class="fl">1.2632</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="fl">1.3829</span> <span class="fl">1.3829</span></span></code></pre></div>
+<h2 id="approximating-the-inverse-of-cdf">Approximating the inverse of
+CDF</h2>
+<p>Let us test the inversion on the sine-cdf:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let*</span> ((sine-cdf (interpolate sine-cdf-xs sine-cdf-ys))</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>       (sine-cdf-inverse (interpolate sine-cdf-ys sine-cdf-xs))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>       (xs (<span class="kw">sort</span> (<span class="kw">loop</span> repeat <span class="dv">20</span> collect (<span class="kw">random</span> <span class="fl">1.0</span>d0)) <span class="op">#&#39;</span>&lt;))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>       (ys (<span class="kw">mapcar</span> sine-cdf xs))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>       (zs (<span class="kw">mapcar</span> <span class="op">#&#39;</span>list xs (<span class="kw">mapcar</span> sine-cdf-inverse ys))))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;~{~{~2,4f ~2,4f~%~}~}&quot;</span> zs))</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0888</span> .<span class="dv">0888</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0900</span> .<span class="dv">0900</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>.<span class="dv">1540</span> .<span class="dv">1539</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2175</span> .<span class="dv">2175</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2193</span> .<span class="dv">2192</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2420</span> .<span class="dv">2419</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>.<span class="dv">2652</span> .<span class="dv">2652</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>.<span class="dv">4074</span> .<span class="dv">4074</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>.<span class="dv">4357</span> .<span class="dv">4357</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>.<span class="dv">5075</span> .<span class="dv">5075</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>.<span class="dv">5605</span> .<span class="dv">5604</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>.<span class="dv">6556</span> .<span class="dv">6556</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>.<span class="dv">6667</span> .<span class="dv">6666</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>.<span class="dv">6740</span> .<span class="dv">6740</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7127</span> .<span class="dv">7126</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7499</span> .<span class="dv">7498</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7996</span> .<span class="dv">7995</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8755</span> .<span class="dv">8755</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9484</span> .<span class="dv">9483</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>.<span class="dv">9705</span> .<span class="dv">9704</span></span></code></pre></div>
+<h2 id="random-sampling-from-an-arbitrary-random-variable">Random
+sampling from an arbitrary random variable</h2>
+<p>Given a PDF <span class="math inline">\(f(x)\)</span>, first I would
+need the CDF <span class="math inline">\(F(x)\)</span> from <span
+class="math inline">\(f(x)\)</span>. In the absence of the function, we
+would need a dense enough sample <span
+class="math inline">\((x_1,p_1),\ldots,(x_N,p_N)\)</span> of points and
+associated probabilities to write an interpolation of the CDF using
+partial sums <span class="math display">\[ y_i = \sum_{j=1}^i p_j
+\]</span> to get the pairs <span
+class="math inline">\((x_1,y_1),\ldots,(x_N,y_N)\)</span> and then an
+interpolation <span class="math inline">\(F^{-1}(x)\)</span> for the
+inverse function using the reverse pairs <span
+class="math inline">\((y_1,x_1),\ldots,(y_N,x_N)\)</span>. Then we take
+a good sample of uniform random numbers <span
+class="math inline">\(u_1,\ldots,u_m\)</span> and evaluate <span
+class="math inline">\(F^{-1}(u_1),\ldots,F^{-1}(u_m)\)</span>.</p>
+<p>For the running example we get</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((sine-cdf-inverse (interpolate sine-cdf-ys sine-cdf-xs)))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">defun</span><span class="fu"> sample-sine-pdf </span>(m)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>       (<span class="kw">loop</span> repeat m collect (<span class="kw">funcall</span> sine-cdf-inverse (<span class="kw">random</span> <span class="fl">1.0</span>)))))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>(<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;~{~2,4f~%~}&quot;</span> (sample-sine-pdf <span class="dv">10</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>SAMPLE-SINE-PDF</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>.<span class="dv">6104</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>.<span class="dv">5235</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>.<span class="dv">8408</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>.<span class="dv">6770</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7273</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3837</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>.<span class="dv">0471</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>.<span class="dv">5568</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>.<span class="dv">3339</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>.<span class="dv">7586</span></span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">January 29, 2025 01:45:35 AM</span></p>
+<p><span id="timestamp">February 12, 2025 10:35:39 PM</span></p>
 </div>
 </body>
 </html>
