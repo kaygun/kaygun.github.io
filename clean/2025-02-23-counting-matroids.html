@@ -117,7 +117,7 @@
   type="text/javascript"></script>
 </head>
 <body>
-<h1 id="counting-matroids">Counting Matroids</h1>
+<h1 id="counting-matroid">Counting Matroid</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>There is a combinatorial structure called <a
 href="https://mathworld.wolfram.com/Matroid.html">matroid</a> which
@@ -141,9 +141,10 @@ r(B)\)</span></li>
 <span class="math inline">\(E\)</span> of a fixed size <span
 class="math inline">\(n\)</span>. This number is given by <a
 href="https://oeis.org/A058673">A058673</a> on <a
-href="https://oeis.org/">OEIS</a>. I am going to use a brute-force
-search of the space of functions that satisfies only the condition givin
-in (1) above. The complexity is horrendous <span
+href="https://oeis.org/">OEIS</a>. I am going to use a
+brute-force-search for functions satisfying conditions (2) and (3) in
+the space of functions that satisfies only the condition (1) above. The
+complexity is horrendous <span
 class="math inline">\(\mathcal{O}(4^n)\)</span>.</p>
 <h2 id="implementation">Implementation</h2>
 <p>Well… I am going to implement this in C.</p>
@@ -267,6 +268,7 @@ Algorithm</a>.</p>
 </tr>
 </tbody>
 </table>
+<p>Didn’t even try <span class="math inline">\(N=5\)</span>.</p>
 </body>
 </html>
 </section><div class="navigate">
