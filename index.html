@@ -138,10 +138,11 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a 
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="op">=</span> n <span class="dv">1</span>)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">list</span> <span class="dv">0</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">loop</span> for i from <span class="dv">1</span> below n</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="kw">append</span> (<span class="kw">loop</span> for left in (parenthesizations i)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">append</span> (<span class="kw">loop</span> for right in (parenthesizations (<span class="op">-</span> n i))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                                      collect (<span class="kw">cons</span> left right))))))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>(parenthesizations <span class="dv">4</span>)</span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="kw">append</span> (<span class="kw">mapcar</span> <span class="op">#&#39;</span>cons </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                           (parenthesizations i) </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                           (parenthesizations (<span class="op">-</span> n i))))))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>(parenthesizations <span class="dv">4</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PARENTHESIZATIONS</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> . <span class="dv">0</span>) (<span class="dv">0</span> (<span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>) ((<span class="dv">0</span> . <span class="dv">0</span>) <span class="dv">0</span> . <span class="dv">0</span>) ((<span class="dv">0</span> <span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>)</span>
