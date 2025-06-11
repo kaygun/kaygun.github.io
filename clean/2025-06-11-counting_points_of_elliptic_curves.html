@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>2025-04-23-loday-coordinates</title>
+  <title>2025-06-11-counting_points_of_elliptic_curves</title>
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -116,158 +116,78 @@
   type="text/javascript"></script>
 </head>
 <body>
-<h1 id="loday-coordinates-for-associahedra">Loday Coordinates for
-Associahedra</h1>
+<h1 id="counting-points-of-elliptic-curves">Counting Points of Elliptic
+Curves</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p><a
-href="https://kaygun.github.io/clean/2025-04-22-associahedra.html">Yesterday</a>
-I wrote a block of scala code to calculate the (integer) Loday
-coordinates of the convex polytopes that model associahedra. I wrote the
-code with the help of a local LLM (codellama) but I wasn’t really happy
-about it. The code was bloated, had unnecessary bits, and not precise at
-all. Today, I am going to rewrite it in Common Lisp. This is completely
-unadulterated.</p>
-<h2 id="implementation">Implementation</h2>
-<p>Let us start with our ground function that generates all
-parenthesizations of <span class="math inline">\(n+1\)</span>-terms.
-This is almost verbatim translation of the scala code, but then again,
-this is the only sensible solution.</p>
+<p>In my random readings of nice math, I came across a very nice
+counting argument.</p>
+<p>Now, consider the following curve <span class="math display">\[ Y^2 =
+X^3 + AX + B \]</span></p>
+<p>which is called an <a
+href="https://en.wikipedia.org/wiki/Elliptic_curve">elliptic curve</a>.
+The curve is called <em>non-singular</em> if its discriminant <span
+class="math inline">\(4A^3+27B^2\)</span> is non-zero. There are some <a
+href="https://en.wikipedia.org/wiki/Counting_points_on_elliptic_curves">sophisticated
+algorithms</a> that count the number of points <span
+class="math inline">\((X,Y)\)</span> on a non-singular elliptic curve in
+the space <span class="math inline">\(\mathbb{F}^2\)</span> over a
+<em>finite</em> field <span class="math inline">\(\mathbb{F}\)</span>.
+But, I am going to use a simple formula I saw in a paper titled “<a
+href="https://www.numdam.org/item/JTNB_1995__7_1_219_0.pdf">Counting
+points on elliptic curves over finite fields</a>” by René Schoof. The
+number of points over the finite field <span
+class="math inline">\(\mathbb{F}\)</span> is</p>
+<p><span class="math display">\[ 1 + p + \sum_{x\in \mathbb{Z}/p}
+\left(\frac{x^3 + Ax + B}{p}\right) \]</span></p>
+<p>where <span class="math inline">\(\left(\frac{q}{p}\right)\)</span>
+is what is called <a
+href="https://en.wikipedia.org/wiki/Legendre_symbol">the Legendre
+symbol</a> which can be calculated as the simple exponent</p>
+<p><span class="math display">\[ \left(\frac{q}{p}\right) = q^{(p-1)/2}
+\]</span></p>
+<p>when <span class="math inline">\(p\)</span> is an odd prime.</p>
+<h2 id="an-implementation">An Implementation</h2>
+<p>Let us start by implementing a smarter modular exponentiation:</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> parenthesizations </span>(n)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="op">=</span> n <span class="dv">1</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">list</span> <span class="dv">0</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">loop</span> for i from <span class="dv">1</span> below n</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="kw">append</span> (<span class="kw">loop</span> for left in (parenthesizations i) </span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">append</span> (<span class="kw">loop</span> for right in (parenthesizations (<span class="op">-</span> n i))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                                     collect (<span class="kw">cons</span> left right))))))</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>(parenthesizations <span class="dv">4</span>)</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> mod-exp </span>(b e p &amp;optional (acc <span class="dv">1</span>))</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">zerop</span> e)  acc)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">evenp</span> e)  (mod-exp (<span class="kw">mod</span> (<span class="op">*</span> b b) p) (<span class="op">/</span> e <span class="dv">2</span>) p acc))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">t</span>          (mod-exp (<span class="kw">mod</span> (<span class="op">*</span> b b) p) (<span class="op">/</span> (<span class="op">1-</span> e) <span class="dv">2</span>) p (<span class="kw">mod</span> (<span class="op">*</span> acc b) p)))))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>(mod-exp <span class="dv">3</span> <span class="dv">255</span> <span class="dv">32933</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PARENTHESIZATIONS</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> . <span class="dv">0</span>) (<span class="dv">0</span> (<span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>) ((<span class="dv">0</span> . <span class="dv">0</span>) <span class="dv">0</span> . <span class="dv">0</span>) ((<span class="dv">0</span> <span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a> (((<span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>) . <span class="dv">0</span>))</span></code></pre></div>
-<p>Now, both of the functions I wrote yesterday for labeling and
-counting leaves can be combined into a single function that traverses
-over a tree:</p>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>MOD-EXP</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dv">14907</span></span></code></pre></div>
+<p>This implementation is a variation of <a
+href="https://en.wikipedia.org/wiki/Ancient_Egyptian_multiplication">Egyptian
+multiplication</a> modified for exponentiation.</p>
+<p>Next, we implement the Legendre symbol as below:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> traverse </span>(tree base fn)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">atom</span> tree)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">funcall</span> base tree)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">funcall</span> fn (traverse (<span class="kw">car</span> tree) base fn)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                  (traverse (<span class="kw">cdr</span> tree) base fn))))</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> legendre </span>(a p)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">zerop</span> (<span class="kw">mod</span> a p)) <span class="dv">0</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ((mod-exp a (<span class="op">/</span> (<span class="op">1-</span> p) <span class="dv">2</span>) p) <span class="dv">1</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">t</span> <span class="op">-</span><span class="dv">1</span>)))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>(legendre <span class="dv">255</span> <span class="dv">32933</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TRAVERSE</span></code></pre></div>
-<p>For counting we do</p>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>LEGENDRE</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div>
+<p>Now, we are ready</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(traverse &#39;(<span class="dv">0</span> (<span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>) (<span class="kw">lambda</span> (x) <span class="dv">1</span>) <span class="op">#&#39;</span>+)</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> count-points </span>(a b p)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">not</span> (<span class="kw">zerop</span> (<span class="kw">mod</span> (<span class="op">+</span> (<span class="op">*</span> <span class="dv">4</span> a a a) (<span class="op">*</span> <span class="dv">27</span> b b)) p)))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      (<span class="op">+</span> <span class="dv">1</span> p (<span class="kw">loop</span> for i from <span class="dv">0</span> below p</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                   for x <span class="op">=</span> (<span class="op">+</span> (<span class="op">*</span> i i i) (<span class="op">*</span> a i) b)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                   sum (legendre x p)))))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>(count-points <span class="dv">7</span> <span class="dv">13</span> <span class="dv">32933</span>)</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span></span></code></pre></div>
-<p>For flattening we do</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(traverse &#39;(<span class="dv">0</span> (<span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>) <span class="op">#&#39;</span>list <span class="op">#&#39;</span>append)</span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span>)</span></code></pre></div>
-<p>For relabelling we do</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">mapcar</span> (<span class="kw">lambda</span> (tree)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">let</span> ((counter (<span class="kw">let</span> ((n <span class="dv">0</span>)) (<span class="kw">lambda</span> (x) (<span class="kw">incf</span> n)))))</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>             (traverse tree counter <span class="op">#&#39;</span>cons)))</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        (parenthesizations <span class="dv">4</span>))</span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>((<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> . <span class="dv">4</span>) (<span class="dv">1</span> (<span class="dv">2</span> . <span class="dv">3</span>) . <span class="dv">4</span>) ((<span class="dv">1</span> . <span class="dv">2</span>) <span class="dv">3</span> . <span class="dv">4</span>) ((<span class="dv">1</span> <span class="dv">2</span> . <span class="dv">3</span>) . <span class="dv">4</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> (((<span class="dv">1</span> . <span class="dv">2</span>) . <span class="dv">3</span>) . <span class="dv">4</span>))</span></code></pre></div>
-<p>Next, I’ll implement the function that returns the size of the
-minimal subtree that contains a collection of elements. This is slight
-generalization of yesterday’s code where the code checked only a
-pair:</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> min-subtree </span>(tree pair)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">atom</span> tree)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">cons</span> <span class="kw">most-positive-fixnum</span> (<span class="kw">list</span> tree))</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let*</span> ((left (min-subtree (<span class="kw">car</span> tree) pair))</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>             (right (min-subtree (<span class="kw">cdr</span> tree) pair))</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>             (elts (<span class="kw">union</span> (<span class="kw">cdr</span> left) (<span class="kw">cdr</span> right))))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">if</span> (<span class="kw">subsetp</span> pair elts)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">cons</span> (<span class="kw">min</span> (<span class="kw">car</span> left) (<span class="kw">car</span> right) (<span class="op">1-</span> (<span class="kw">length</span> elts))) elts)</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">cons</span> (<span class="kw">min</span> (<span class="kw">car</span> left) (<span class="kw">car</span> right)) elts)))))</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>(min-subtree &#39;((<span class="dv">1</span> . <span class="dv">2</span>) ((<span class="dv">3</span> . <span class="dv">4</span>) . <span class="dv">5</span>) . <span class="dv">6</span>) &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>))</span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>MIN-SUBTREE</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">5</span> <span class="dv">6</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">1</span> <span class="dv">2</span>)</span></code></pre></div>
-<p>Next, the Loday coordinates for a given tree:</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> loday-coordinates </span>(tree n)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">loop</span> for i from <span class="dv">1</span> below n</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        collect (<span class="kw">car</span> (min-subtree tree (<span class="kw">list</span> i (<span class="op">1+</span> i))))))</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>(loday-coordinates &#39;((<span class="dv">1</span> . <span class="dv">2</span>) ((<span class="dv">3</span> . <span class="dv">4</span>) . <span class="dv">5</span>) . <span class="dv">6</span>) <span class="dv">6</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>LODAY-COORDINATES</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">5</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>)</span></code></pre></div>
-<p>And finally, the coordinates of the extremal points for the convex
-polytope that models an associahedron <span
-class="math inline">\(K_n\)</span>:</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> associahedra-coordinates </span>(n)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">labels</span> ((counter ()</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">let</span> ((n <span class="dv">0</span>)) (<span class="kw">lambda</span> (x) (<span class="kw">incf</span> n))))</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>           (label-tree (tree)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">let</span> ((c (counter)))</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>               (traverse tree c <span class="op">#&#39;</span>cons))))</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">mapcar</span> (<span class="kw">lambda</span> (x) (loday-coordinates (label-tree x) n))</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>            (parenthesizations n))))</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>(associahedra-coordinates <span class="dv">4</span>)</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>(associahedra-coordinates <span class="dv">5</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ASSOCIAHEDRA-COORDINATES</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>((<span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>) (<span class="dv">3</span> <span class="dv">1</span> <span class="dv">2</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span>) (<span class="dv">2</span> <span class="dv">1</span> <span class="dv">3</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>))</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>((<span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>) (<span class="dv">4</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">2</span>) (<span class="dv">4</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span>) (<span class="dv">4</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">3</span>) (<span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>) (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">2</span> <span class="dv">1</span>) (<span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a> (<span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">1</span>) (<span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span>) (<span class="dv">3</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span>) (<span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">4</span>) (<span class="dv">2</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">4</span>) (<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>))</span></code></pre></div>
-<h2 id="postscript">Postscript</h2>
-<p>In my experience of playing with LLMs (both local and hosted) in
-generating code, LLMs do well with imperative languages in relatively
-simple problems. For some reason, all of the LLMs I tried generated junk
-lisp code for the problems I am interested in. I tend to write
-recursive, generalized/abstracted lisp code (think of
-<code>count-leaves</code> or <code>flatten</code> or
-<code>label-leaves</code> below and <code>traverse</code> function
-above). LLMs can’t get even close to write something similar.</p>
-<div class="sourceCode" id="cb17"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> count-leaves </span>(tree)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">atom</span> tree)</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>      <span class="dv">1</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>      (<span class="op">+</span> (count-leaves (<span class="kw">car</span> tree))</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>         (count-leaves (<span class="kw">cdr</span> tree)))))</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>(count-leaves &#39;((<span class="dv">1</span> . <span class="dv">2</span>) ((<span class="dv">3</span> . <span class="dv">4</span>) . <span class="dv">5</span>) . <span class="dv">6</span>))</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> flatten </span>(tree)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">atom</span> tree)</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">list</span> tree)</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">append</span> (flatten (<span class="kw">car</span> tree))</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>              (flatten (<span class="kw">cdr</span> tree)))))</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>(flatten &#39;((<span class="dv">1</span> . <span class="dv">2</span>) ((<span class="dv">3</span> . <span class="dv">4</span>) . <span class="dv">5</span>) . <span class="dv">6</span>))</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> label-leaves </span>(tree counter)</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">if</span> (<span class="kw">atom</span> tree)</span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">funcall</span> counter)</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">cons</span> (label-leaves (<span class="kw">car</span> tree) counter)</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>            (label-leaves (<span class="kw">cdr</span> tree) counter))))</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> ((c (<span class="kw">let</span> ((n <span class="dv">0</span>)) (<span class="kw">lambda</span> () (<span class="kw">incf</span> n)))))</span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>  (label-leaves &#39;((<span class="dv">0</span> . <span class="dv">0</span>) ((<span class="dv">0</span> . <span class="dv">0</span>) . <span class="dv">0</span>) . <span class="dv">0</span>) c))</span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>COUNT-LEAVES</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="dv">6</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>FLATTEN</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span>)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>LABEL-LEAVES</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>((<span class="dv">1</span> . <span class="dv">2</span>) ((<span class="dv">3</span> . <span class="dv">4</span>) . <span class="dv">5</span>) . <span class="dv">6</span>)</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>COUNT-POINTS</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dv">65867</span></span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">May 04, 2025 11:55:05 PM</span></p>
+<p><span id="timestamp">June 11, 2025 10:04:37 PM</span></p>
 </div>
 </body>
 </html>
