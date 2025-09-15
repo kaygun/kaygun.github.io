@@ -119,8 +119,7 @@
   type="text/javascript"></script>
 </head>
 <body>
-<h1 id="strongly-depth-balanced-binary-trees">Strongly Depth Balanced
-Binary Trees</h1>
+<h1 id="depth-balanced-binary-trees">Depth-Balanced Binary Trees</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
 <p>A directed graph <span class="math inline">\((V,E)\)</span> is called
 <em>a rooted binary tree</em> if every vertex <span
@@ -138,47 +137,45 @@ class="math inline">\((v,v_r)\)</span> are the directed edges coming out
 of <span class="math inline">\(v\)</span>. Notice that <span
 class="math inline">\(C(v)\)</span> counts the number of leaves under
 the vertex <span class="math inline">\(v\)</span>.</p>
-<p>We define a binary tree as <em>strongly balanced</em> if the
-difference between <span class="math inline">\(C(v_l)\)</span> and <span
+<p>We define a binary tree as <em>balanced</em> if the difference
+between <span class="math inline">\(C(v_l)\)</span> and <span
 class="math inline">\(C(v_r)\)</span> is at most 1 for every internal
 vertex (including the root) <span class="math inline">\(v\in
 V\)</span>.</p>
-<p>Luckily, up to a graph isomorphism, there is only one strongly
-balanced rooted binary tree on <span class="math inline">\(n\)</span>
-leaves.</p>
+<p>Luckily, up to a graph isomorphism, there is only one balanced rooted
+binary tree on <span class="math inline">\(n\)</span> leaves.</p>
 <h2 id="proof">Proof</h2>
 <p>Let <span class="math inline">\(T_n\)</span> be the number of
-strongly balanced rooted binary trees on <span
-class="math inline">\(n\)</span> leaves. We will prove the assertion
-using strong induction on <span class="math inline">\(n\)</span>.</p>
+balanced rooted binary trees on <span class="math inline">\(n\)</span>
+leaves. We will prove the assertion using strong induction on <span
+class="math inline">\(n\)</span>.</p>
 <p>It is easy to see that <span class="math inline">\(T_n=1\)</span>. If
 <span class="math inline">\(n=2k\)</span> is even, then when we split
 the root <span class="math inline">\(R\)</span> into its children <span
 class="math inline">\(R_l\)</span> and <span
-class="math inline">\(R_r\)</span>, the fact that the tree is strongly
-balanced forces <span class="math inline">\(C(R_l)=C(R_r)=k\)</span>.
-Then <span class="math inline">\(T_{2k}=T_k^2=1\)</span>. If <span
+class="math inline">\(R_r\)</span>, the fact that the tree is balanced
+forces <span class="math inline">\(C(R_l)=C(R_r)=k\)</span>. Then <span
+class="math inline">\(T_{2k}=T_k^2=1\)</span>. If <span
 class="math inline">\(n=2k+1\)</span> is odd then, up to isomorphism, we
 can safely assume <span class="math inline">\(C(R_l)=k+1\)</span> and
 <span class="math inline">\(C(R_r)=k\)</span>. Then <span
 class="math inline">\(T_{2k+1}=T_{k+1}T_k=1\)</span>.</p>
 <h2 id="a-slight-modification">A Slight Modification</h2>
-<p>Now that we establish that there aren’t enough strongly balanced
-graphs, let us modify the problem a bit. Let us define recursively <span
+<p>Now that we establish that there aren’t enough balanced graphs, let
+us modify the problem a bit. Let us define recursively <span
 class="math display">\[ D(v) = \max( D(v_l), D(v_r) ) + 1 \]</span>
-where <span class="math inline">\(C(v)=0\)</span> for any leaf <span
+where <span class="math inline">\(D(v)=0\)</span> for any leaf <span
 class="math inline">\(v\in V\)</span>. Notice this time <span
 class="math inline">\(D\)</span> calculate the depth of a tree.</p>
-<p>This time we will call a binary tree <em>strongly depth balanced</em>
-if the difference between <span class="math inline">\(D(v_l)\)</span>
-and <span class="math inline">\(D(v_r)\)</span> is at most 1. This time
-we are going to count the number of isomorphism classes of strongly
-depth balanced binary trees.</p>
+<p>This time we will call a binary tree <em>depth-balanced</em> if the
+difference between <span class="math inline">\(D(v_l)\)</span> and <span
+class="math inline">\(D(v_r)\)</span> is at most 1. This time we are
+going to count the number of isomorphism classes of depth-balanced
+binary trees.</p>
 <p>Let <span class="math inline">\(T_{n,d}\)</span> be the number of
-strongly depth balanced binary trees on <span
-class="math inline">\(n\)</span> leaves of depth <span
-class="math inline">\(d\)</span>. The easy cases are <span
-class="math inline">\(T_{n,d} = 0\)</span> when <span
+depth-balanced binary trees on <span class="math inline">\(n\)</span>
+leaves of depth <span class="math inline">\(d\)</span>. The easy cases
+are <span class="math inline">\(T_{n,d} = 0\)</span> when <span
 class="math inline">\(n&gt;2^d\)</span> and <span
 class="math inline">\(n\leq 2^{d-1}\)</span>. Then we have the following
 recurrence relation: <span class="math display">\[ T_{n,d} =
@@ -186,20 +183,20 @@ T_{n-2^{d-2},d-1} + \sum_{a\geq b,\ \ a+b=n} T_{a,d-1} T_{b,d-1}
 \]</span> for <span class="math inline">\(n\geq 2\)</span>.</p>
 <h2 id="an-implementation">An Implementation</h2>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> count-sdr </span>(n d)</span>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> count-dbts </span>(n d)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">cond</span> ((<span class="op">=</span> n (<span class="kw">expt</span> <span class="dv">2</span> d)) <span class="dv">1</span>)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>         ((<span class="kw">or</span> (<span class="op">&gt;</span> n (<span class="kw">expt</span> <span class="dv">2</span> d)) (<span class="op">&lt;=</span> n (<span class="kw">expt</span> <span class="dv">2</span> (<span class="op">1-</span> d)))) <span class="dv">0</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">t</span> (<span class="op">+</span> (count-sdr (<span class="op">-</span> n (<span class="kw">expt</span> <span class="dv">2</span> (<span class="op">-</span> d <span class="dv">2</span>))) (<span class="op">1-</span> d))</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">loop</span> for i from <span class="dv">1</span> to (<span class="kw">floor</span> n <span class="dv">2</span>) sum (<span class="op">*</span> (count-sdr (<span class="op">-</span> n i) (<span class="op">1-</span> d)) </span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                                        (count-sdr i (<span class="op">1-</span> d))))))))</span></code></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">t</span> (<span class="op">+</span> (count-dbts (<span class="op">-</span> n (<span class="kw">expt</span> <span class="dv">2</span> (<span class="op">-</span> d <span class="dv">2</span>))) (<span class="op">1-</span> d))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">loop</span> for i from <span class="dv">1</span> to (<span class="kw">floor</span> n <span class="dv">2</span>) sum (<span class="op">*</span> (count-dbts (<span class="op">-</span> n i) (<span class="op">1-</span> d)) </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                                        (count-dbts i (<span class="op">1-</span> d))))))))</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>COUNT-SDR</span></code></pre></div>
+class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>COUNT-DBTS</span></code></pre></div>
 <p>Let us test:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">format</span> <span class="kw">nil</span> <span class="st">&quot;~{~{~a ~}~%~}&quot;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">loop</span> for i from <span class="dv">1</span> to <span class="dv">7</span> collect</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">loop</span> for j from (<span class="op">1+</span> (<span class="kw">expt</span> <span class="dv">2</span> (<span class="op">1-</span> i))) to (<span class="kw">expt</span> <span class="dv">2</span> i) collect</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>            (count-sdr j i))))</span></code></pre></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>            (count-dbts j i))))</span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> </span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="dv">1</span> </span>
@@ -209,7 +206,7 @@ class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a 
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="dv">5</span> <span class="dv">10</span> <span class="dv">40</span> <span class="dv">60</span> <span class="dv">159</span> <span class="dv">244</span> <span class="dv">651</span> <span class="dv">733</span> <span class="dv">1392</span> <span class="dv">1663</span> <span class="dv">3009</span> <span class="dv">2883</span> <span class="dv">4151</span> <span class="dv">3814</span> <span class="dv">5888</span> <span class="dv">3814</span> <span class="dv">4151</span> <span class="dv">2883</span> <span class="dv">3009</span> <span class="dv">1663</span> <span class="dv">1392</span> <span class="dv">733</span> <span class="dv">651</span> <span class="dv">244</span> <span class="dv">159</span> <span class="dv">60</span> <span class="dv">40</span> <span class="dv">10</span> <span class="dv">5</span> <span class="dv">1</span> <span class="dv">1</span> </span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="dv">6</span> <span class="dv">15</span> <span class="dv">75</span> <span class="dv">150</span> <span class="dv">519</span> <span class="dv">1103</span> <span class="dv">3890</span> <span class="dv">6594</span> <span class="dv">17780</span> <span class="dv">32530</span> <span class="dv">84923</span> <span class="dv">135303</span> <span class="dv">301414</span> <span class="dv">477901</span> <span class="dv">1103408</span> <span class="dv">1447390</span> <span class="dv">2742249</span> <span class="dv">3782146</span> <span class="dv">7008110</span> <span class="dv">8583033</span> <span class="dv">14078255</span> <span class="dv">16990708</span> <span class="dv">28164391</span> <span class="dv">29422747</span> <span class="dv">42187120</span> <span class="dv">44583409</span> <span class="dv">62836982</span> <span class="dv">58994758</span> <span class="dv">73886109</span> <span class="dv">67957444</span> <span class="dv">89566178</span> <span class="dv">67957444</span> <span class="dv">73886109</span> <span class="dv">58994758</span> <span class="dv">62836982</span> <span class="dv">44583409</span> <span class="dv">42187120</span> <span class="dv">29422747</span> <span class="dv">28164391</span> <span class="dv">16990708</span> <span class="dv">14078255</span> <span class="dv">8583033</span> <span class="dv">7008110</span> <span class="dv">3782146</span> <span class="dv">2742249</span> <span class="dv">1447390</span> <span class="dv">1103408</span> <span class="dv">477901</span> <span class="dv">301414</span> <span class="dv">135303</span> <span class="dv">84923</span> <span class="dv">32530</span> <span class="dv">17780</span> <span class="dv">6594</span> <span class="dv">3890</span> <span class="dv">1103</span> <span class="dv">519</span> <span class="dv">150</span> <span class="dv">75</span> <span class="dv">15</span> <span class="dv">6</span> <span class="dv">1</span> <span class="dv">1</span> </span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">September 15, 2025 09:53:26 AM</span></p>
+<p><span id="timestamp">September 15, 2025 10:03:45 AM</span></p>
 </div>
 </body>
 </html>
