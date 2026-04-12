@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>2025-12-01-general-casimir-elements</title>
+  <title>2026-04-12-counting-graphs-scala</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -113,493 +113,77 @@
   </div>
 
   <section>
-  <script defer=""
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
 </head>
 <body>
 <h1
-id="higherdegree-casimir-elements-via-invariant-polynomials">Higher–Degree
-Casimir Elements via Invariant Polynomials</h1>
+id="counting-graphs-with-a-prescribed-degree-sequence-scala-version">Counting
+Graphs with a Prescribed Degree Sequence (Scala Version)</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>In <a
-href="https://kaygun.github.io/clean/2020-10-23-the_quadratic_casimir_element.html">an
-earlier post</a> I computed the quadratic Casimir element in the
-universal enveloping algebra <span class="math inline">\(U(\mathfrak
-g)\)</span> of a semisimple Lie algebra <span
-class="math inline">\(\mathfrak g\)</span> using Sage. The construction
-was very concrete: one chooses a basis of <span
-class="math inline">\(\mathfrak g\)</span>, writes down the Killing form
-matrix, inverts it, and forms the familiar element <span
-class="math display">\[
-\Omega_2  =  \sum_i X_i X^i  \in U(\mathfrak g),
-\]</span> where <span class="math inline">\(\{X_i\}\)</span> is a basis
-and <span class="math inline">\(\{X^i\}\)</span> is the dual basis with
-respect to the Killing form.</p>
-<p>It is natural to ask whether there is a <em>uniform</em> way to
-produce Casimir–type central elements of higher degree: elements in
-<span class="math inline">\(Z\big(U(\mathfrak g)\big)\)</span> that
-arise from invariant homogeneous polynomials of degree <span
-class="math inline">\(d\)</span> on <span
-class="math inline">\(\mathfrak g\)</span>. From the general theory one
-knows that all central elements are obtained from invariant polynomials
-<span class="math inline">\(f \in S(\mathfrak g)^{\mathfrak g}\)</span>
-by the PBW symmetrisation map; conversely, every invariant polynomial
-produces a central element in this way.</p>
-<p>Today, I’ll show how to turn this abstract picture into Sage code.
-The code is written so that, given a homogeneous invariant polynomial of
-degree <span class="math inline">\(d\)</span> coming from the adjoint
-representation, we produce the corresponding degree–<span
-class="math inline">\(d\)</span> <em>Casimir–type</em> element by
-polarisation and PBW symmetrisation. For <span
-class="math inline">\(d=2\)</span> we recover the quadratic Casimir
-while in other degrees we get the central element associated to the
-invariant polynomial <span class="math display">\[
-x \longmapsto \mathrm{Tr}\big(\operatorname{ad}(x)^d\big).
-\]</span></p>
-<p>There is one important representation–theoretic caveat. For a
-semisimple Lie algebra <span class="math inline">\(\mathfrak g\)</span>,
-the odd–degree trace polynomials <span
-class="math inline">\(\mathrm{Tr}(\operatorname{ad}(x)^d)\)</span>
-vanish identically. So, the construction gives zero when <span
-class="math inline">\(d\)</span> is odd. For even <span
-class="math inline">\(d\)</span> the resulting central elements are
-generally non–primitive: they can be expressed as polynomials in the
-fundamental Casimirs given by the exponents of <span
-class="math inline">\(\mathfrak g\)</span>. The point of the code is not
-to solve invariant theory, but to implement faithfully the mechanism
-that generates central elements from invariant polynomials in a way that
-works uniformly for all degrees.</p>
-<h2 id="theoretical-discussion">Theoretical discussion</h2>
-<p>Let <span class="math inline">\(\mathfrak g\)</span> be a
-finite–dimensional semisimple Lie algebra and let <span
-class="math inline">\(U(\mathfrak g)\)</span> be its universal
-enveloping algebra. The adjoint representation <span
-class="math display">\[
-\operatorname{ad}\colon \mathfrak g \longrightarrow
-\mathfrak{gl}(\mathfrak g),
-\qquad
-\operatorname{ad}(x)(y) = [x,y]
-\]</span> is a faithful representation of <span
-class="math inline">\(\mathfrak g\)</span> on itself. For each integer
-<span class="math inline">\(d \geq 1\)</span> we can consider the map
-<span class="math display">\[
-f_d\colon \mathfrak g \longrightarrow \mathbb C, \qquad
-f_d(x) = \operatorname{Tr}\big(\operatorname{ad}(x)^d\big).
-\]</span> The trace is conjugation–invariant, so <span
-class="math inline">\(f_d\)</span> is invariant under the adjoint group
-of <span class="math inline">\(\mathfrak g\)</span>; in particular <span
-class="math inline">\(f_d\)</span> is a homogeneous polynomial function
-of degree <span class="math inline">\(d\)</span> on <span
-class="math inline">\(\mathfrak g\)</span>, and it lies in the invariant
-subalgebra <span class="math display">\[
-S(\mathfrak g)^{\mathfrak g}  \subseteq  S(\mathfrak g),
-\]</span> where <span class="math inline">\(S(\mathfrak g)\)</span> is
-the symmetric algebra on <span class="math inline">\(\mathfrak
-g\)</span>.</p>
-<p>More explicitly, fix a basis <span
-class="math inline">\(\{X_0,\dots,X_{n-1}\}\)</span> of <span
-class="math inline">\(\mathfrak g\)</span> and write <span
-class="math display">\[
-x  =  \sum_{i=0}^{n-1} t_i X_i
-\]</span> with commuting coordinate functions <span
-class="math inline">\(t_0,\dots,t_{n-1}\)</span>. With respect to this
-basis, <span class="math inline">\(\operatorname{ad}(x)\)</span> is a
-matrix whose entries are homogeneous linear forms in the <span
-class="math inline">\(t_i\)</span>, so its <span
-class="math inline">\(d\)</span>-th power <span
-class="math inline">\(\operatorname{ad}(x)^d\)</span> has entries that
-are homogeneous degree–<span class="math inline">\(d\)</span>
-polynomials in the <span class="math inline">\(t_i\)</span>, and the
-trace <span class="math display">\[
-f_d(t_0,\dots,t_{n-1})
-= \operatorname{Tr}\big(\operatorname{ad}(x)^d\big)
-\]</span> is a homogeneous polynomial of total degree <span
-class="math inline">\(d\)</span>. The invariance of <span
-class="math inline">\(f_d\)</span> under the adjoint group is simply the
-fact that <span class="math display">\[
-\operatorname{ad}(\operatorname{Ad}(g)x)
-= \operatorname{Ad}(g)\,\operatorname{ad}(x)\,\operatorname{Ad}(g)^{-1}
-\]</span> and the trace is invariant under conjugation. Thus each <span
-class="math inline">\(f_d\)</span> defines an element of <span
-class="math inline">\(S^d(\mathfrak g^\vee)^{\mathfrak g}\)</span>.</p>
-<p>The symmetric algebra <span class="math inline">\(S(\mathfrak
-g)\)</span> is naturally isomorphic, as a graded vector space, to the
-algebra of polynomial functions on <span class="math inline">\(\mathfrak
-g\)</span>. Each homogeneous polynomial <span
-class="math inline">\(f_d\)</span> can be viewed as a symmetric <span
-class="math inline">\(d\)</span>–linear form <span
-class="math display">\[
-T_d\colon \mathfrak g^{\times d} \longrightarrow \mathbb C,
-\]</span> obtained from <span class="math inline">\(f_d\)</span> by
-polarisation. If we write <span class="math inline">\(f_d\)</span> as a
-polynomial in the coordinates <span class="math inline">\(t_i\)</span>,
-<span class="math display">\[
-f_d(t_0,\dots,t_{n-1})
-= \sum_{i_1,\dots,i_d} c_{i_1\cdots i_d}\, t_{i_1}\cdots t_{i_d},
-\]</span> then the coefficients <span class="math inline">\(c_{i_1\cdots
-i_d}\)</span> are exactly the values of the symmetric <span
-class="math inline">\(d\)</span>–linear form on the basis, <span
-class="math display">\[
-T_d(X_{i_1},\dots,X_{i_d}) = c_{i_1\cdots i_d}.
-\]</span> Equivalently, one has the polarisation formula <span
-class="math display">\[
-T_d(X_{i_1},\dots,X_{i_d})
-= \frac{1}{d!}\,
-   \frac{\partial^d}{\partial t_{i_1}\cdots\partial t_{i_d}} f_d(t)
-   \bigg|_{t=0}.
-\]</span></p>
-<p>On the other hand, the Poincaré–Birkhoff–Witt symmetrisation map
-<span class="math display">\[
-\operatorname{sym}\colon S(\mathfrak g)\longrightarrow U(\mathfrak g),
-\qquad
-\operatorname{sym}(X_{i_1}\cdots X_{i_d})
-= \frac{1}{d!}\sum_{\sigma\in S_d} X_{i_{\sigma(1)}}\cdots
-X_{i_{\sigma(d)}},
-\]</span> is a filtered linear isomorphism whose associated graded map
-is the identity. It is <span class="math inline">\(\mathfrak
-g\)</span>–equivariant with respect to the adjoint action, and therefore
-it restricts to an isomorphism <span class="math display">\[
-\operatorname{sym}\colon S(\mathfrak g)^{\mathfrak g}
-\overset{\sim}{\longrightarrow} U(\mathfrak g)^{\mathfrak g}
-= Z\big(U(\mathfrak g)\big).
-\]</span> In particular, if we take the invariant polynomial <span
-class="math inline">\(f_d\)</span> (or, equivalently, the symmetric
-tensor <span class="math inline">\(T_d\)</span>) and apply PBW
-symmetrisation, we obtain a central element <span
-class="math display">\[
-C_d = \sum_{i_1,\dots,i_d}
-       T_d(X_{i_1},\dots,X_{i_d})\,
-       \operatorname{sym}(X_{i_1}\cdots X_{i_d})
-  \in  Z\big(U(\mathfrak g)\big).
-\]</span></p>
-<p>The quadratic Casimir is the special case <span
-class="math inline">\(d=2\)</span>: the polynomial <span
-class="math inline">\(f_2(x)=\mathrm{Tr}(\operatorname{ad}(x)^2)\)</span>
-is (a scalar multiple of) the Killing form <span
-class="math inline">\(\kappa(x,x)\)</span>, and the corresponding <span
-class="math inline">\(C_2\)</span> is the usual Casimir element <span
-class="math inline">\(\sum X_i X^i\)</span>. For <span
-class="math inline">\(d&gt;2\)</span> the central elements <span
-class="math inline">\(C_d\)</span> coming from the adjoint trace are in
-general not algebraically independent; the structure theorem for <span
-class="math inline">\(S(\mathfrak g)^{\mathfrak g}\)</span> says that
-this invariant ring is a polynomial algebra on <span
-class="math inline">\(\ell\)</span> generators of degrees <span
-class="math inline">\(m_i+1\)</span>, where <span
-class="math inline">\(m_i\)</span> are the exponents of <span
-class="math inline">\(\mathfrak g\)</span>, and only those degrees can
-carry primitive generators.</p>
-<p>There is an additional phenomenon for odd <span
-class="math inline">\(d\)</span>. If <span
-class="math inline">\(d\)</span> is odd and <span
-class="math inline">\(\mathfrak g\)</span> is semisimple, then <span
-class="math inline">\(f_d(x) =
-\mathrm{Tr}(\operatorname{ad}(x)^d)\)</span> vanishes identically.
-Indeed, fix a Cartan subalgebra <span class="math inline">\(\mathfrak
-h\)</span> and decompose <span class="math inline">\(\mathfrak g =
-\mathfrak h \oplus \bigoplus_{\alpha\in\Phi} \mathfrak
-g_\alpha\)</span>. For <span class="math inline">\(H\in\mathfrak
-h\)</span>, the eigenvalues of <span
-class="math inline">\(\operatorname{ad}(H)\)</span> are <span
-class="math inline">\(0\)</span> on <span
-class="math inline">\(\mathfrak h\)</span>, <span
-class="math inline">\(\alpha(H)\)</span> on <span
-class="math inline">\(\mathfrak g_\alpha\)</span>, and <span
-class="math inline">\(-\alpha(H)\)</span> on <span
-class="math inline">\(\mathfrak g_{-\alpha}\)</span>. Therefore <span
-class="math display">\[
-\operatorname{Tr}\big(\operatorname{ad}(H)^d\big)
-  = \sum_{\alpha\in\Phi} \alpha(H)^d + (-\alpha(H))^d
-  = 0
-\]</span> for every odd <span class="math inline">\(d\)</span>. The
-trace is <span
-class="math inline">\(\operatorname{Ad}\)</span>–invariant, so this
-identity holds on all of <span class="math inline">\(\mathfrak
-g\)</span>. Thus for odd <span class="math inline">\(d\)</span> the
-coefficients <span
-class="math inline">\(T_d(X_{i_1},\dots,X_{i_d})\)</span> all vanish and
-the central element <span class="math inline">\(C_d\)</span> is
-zero.</p>
-<p>The upshot is that the adjoint–trace construction gives a uniform
-recipe for a degree–<span class="math inline">\(d\)</span>
-<em>Casimir–type</em> element, but for a semisimple <span
-class="math inline">\(\mathfrak g\)</span> one only gets nontrivial
-information in the even degrees. The only genuinely primitive central
-generator that appears this way is the quadratic Casimir <span
-class="math inline">\(C_2\)</span>. The higher <span
-class="math inline">\(C_d\)</span> are polynomials in the fundamental
-Casimirs determined by the exponents.</p>
-<h2 id="the-code-and-the-calculation">The code and the calculation</h2>
-<p>I now explain how to turn the discussion above into Sage code. The
-basic ingredients are:</p>
-<ol type="1">
-<li>a way to construct the adjoint matrices <span
-class="math inline">\(\operatorname{ad}(X_i)\)</span> for a given Lie
-algebra <code>L</code>,</li>
-<li>a function that builds the invariant polynomial <span
-class="math inline">\(f_d(x) =
-\mathrm{Tr}(\operatorname{ad}(x)^d)\)</span>, and</li>
-<li>a routine that performs polarisation and PBW symmetrisation to
-produce the element <span class="math inline">\(C_d\in
-U(L)\)</span>.</li>
-</ol>
-<p>The starting point is a finite–dimensional Lie algebra object
-<code>L</code> in Sage, together with an ordered basis
-<code>B = list(L.basis())</code>. We first construct the matrices of the
-adjoint representation in this basis.</p>
+<p><a
+href="https://kaygun.github.io/clean/2020-12-18-counting_graphs_with_a_prescribed_degree_sequence.html">Earlier</a>
+I explained the mathematical theory behind counting isomorphism classes
+of graphs that have a prescribed degree sequence. In that post, I also
+implemented a lisp version of the counting algorithm. Today, I am going
+to write a scala version of the same code.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Scala does not have a framework/library to implement general
+memoization, but you can hand-roll one. I found <a
+href="https://stackoverflow.com/questions/16257378/is-there-a-generic-way-to-memoize-in-scala">the
+following</a> on StackOverflow:</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sage.matrix.constructor <span class="im">import</span> matrix</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product, permutations</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> math <span class="im">import</span> factorial</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> adjoint_matrices(L):</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">    Return a list of matrices [A_0, ..., A_{n-1}] representing the adjoint</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">    action of a finite-dimensional Lie algebra L in its own basis.</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">    If B = (X_0,...,X_{n-1}) is L.basis() in that order, then A_i is the</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">    matrix of ad(X_i): L -&gt; L in the basis B, i.e. the j-th column of A_i</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">    is the coordinate vector of [X_i, X_j].</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    B <span class="op">=</span> <span class="bu">list</span>(L.basis())</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(B)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    K <span class="op">=</span> L.base_ring()</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    mats <span class="op">=</span> []</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, x <span class="kw">in</span> <span class="bu">enumerate</span>(B):</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        M <span class="op">=</span> matrix(K, n, n)</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j, y <span class="kw">in</span> <span class="bu">enumerate</span>(B):</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            br <span class="op">=</span> L.bracket(x, y)      <span class="co"># element of L</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            v  <span class="op">=</span> br.to_vector()       <span class="co"># coordinates in the basis B</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            <span class="co"># v[k] is the coefficient of B[k] in [x,y]</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(n):</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>                M[k, j] <span class="op">=</span> v[k]</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        mats.append(M)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mats</span></code></pre></div>
-<p>Let us test:</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> scala<span class="op">.</span>collection<span class="op">.</span>mutable</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> memoFix<span class="op">[</span>A<span class="op">,</span> B<span class="op">](</span>f<span class="op">:</span> <span class="op">(</span>A <span class="op">=&gt;</span> B<span class="op">)</span> <span class="op">=&gt;</span> A <span class="op">=&gt;</span> B<span class="op">):</span> A <span class="op">=&gt;</span> B <span class="op">=</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> cache <span class="op">=</span> mutable<span class="op">.</span><span class="ex">HashMap</span><span class="op">[</span>A<span class="op">,</span> B<span class="op">]()</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">lazy</span> <span class="kw">val</span> g<span class="op">:</span> A <span class="op">=&gt;</span> B <span class="op">=</span> a <span class="op">=&gt;</span> cache<span class="op">.</span><span class="fu">getOrElseUpdate</span><span class="op">(</span>a<span class="op">,</span> <span class="fu">f</span><span class="op">(</span>g<span class="op">)(</span>a<span class="op">))</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  g</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>adjoint_matrices(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">1</span>]))</span></code></pre></div>
-<pre><code>[
-[ 0 -2  0]  [ 2  0  0]  [ 0  0  0]
-[ 0  0  1]  [ 0  0  0]  [-1  0  0]
-[ 0  0  0], [ 0  0 -2], [ 0  2  0]
-]</code></pre>
-<p>Given these matrices, the degree–<span
-class="math inline">\(d\)</span> invariant polynomial <span
-class="math inline">\(f_d(x) =
-\mathrm{Tr}(\operatorname{ad}(x)^d)\)</span> is obtained by forming the
-generic matrix <span class="math display">\[
-\operatorname{ad}(x) = \sum_{i=0}^{n-1} t_i A_i
-\]</span> over a polynomial ring in the formal variables <span
-class="math inline">\(t_i\)</span>, taking the <span
-class="math inline">\(d\)</span>-th power, and then the trace.</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> memoFix<span class="op">[</span>A<span class="op">,</span> B<span class="op">](</span>f<span class="op">:</span> <span class="op">(</span>A <span class="op">=&gt;</span> B<span class="op">)</span> <span class="op">=&gt;</span> A <span class="op">=&gt;</span> B<span class="op">):</span> A <span class="op">=&gt;</span> B</span></code></pre></div>
+<p>which is the typed version of the <a
+href="https://kaygun.github.io/clean/2014-09-23-a_memoization_macro_for_common_lisp.html">hand-rolled
+lisp version</a> I wrote long time ago.</p>
+<p>After this, we can easily port the lisp code as follows:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> graphCount<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="bu">Int</span><span class="op">]</span> <span class="op">=&gt;</span> <span class="ex">Long</span> <span class="op">=</span> memoFix <span class="op">{</span> self <span class="op">=&gt;</span> ds <span class="op">=&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  ds <span class="cf">match</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">)</span>           <span class="op">=&gt;</span> <span class="dv">1L</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="cf">if</span> ds<span class="op">.</span>length <span class="op">&lt;</span> <span class="dv">3</span>   <span class="op">=&gt;</span> <span class="dv">0L</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="cf">if</span> ds<span class="op">.</span>sum <span class="op">%</span> <span class="dv">2</span> <span class="op">!=</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="dv">0L</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> first <span class="op">::</span> rest <span class="op">=&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      rest<span class="op">.</span>indices<span class="op">.</span>toList<span class="op">.</span><span class="fu">combinations</span><span class="op">(</span>first<span class="op">).</span>map <span class="op">{</span> is <span class="op">=&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> idxSet <span class="op">=</span> is<span class="op">.</span>toSet</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">self</span><span class="op">(</span>rest<span class="op">.</span>zipWithIndex</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">map</span><span class="op">((</span>d<span class="op">,</span> i<span class="op">)</span> <span class="op">=&gt;</span> <span class="cf">if</span> <span class="fu">idxSet</span><span class="op">(</span>i<span class="op">)</span> then d <span class="op">-</span> <span class="dv">1</span> <span class="cf">else</span> d<span class="op">)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">filter</span><span class="op">(</span>_ <span class="op">&gt;</span> <span class="dv">0</span><span class="op">).</span>sorted<span class="op">)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      <span class="op">}.</span>sum</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> invariant_polynomial(L, d):</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Compute f(t) = Tr(ad(x)^d) where x = sum t_i X_i and X_i is the basis of L.</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Return the polynomial f and the tuple of variables t.</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    B   <span class="op">=</span> L.basis().<span class="bu">list</span>()</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    n   <span class="op">=</span> <span class="bu">len</span>(B)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    K   <span class="op">=</span> L.base_ring()</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    mats <span class="op">=</span> adjoint_matrices(L)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    R <span class="op">=</span> PolynomialRing(K, <span class="st">&#39;t&#39;</span>, n)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> R.gens()</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    Mx <span class="op">=</span> <span class="bu">sum</span>(t[i] <span class="op">*</span> matrix(R, mats[i]) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n))</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    f <span class="op">=</span> (Mx<span class="op">**</span>d).trace()    <span class="co"># homogeneous degree-d polynomial in the t_i</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> f, t</span></code></pre></div>
-<p>Let us test:</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> graphCount<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="bu">Int</span><span class="op">]</span> <span class="op">=&gt;</span> <span class="ex">Long</span> <span class="op">=</span> Lambda<span class="op">/</span><span class="bn">0x000000006c5c4a08</span>@<span class="dv">2823</span>b7c5</span></code></pre></div>
+<p>Let us test this on the same examples:</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>invariant_polynomial(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">1</span>]),<span class="dv">2</span>)</span></code></pre></div>
-<pre><code>(8*t1^2 + 8*t0*t2, (t0, t1, t2))</code></pre>
-<p>At this point <code>f</code> is the coordinate expression of <span
-class="math inline">\(f_d\)</span>, and <code>t</code> is the tuple of
-coordinate functions. To get the central element <span
-class="math inline">\(C_d\)</span> in the enveloping algebra we have to
-polarise <span class="math inline">\(f\)</span> and symmetrise in the
-PBW algebra. This is done by the function <code>casimir_of_degree</code>
-below.</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> casimir_of_degree(L, d):</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Given a finite-dimensional Lie algebra L over a field K and a function</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">    invariant_polynomial(L,d) returning the homogeneous invariant polynomial</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">        f(t) = f(x) = Tr(ρ(x)^d)</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">    of degree d in coordinates t_i for x = Σ t_i X_i (basis of L),</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">    construct the corresponding degree-d Casimir-type element in U(L) by</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">    polarisation and PBW symmetrisation.</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">    This generalises the quadratic Casimir construction: for d=2 and</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">    f(x) = κ(x,x) one recovers the usual quadratic Casimir up to normalisation.</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    B <span class="op">=</span> L.basis().<span class="bu">list</span>()</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="bu">len</span>(B)</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    K <span class="op">=</span> L.base_ring()</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># f(t) homogeneous of degree d, with t = (t_0,...,t_{n-1})</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    f, t <span class="op">=</span> invariant_polynomial(L, d)</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    R <span class="op">=</span> f.parent()</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># substitution t_i = 0 for all i</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    subs0 <span class="op">=</span> {ti: R(<span class="dv">0</span>) <span class="cf">for</span> ti <span class="kw">in</span> t}</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    C <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> multi <span class="kw">in</span> product(<span class="bu">range</span>(n), repeat<span class="op">=</span>d):</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> f</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> idx <span class="kw">in</span> multi:</span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>            g <span class="op">=</span> g.derivative(t[idx])</span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>        c_poly <span class="op">=</span> g.subs(subs0)</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> c_poly <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        <span class="co"># polarisation factor 1/d!</span></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        c <span class="op">=</span> K(c_poly) <span class="op">/</span> K(factorial(d))</span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>        <span class="co"># fully symmetrised product of the basis elements indexed by &#39;multi&#39;</span></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>        perms <span class="op">=</span> <span class="bu">set</span>(permutations(multi))</span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>        sym_word <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> p <span class="kw">in</span> perms:</span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>            m <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> j <span class="kw">in</span> p:</span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>                m <span class="op">*=</span> B[j]</span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>            sym_word <span class="op">+=</span> m</span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>        sym_word <span class="op">=</span> sym_word <span class="op">/</span> K(<span class="bu">len</span>(perms))</span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>        C <span class="op">+=</span> c <span class="op">*</span> sym_word</span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> C</span></code></pre></div>
-<p>Conceptually, the loop over
-<code>multi in product(range(n), repeat=d)</code> runs over all
-multi–indices <span class="math inline">\((i_1,\dots,i_d)\)</span>. The
-repeated differentiation <span class="math display">\[
-g = f,\quad g = \frac{\partial g}{\partial t_{i_1}},\quad
-g = \frac{\partial g}{\partial t_{i_2}},\quad \dots,\quad
-g = \frac{\partial g}{\partial t_{i_d}}
-\]</span> computes the mixed partial derivative <span
-class="math display">\[
-\frac{\partial^d f}{\partial t_{i_1}\cdots\partial t_{i_d}},
-\]</span> and the substitution <code>subs0</code> evaluates it at the
-origin <span class="math inline">\(t=0\)</span>, yielding the
-coefficient <span class="math display">\[
-\frac{\partial^d f}{\partial t_{i_1}\cdots\partial t_{i_d}}(0,\dots,0)
-= d!\, T_d(X_{i_1},\dots,X_{i_d}).
-\]</span> Dividing by <span class="math inline">\(d!\)</span> corrects
-for this factor and produces the symmetric multilinear coefficient <span
-class="math inline">\(T_d(X_{i_1},\dots,X_{i_d})\)</span>. The inner
-loop over <code>perms</code> constructs the fully symmetrised product
-<span class="math display">\[
-\operatorname{sym}(X_{i_1}\cdots X_{i_d})
-= \frac{1}{|\mathrm{Orb}(i_1,\dots,i_d)|}\sum_{\sigma\in S_d}
-   X_{i_{\sigma(1)}}\cdots X_{i_{\sigma(d)}},
-\]</span> taking into account that some multi–indices may have repeated
-entries and hence fewer distinct permutations.</p>
-<p>Putting these pieces together, the function
-<code>casimir_of_degree(L, d)</code> returns exactly the central element
-<span class="math display">\[
-C_d
-= \sum_{i_1,\dots,i_d} T_d(X_{i_1},\dots,X_{i_d})\,
-   \operatorname{sym}(X_{i_1}\cdots X_{i_d})
-  \in  Z\big(U(L)\big)
-\]</span> associated to the invariant polynomial <span
-class="math inline">\(f_d(x) =
-\mathrm{Tr}(\operatorname{ad}(x)^d)\)</span> via PBW symmetrisation.</p>
-<p>For example, for <span class="math inline">\(d=2\)</span> one obtains
-the quadratic Casimir in the guise of the adjoint–trace Killing form. In
-Sage, with</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">1</span>]), <span class="dv">2</span>)</span></code></pre></div>
-<pre><code>8*b1^2 + 8*b0*b2 - 4*b1</code></pre>
-<p>one recovers, up to an overall scalar depending on the normalisation
-of the Killing form, the familiar element <span class="math display">\[
-\Omega_2 \sim EF + \frac{1}{4}H(H-2)
-\]</span> for <span class="math inline">\(\mathfrak{sl}_2\)</span>. For
-odd <span class="math inline">\(d\)</span> and semisimple
-<code>L</code>, as explained above,
-<code>invariant_polynomial(L, d)</code> is identically zero, so
-<code>casimir_of_degree</code> correctly returns <span
-class="math inline">\(0\)</span>.</p>
-<p>The cost of this construction grows quickly with <span
-class="math inline">\(d\)</span> and <span class="math inline">\(\dim
-L\)</span>, because of the combinatorics of multi–indices and
-permutations. In practice it is most reasonable for low degrees
-(especially <span class="math inline">\(d=2\)</span>) and moderate rank.
-For larger <span class="math inline">\(d\)</span> and more complicated
-types one should instead use theoretical information about the exponents
-and the Harish–Chandra isomorphism to identify a small generating set of
-invariant polynomials, and then only apply this construction to those,
-rather than to every <span class="math inline">\(f_d\)</span>.</p>
-<p>Now, let us test the cases we tested in my earlier post:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">2</span>]),<span class="dv">2</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;B&#39;</span>,<span class="dv">2</span>]),<span class="dv">2</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;C&#39;</span>,<span class="dv">2</span>]),<span class="dv">2</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;E&#39;</span>,<span class="dv">6</span>]),<span class="dv">2</span>)</span></code></pre></div>
-<pre><code>12*b3^2 - 12*b3*b4 + 12*b4^2 + 12*b0*b5 + 12*b1*b6 + 12*b2*b7 - 12*b3 - 12*b4
-12*b4^2 - 24*b4*b5 + 24*b5^2 + 24*b0*b6 + 12*b1*b7 + 24*b2*b8 + 12*b3*b9 - 36*b4 - 30*b5
-24*b4^2 - 24*b4*b5 + 12*b5^2 + 12*b0*b6 + 24*b1*b7 + 24*b2*b8 + 12*b3*b9 - 30*b4 - 36*b5
-48*b36^2 + 48*b37^2 - 48*b36*b38 + 48*b38^2 - 48*b37*b39 - 48*b38*b39 + 48*b39^2 - 48*b39*b40 + 48*b40^2 - 48*b40*b41 + 48*b41^2 + 48*b0*b42 + 48*b1*b43 + 48*b2*b44 + 48*b3*b45 + 48*b4*b46 + 48*b5*b47 + 48*b6*b48 + 48*b7*b49 + 48*b8*b50 + 48*b9*b51 + 48*b10*b52 + 48*b11*b53 + 48*b12*b54 + 48*b13*b55 + 48*b14*b56 + 48*b15*b57 + 48*b16*b58 + 48*b17*b59 + 48*b18*b60 + 48*b19*b61 + 48*b20*b62 + 48*b21*b63 + 48*b22*b64 + 48*b23*b65 + 48*b24*b66 + 48*b25*b67 + 48*b26*b68 + 48*b27*b69 + 48*b28*b70 + 48*b29*b71 + 48*b30*b72 + 48*b31*b73 + 48*b32*b74 + 48*b33*b75 + 48*b34*b76 + 48*b35*b77 - 384*b36 - 528*b37 - 720*b38 - 1008*b39 - 720*b40 - 384*b41</code></pre>
-<p>I still wasn’t able to calculate <span
-class="math inline">\(E_7\)</span> or <span
-class="math inline">\(E_8\)</span>, but I can calculate</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">2</span>]),<span class="dv">3</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">2</span>]),<span class="dv">4</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>casimir_of_degree(LieAlgebra(QQ, cartan_type<span class="op">=</span>[<span class="st">&#39;A&#39;</span>,<span class="dv">3</span>]),<span class="dv">4</span>)</span></code></pre></div>
-<pre><code>0
-
-36*b3^4 - 72*b3^3*b4 + 108*b3^2*b4^2 - 72*b3*b4^3 + 36*b4^4 + 72*b0*b3^2*b5 - 72*b0*b3*b4*b5 + 72*b0*b4^2*b5 + 36*b0^2*b5^2 + 72*b1*b3^2*b6 - 72*b1*b3*b4*b6 + 72*b1*b4^2*b6 + 72*b0*b1*b5*b6 + 36*b1^2*b6^2 + 72*b2*b3^2*b7 - 72*b2*b3*b4*b7 + 72*b2*b4^2*b7 + 72*b0*b2*b5*b7 + 72*b1*b2*b6*b7 + 36*b2^2*b7^2 - 72*b3^3 - 72*b4^3 - 360*b0*b3*b5 + 252*b0*b4*b5 + 252*b1*b3*b6 - 360*b1*b4*b6 - 36*b2*b5*b6 + 36*b0*b1*b7 - 36*b2*b3*b7 - 36*b2*b4*b7 - 18*b3^2 + 162*b3*b4 - 18*b4^2 + 486*b0*b5 + 486*b1*b6 - 54*b2*b7 - 18*b3 - 18*b4
-
-40*b6^4 - 80*b6^3*b7 + 120*b6^2*b7^2 - 80*b6*b7^3 + 40*b7^4 - 48*b6^2*b7*b8 + 48*b6*b7^2*b8 - 80*b7^3*b8 + 48*b6^2*b8^2 - 48*b6*b7*b8^2 + 120*b7^2*b8^2 - 80*b7*b8^3 + 40*b8^4 + 48*b0*b6^2*b9 - 48*b0*b6*b7*b9 + 80*b0*b7^2*b9 - 80*b0*b7*b8*b9 + 80*b0*b8^2*b9 + 40*b0^2*b9^2 + 80*b1*b6^2*b10 - 80*b1*b6*b7*b10 + 80*b1*b7^2*b10 - 32*b1*b6*b8*b10 - 80*b1*b7*b8*b10 + 80*b1*b8^2*b10 + 80*b0*b1*b9*b10 + 32*b3*b6*b9*b10 + 40*b1^2*b10^2 + 80*b2*b6^2*b11 - 80*b2*b6*b7*b11 + 80*b2*b7^2*b11 - 48*b2*b7*b8*b11 + 48*b2*b8^2*b11 + 48*b0*b2*b9*b11 + 80*b1*b2*b10*b11 - 32*b4*b8*b10*b11 - 32*b5*b9*b10*b11 + 40*b2^2*b11^2 + 32*b0*b1*b6*b12 + 80*b3*b6^2*b12 - 112*b3*b6*b7*b12 + 80*b3*b7^2*b12 + 32*b3*b6*b8*b12 - 80*b3*b7*b8*b12 + 80*b3*b8^2*b12 + 80*b0*b3*b9*b12 + 80*b1*b3*b10*b12 + 80*b2*b3*b11*b12 + 32*b0*b4*b11*b12 + 32*b5*b7*b11*b12 - 32*b5*b8*b11*b12 + 40*b3^2*b12^2 + 80*b4*b6^2*b13 - 80*b4*b6*b7*b13 + 80*b4*b7^2*b13 - 32*b1*b2*b8*b13 + 32*b4*b6*b8*b13 - 112*b4*b7*b8*b13 + 80*b4*b8^2*b13 + 32*b2*b3*b9*b13 + 80*b0*b4*b9*b13 + 32*b5*b6*b9*b13 - 32*b5*b7*b9*b13 + 80*b1*b4*b10*b13 + 80*b2*b4*b11*b13 + 48*b3*b4*b12*b13 - 32*b1*b5*b12*b13 + 40*b4^2*b13^2 - 32*b0*b1*b2*b14 + 32*b0*b4*b6*b14 + 80*b5*b6^2*b14 + 32*b2*b3*b7*b14 - 32*b0*b4*b7*b14 - 48*b5*b6*b7*b14 + 48*b5*b7^2*b14 - 32*b2*b3*b8*b14 - 32*b5*b6*b8*b14 - 48*b5*b7*b8*b14 + 80*b5*b8^2*b14 + 80*b0*b5*b9*b14 - 32*b3*b4*b10*b14 + 48*b1*b5*b10*b14 + 80*b2*b5*b11*b14 + 80*b3*b5*b12*b14 + 80*b4*b5*b13*b14 + 40*b5^2*b14^2 - 120*b6^3 - 56*b6^2*b7 + 56*b6*b7^2 - 144*b7^3 - 104*b6^2*b8 + 208*b6*b7*b8 + 56*b7^2*b8 - 104*b6*b8^2 - 56*b7*b8^2 - 120*b8^3 - 56*b0*b6*b9 - 512*b0*b7*b9 + 240*b0*b8*b9 - 360*b1*b6*b10 + 296*b1*b7*b10 - 360*b1*b8*b10 - 120*b3*b9*b10 + 240*b2*b6*b11 - 512*b2*b7*b11 - 56*b2*b8*b11 + 40*b4*b10*b11 - 40*b0*b1*b12 - 344*b3*b6*b12 + 40*b3*b7*b12 - 144*b3*b8*b12 - 88*b5*b11*b12 + 120*b1*b2*b13 - 144*b4*b6*b13 + 40*b4*b7*b13 - 344*b4*b8*b13 + 56*b5*b9*b13 - 8*b2*b3*b14 + 40*b0*b4*b14 - 32*b5*b6*b14 - 280*b5*b7*b14 - 32*b5*b8*b14 + 104/3*b6^2 + 360*b6*b7 + 104/3*b7^2 + 616/3*b6*b8 + 360*b7*b8 + 104/3*b8^2 + 1856/3*b0*b9 + 1928/3*b1*b10 + 1856/3*b2*b11 + 280/3*b3*b12 + 280/3*b4*b13 - 104/3*b5*b14 - 92/3*b6 + 8/3*b7 - 92/3*b8</code></pre>
-<h2 id="whats-next">What’s next?</h2>
-<p>Two remarks are in order if one wants to go beyond the adjoint
-representation.</p>
-<p>First, the mechanism above works for <em>any</em> homogeneous
-invariant polynomial <span class="math inline">\(f\in S^d(\mathfrak
-g)^{\mathfrak g}\)</span>, not only for <span
-class="math inline">\(f_d(x) =
-\mathrm{Tr}(\operatorname{ad}(x)^d)\)</span>. If <span
-class="math inline">\(\rho\colon\mathfrak g\to\mathfrak{gl}(V)\)</span>
-is a finite–dimensional representation, then <span
-class="math display">\[
-x \longmapsto \operatorname{Tr}\big(\rho(x)^d\big)
-\]</span> is also an invariant homogeneous polynomial of degree <span
-class="math inline">\(d\)</span>, and one can feed this <span
-class="math inline">\(f\)</span> into the same
-polarisation–and–symmetrisation pipeline to obtain a central element in
-<span class="math inline">\(U(\mathfrak g)\)</span>. In particular, in
-type <span class="math inline">\(A_{n-1}\)</span>, the fundamental
-invariants of degrees <span class="math inline">\(2,3,\dots,n\)</span>
-are classically constructed as traces of powers of the defining
-representation; their symmetrisations give the primitive higher–degree
-Casimir elements corresponding to the exponents.</p>
-<p>Second, the Harish–Chandra isomorphism identifies <span
-class="math inline">\(Z\big(U(\mathfrak g)\big)\)</span> with the
-algebra of Weyl–invariant polynomials on a Cartan subalgebra. Under this
-identification, the element <span class="math inline">\(C_d\)</span>
-constructed above corresponds to the restriction of <span
-class="math inline">\(f_d\)</span> to <span
-class="math inline">\(\mathfrak h\)</span> (up to the usual <span
-class="math inline">\(\rho\)</span>–shift). Thus, if one is primarily
-interested in eigenvalues of central elements on highest–weight modules,
-it is often more efficient to work entirely with invariant polynomials
-on <span class="math inline">\(\mathfrak h\)</span> and Weyl–group
-invariant theory, and to regard the explicit PBW expressions only as a
-computational realisation of the abstract correspondence. The code
-presented here is best viewed as a concrete implementation of this
-correspondence for the adjoint–trace invariants, with the quadratic case
-singled out as the one that produces the familiar Casimir element in
-<span class="math inline">\(U(\mathfrak g)\)</span> in a particularly
-simple and efficient way.</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">))</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">2</span><span class="op">))</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">))</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">))</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">))</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">2</span><span class="op">,</span><span class="dv">2</span><span class="op">,</span><span class="dv">3</span><span class="op">,</span><span class="dv">3</span><span class="op">,</span><span class="dv">3</span><span class="op">,</span><span class="dv">4</span><span class="op">,</span><span class="dv">4</span><span class="op">,</span><span class="dv">5</span><span class="op">,</span><span class="dv">7</span><span class="op">))</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res0<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res1<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">7</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res2<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">15</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res3<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res4<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">70</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res5<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">21065283747</span></span></code></pre></div>
+<div id="footer">
+<p><span id="timestamp">April 12, 2026 03:03:14 PM</span></p>
+</div>
 </body>
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
+<p>[<strong>2025-12-01</strong>] <a
+href="clean/2025-12-01-general-casimir-elements.html">Higher–Degree
+Casimir Elements via Invariant Polynomials</a></p>
 <p>[<strong>2025-09-10</strong>] <a
 href="clean/2025-09-10-strongly-balanced.html">Depth-Balanced Binary
 Trees</a></p>
