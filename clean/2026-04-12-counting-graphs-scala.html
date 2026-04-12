@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>2020-12-12-havelhakimi_algorithm_in_common-lisp</title>
+  <title>2026-04-12-counting-graphs-scala</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -113,56 +113,69 @@
   </div>
 
   <section>
-  <script defer=""
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
 </head>
 <body>
-<h1 id="havelhakimi-algorithm-in-common-lisp">Havel–Hakimi Algorithm in
-Common-Lisp</h1>
+<h1
+id="counting-graphs-with-a-prescribed-degree-sequence-scala-version">Counting
+Graphs with a Prescribed Degree Sequence (Scala Version)</h1>
 <h2 id="description-of-the-problem">Description of the problem</h2>
-<p>A <a
-href="https://mathworld.wolfram.com/DegreeSequence.html#:~:text=Given%20an%20undirected%20graph%2C%20a,closely%20related%20to%20graphical%20partitions.">degree
-sequence</a> is a non-decreasing sequence <span
-class="math inline">\((d_1\leq \cdots\leq d_n)\)</span> of positive
-integers such that there is a graph whose vertices are labelled with
-<span class="math inline">\(1,\ldots,n\)</span> with <span
-class="math inline">\(\deg(i) = d_i\)</span>. <a
-href="https://en.wikipedia.org/wiki/Erd%C5%91s%E2%80%93Gallai_theorem">Erdős–Gallai
-theorem</a> gives a necessary and sufficient condition that a given
-non-increasing sequence is a degree sequence. However, there is a very
-simple recursive algorithm called <a
-href="https://en.wikipedia.org/wiki/Havel%E2%80%93Hakimi_algorithm">Havel–Hakimi
-algorithm</a> that determines if a given non-increasing sequence is a
-degree sequence. Today, I’ll implement Havel-Hakimi in common lisp.</p>
-<h2 id="the-implementation">The Implementation</h2>
-<p>Here is my implementation:</p>
+<p><a
+href="https://kaygun.github.io/clean/2020-12-18-counting_graphs_with_a_prescribed_degree_sequence.html">Earlier</a>
+I explained the mathematical theory behind counting isomorphism classes
+of graphs that have a prescribed degree sequence. In that post, I also
+implemented a lisp version of the counting algorithm. Today, I am going
+to write a scala version of the same code.</p>
+<h2 id="implementation">Implementation</h2>
+<p>Scala does not have a framework/library to implement general
+memoization, but you can hand-roll one. I found <a
+href="https://stackoverflow.com/questions/16257378/is-there-a-generic-way-to-memoize-in-scala">the
+following</a> on StackOverflow:</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">defun</span><span class="fu"> havel-hakimi </span>(xs)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">cond</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">null</span> xs) <span class="kw">t</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    ((<span class="kw">oddp</span> (<span class="kw">reduce</span> <span class="op">#&#39;</span>+ xs)) <span class="kw">nil</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">t</span> (havel-hakimi (<span class="kw">delete</span> <span class="dv">0</span> (<span class="kw">sort</span> (<span class="kw">mapcar</span> <span class="op">#&#39;</span>-</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                             (<span class="kw">cdr</span> xs)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                                             (<span class="kw">append</span> (<span class="kw">loop</span> repeat (<span class="kw">car</span> xs) collect <span class="dv">1</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                                                     (<span class="kw">loop</span> repeat (<span class="op">-</span> (<span class="kw">length</span> xs) (<span class="kw">car</span> xs) <span class="dv">1</span>) collect <span class="dv">0</span>)))</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">#&#39;</span>&lt;))))))</span></code></pre></div>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> scala<span class="op">.</span>collection<span class="op">.</span>mutable</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> memoFix<span class="op">[</span>A<span class="op">,</span> B<span class="op">](</span>f<span class="op">:</span> <span class="op">(</span>A <span class="op">=&gt;</span> B<span class="op">)</span> <span class="op">=&gt;</span> A <span class="op">=&gt;</span> B<span class="op">):</span> A <span class="op">=&gt;</span> B <span class="op">=</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> cache <span class="op">=</span> mutable<span class="op">.</span><span class="ex">HashMap</span><span class="op">[</span>A<span class="op">,</span> B<span class="op">]()</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">lazy</span> <span class="kw">val</span> g<span class="op">:</span> A <span class="op">=&gt;</span> B <span class="op">=</span> a <span class="op">=&gt;</span> cache<span class="op">.</span><span class="fu">getOrElseUpdate</span><span class="op">(</span>a<span class="op">,</span> <span class="fu">f</span><span class="op">(</span>g<span class="op">)(</span>a<span class="op">))</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  g</span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>HAVEL-HAKIMI</span></code></pre></div>
-<p>And here are some tests:</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> memoFix<span class="op">[</span>A<span class="op">,</span> B<span class="op">](</span>f<span class="op">:</span> <span class="op">(</span>A <span class="op">=&gt;</span> B<span class="op">)</span> <span class="op">=&gt;</span> A <span class="op">=&gt;</span> B<span class="op">):</span> A <span class="op">=&gt;</span> B</span></code></pre></div>
+<p>which is the typed version of the <a
+href="https://kaygun.github.io/clean/2014-09-23-a_memoization_macro_for_common_lisp.html">hand-rolled
+lisp version</a> I wrote long time ago.</p>
+<p>After this, we can easily port the lisp code as follows:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(havel-hakimi &#39;(<span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span>))</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>(havel-hakimi &#39;(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span>))</span></code></pre></div>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> graphCount<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="bu">Int</span><span class="op">]</span> <span class="op">=&gt;</span> <span class="ex">Long</span> <span class="op">=</span> memoFix <span class="op">{</span> self <span class="op">=&gt;</span> ds <span class="op">=&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  ds <span class="cf">match</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">)</span>           <span class="op">=&gt;</span> <span class="dv">1L</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="cf">if</span> ds<span class="op">.</span>length <span class="op">&lt;</span> <span class="dv">3</span>   <span class="op">=&gt;</span> <span class="dv">0L</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="cf">if</span> ds<span class="op">.</span>sum <span class="op">%</span> <span class="dv">2</span> <span class="op">!=</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="dv">0L</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> first <span class="op">::</span> rest <span class="op">=&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      rest<span class="op">.</span>indices<span class="op">.</span>toList<span class="op">.</span><span class="fu">combinations</span><span class="op">(</span>first<span class="op">).</span>map <span class="op">{</span> is <span class="op">=&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> idxSet <span class="op">=</span> is<span class="op">.</span>toSet</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">self</span><span class="op">(</span>rest<span class="op">.</span>zipWithIndex</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">map</span><span class="op">((</span>d<span class="op">,</span> i<span class="op">)</span> <span class="op">=&gt;</span> <span class="cf">if</span> <span class="fu">idxSet</span><span class="op">(</span>i<span class="op">)</span> then d <span class="op">-</span> <span class="dv">1</span> <span class="cf">else</span> d<span class="op">)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>          <span class="op">.</span><span class="fu">filter</span><span class="op">(</span>_ <span class="op">&gt;</span> <span class="dv">0</span><span class="op">).</span>sorted<span class="op">)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      <span class="op">}.</span>sum</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>T</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>NIL</span></code></pre></div>
-<p>Here is a large sequence to test:</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> graphCount<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="bu">Int</span><span class="op">]</span> <span class="op">=&gt;</span> <span class="ex">Long</span> <span class="op">=</span> Lambda<span class="op">/</span><span class="bn">0x000000006c5c4a08</span>@<span class="dv">2823</span>b7c5</span></code></pre></div>
+<p>Let us test this on the same examples:</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(havel-hakimi &#39;(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">6</span>))</span></code></pre></div>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">))</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">2</span><span class="op">))</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">))</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">))</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">))</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">graphCount</span><span class="op">(</span><span class="ex">List</span><span class="op">(</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">2</span><span class="op">,</span><span class="dv">2</span><span class="op">,</span><span class="dv">3</span><span class="op">,</span><span class="dv">3</span><span class="op">,</span><span class="dv">3</span><span class="op">,</span><span class="dv">4</span><span class="op">,</span><span class="dv">4</span><span class="op">,</span><span class="dv">5</span><span class="op">,</span><span class="dv">7</span><span class="op">))</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>T</span></code></pre></div>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res0<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res1<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">7</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res2<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">15</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res3<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res4<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">70</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> res5<span class="op">:</span> <span class="ex">Long</span> <span class="op">=</span> <span class="dv">21065283747</span></span></code></pre></div>
 <div id="footer">
-<p><span id="timestamp">December 12th, 2020 3:35pm</span></p>
+<p><span id="timestamp">April 12, 2026 03:03:14 PM</span></p>
 </div>
 </body>
 </html>
