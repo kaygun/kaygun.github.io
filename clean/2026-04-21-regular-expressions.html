@@ -77,28 +77,29 @@ Expressions in Practice and the “Infinite Depth” of PCRE</h3>
 behind ubiquitous Unix utilities like <code>grep</code>,
 <code>sed</code>, and <code>awk</code>. These tools excel at pattern
 matching over flat sequences. For instance, using <code>awk</code> to
-extract categorized records might look like
-<code>/^[A-Z][a-z]+:/ { print $1 }</code>, or using <code>sed</code> to
-isolate a specific date format
-<code>sed -E 's/([0-9]{4})-([0-9]{2})/\1/g'</code>. These extended
-regular expressions (ERE) add syntactic convenience—such as the
-<code>+</code> quantifier or grouping parentheses—but they do not
-fundamentally alter the underlying computational power; they remain
-strictly bound to finite memory.</p>
+extract categorized records might look like</p>
+<pre><code>/^[A-Z][a-z]+:/ { print $1 }</code></pre>
+<p>or using <code>sed</code> to isolate a specific date format</p>
+<pre><code>sed -E &#39;s/([0-9]{4})-([0-9]{2})/\1/g&#39;</code></pre>
+<p>These extended regular expressions (ERE) add syntactic
+convenience—such as the <code>+</code> quantifier or grouping
+parentheses—but they do not fundamentally alter the underlying
+computational power; they remain strictly bound to finite memory.</p>
 <p>However, the landscape shifts dramatically with the introduction of
 <a
 href="https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions">Perl-Compatible
 Regular Expressions (PCRE)</a>. Modern PCRE engines include features
 that mathematically disqualify them from being “regular.” The most
-critical of these is recursion. A pattern such as
-<code>(\((?:[^()]+|(?1))*\))</code> utilizes <code>(?1)</code> to
-recursively call the first capture group. This mechanism implicitly
-utilizes a <a href="https://en.wikipedia.org/wiki/Call_stack">call
-stack</a>. By introducing a pushdown memory structure, PCRE
-implementations transcend the boundaries of finite state machines. This
-stack allows the engine to suspend its current state, descend into a
-nested branch of a tree, and resume upon returning, effectively granting
-it the “infinite depth” necessary to parse truly <a
+critical of these is recursion. A pattern such as</p>
+<pre><code>(\((?:[^()]+|(?1))*\))</code></pre>
+<p>utilizes <code>(?1)</code> to recursively call the first capture
+group. This mechanism implicitly utilizes a <a
+href="https://en.wikipedia.org/wiki/Call_stack">call stack</a>. By
+introducing a pushdown memory structure, PCRE implementations transcend
+the boundaries of finite state machines. This stack allows the engine to
+suspend its current state, descend into a nested branch of a tree, and
+resume upon returning, effectively granting it the “infinite depth”
+necessary to parse truly <a
 href="https://en.wikipedia.org/wiki/Context-free_language">context-free</a>
 or even context-sensitive structures.</p>
 <h3 id="the-formal-hierarchy-of-regular-languages">The Formal Hierarchy
@@ -174,6 +175,9 @@ into the abyss of an infinite loop.</p>
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
+<p>[<strong>2026-04-12</strong>] <a
+href="clean/2026-04-12-counting-graphs-scala.html">Counting Graphs with
+a Prescribed Degree Sequence (Scala Version)</a></p>
 <p>[<strong>2025-12-01</strong>] <a
 href="clean/2025-12-01-general-casimir-elements.html">Higher–Degree
 Casimir Elements via Invariant Polynomials</a></p>
