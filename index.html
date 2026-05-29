@@ -118,7 +118,9 @@
   type="text/javascript"></script>
 </head>
 <body>
-<p>In the <a
+<h1 id="from-magmas-and-catamorphisms-to-coalgebras-of-computation">From
+Magmas and Catamorphisms to Coalgebras of Computation</h1>
+<p>In a <a
 href="https://kaygun.github.io/clean/2025-07-30-magmas-and-catamorphisms.html">previous
 post</a> I described how the syntax of applicative calculi can be
 organized by magmas and catamorphisms. The guiding idea was simple:
@@ -401,7 +403,7 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb27-1"><a hre
 SKK applied to I: I
 val r0: Term = App(App(S,K),K)
 val h: Head = HApp
-val next: Term =&gt; Term = HeadCoalgebra$$Lambda$1129/0x00007f3df457c000@21e5feb</code></pre>
+val next: Term =&gt; Term = HeadCoalgebra$$Lambda$1129/0x00007f67e4578000@21e5feb</code></pre>
 <p>where <code>h</code> is the current head and <code>next</code> is the
 function sending an argument to the next state.</p>
 <p>This is the computational meaning of currying. A multi-argument
@@ -740,7 +742,7 @@ approximates by finite tests, or proves equivalence mathematically. But
 the abstraction is still useful: it tells us what the exact semantic
 object is.</p>
 <div id="footer">
-<p><span id="timestamp">May 29, 2026 02:27:48 PM</span></p>
+<p><span id="timestamp">May 29, 2026 02:30:51 PM</span></p>
 </div>
 </body>
 </html>
