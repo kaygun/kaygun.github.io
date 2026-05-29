@@ -137,7 +137,7 @@ a tree. Once reduced to a computational state, the program can receive
 arguments, expose a head form, and continue to another state. That
 transition structure is not best described by a fold. It is best
 described by a coalgebra.</p>
-<h2 id="from-syntax-to-reduced-states">1. From syntax to reduced
+<h2 id="from-syntax-to-reduced-states">From syntax to reduced
 states</h2>
 <p>Let us begin with the algebraic side. A formal applicative language
 has a collection of program texts and a binary operation of application.
@@ -204,7 +204,7 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>r<span class="op">:</span> R<span class="op">,</span> s<span class="op">:</span> R<span class="op">):</span> R</span></code></pre></div>
 <p>Here <code>app(r, s)</code> means reduced application, not raw syntax
 formation.</p>
-<h2 id="programs-as-states">2. Programs as states</h2>
+<h2 id="programs-as-states">Programs as states</h2>
 <p>Once we have reduced states, we can stop thinking of a program as an
 inert syntax tree. A reduced program is now a state of a machine.</p>
 <p>From such a state, there are two things we can ask.</p>
@@ -236,7 +236,7 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a hre
 <p>This is the coalgebraic half of applicative computation.</p>
 <p>A catamorphism consumes finite syntax. This coalgebra unfolds future
 behaviour.</p>
-<h2 id="a-very-small-ski-evaluator">3. A very small SKI evaluator</h2>
+<h2 id="a-very-small-ski-evaluator">A very small SKI evaluator</h2>
 <p>To keep the example concrete, let us implement a tiny SKI reducer.
 This is not meant to be efficient or complete as an evaluator for all
 purposes. It is only meant to show how reduced application gives the
@@ -285,7 +285,7 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb16-1"><a hre
 class="sourceCode scala"><code class="sourceCode scala"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">reducedApp</span><span class="op">(</span>r<span class="op">:</span> Term<span class="op">,</span> s<span class="op">:</span> Term<span class="op">):</span> Term <span class="op">=</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">normalize</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>r<span class="op">,</span> s<span class="op">))</span></span></code></pre></div>
 <p>This gives the transition part of the coalgebra.</p>
-<h2 id="head-labels">4. Head labels</h2>
+<h2 id="head-labels">Head labels</h2>
 <p>We next choose what we want to observe. For SKI, a simple head
 observation records whether the reduced term begins with <code>S</code>,
 <code>K</code>, <code>I</code>, an application-headed form, or something
@@ -326,7 +326,7 @@ of unary transitions:</p>
 <pre class="text"><code>K      --x--&gt;   K x
 K x    --y--&gt;   x</code></pre>
 <p>The coalgebra unfolds this process.</p>
-<h2 id="complete-behaviour">5. Complete behaviour</h2>
+<h2 id="complete-behaviour">Complete behaviour</h2>
 <p>The one-step coalgebra only tells us the current head and the
 next-state function. To know the complete observable behaviour of a
 state, we unfold it along every finite list of arguments.</p>
@@ -370,7 +370,7 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb30-1"><a hre
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="op">):</span> <span class="ex">Map</span><span class="op">[</span><span class="ex">List</span><span class="op">[</span>Term<span class="op">],</span> Head<span class="op">]</span> <span class="op">=</span></span>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  tests<span class="op">.</span><span class="fu">map</span><span class="op">(</span>args <span class="op">=&gt;</span> args <span class="op">-&gt;</span> <span class="fu">observeAfter</span><span class="op">(</span>r<span class="op">,</span> args<span class="op">)).</span>toMap</span></code></pre></div>
 <p>This gives a finite approximation to the terminal head profile.</p>
-<h2 id="behavioural-equivalence">6. Behavioural equivalence</h2>
+<h2 id="behavioural-equivalence">Behavioural equivalence</h2>
 <p>Two reduced states are behaviourally equivalent if they have the same
 complete head profile.</p>
 <p>That is,</p>
@@ -421,8 +421,7 @@ them behaviourally.</p>
 <pre class="text"><code>syntax equality     compares trees;
 reduction equality  compares reduced representatives;
 behaviour equality  compares all future observations.</code></pre>
-<h2 id="from-one-calculus-to-another">7. From one calculus to
-another</h2>
+<h2 id="from-one-calculus-to-another">From one calculus to another</h2>
 <p>The point of this coalgebraic view is not only to compare two
 programs inside one calculus. It also lets us compare whole calculi.</p>
 <p>The lambda calculus, SKI, and iota calculus have different syntax.
@@ -450,7 +449,7 @@ quotients. This gives a Gabriel–Zisman localization of the category of
 calculi.</p>
 <p>The slogan is:</p>
 <pre class="text"><code>different syntax, same terminal behaviour.</code></pre>
-<h2 id="recursion-as-diagonal-closure">8. Recursion as diagonal
+<h2 id="recursion-as-diagonal-closure">Recursion as diagonal
 closure</h2>
 <p>There is another point where the coalgebraic perspective clarifies
 the structure.</p>
@@ -484,7 +483,7 @@ calculus, SKI, and iota support general recursion.</p>
 <code>p</code> back into the behaviour of <code>a</code>.</p>
 <p>Thus recursion is an algebraic fixed point internally, but it becomes
 a self-referential behaviour externally.</p>
-<h2 id="where-catamorphisms-stop-and-coalgebras-begin">9. Where
+<h2 id="where-catamorphisms-stop-and-coalgebras-begin">Where
 catamorphisms stop and coalgebras begin</h2>
 <p>The earlier post was about magmas and catamorphisms. The point
 was:</p>
@@ -547,7 +546,7 @@ behaviours.</p>
 functions <code>R* -&gt; B</code>. One approximates by finite tests, or
 proves equivalence mathematically. But the abstraction is still useful:
 it tells us what the exact semantic object is.</p>
-<h2 id="conclusion">11. Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p>The earlier magma/catamorphism story explained the algebraic side of
 applicative calculi. Program syntax is inductive. Application gives a
 binary constructor. Syntax-directed transformations are folds.</p>
