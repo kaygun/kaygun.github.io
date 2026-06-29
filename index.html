@@ -323,7 +323,10 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a hre
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> x <span class="op">=</span> <span class="ex">Vector</span><span class="op">.</span><span class="fu">fill</span><span class="op">(</span><span class="dv">12</span><span class="op">)(</span>rng<span class="op">.</span><span class="fu">nextDouble</span><span class="op">())</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> b <span class="op">=</span> <span class="fu">solve</span><span class="op">(</span>x<span class="op">,</span> <span class="dv">3</span><span class="op">)</span></span></code></pre></div>
 <pre class="output"><code>val rng: scala.util.Random = scala.util.Random@6f430ea8
-val x: scala.collection.immutable.Vector[Double] = Vector(0.6186327814734252, 0.849209341093155, 0.7903839677394705, 0.5296053232288097, 0.8416668624371814, 0.14829601053373576, 0.8437822755735771, 0.5847572137985457, 0.1667271317594733, 0.7157842860912638, 0.5392902493576879, 0.27949326840295363)
+
+val x: scala.collection.immutable.Vector[Double] = Vector(0.6186327814734252, 0.849209341093155, 0.7903839677394705, 0.5296053232288097, 0.8416668624371814, 
+0.14829601053373576, 0.8437822755735771, 0.5847572137985457, 0.1667271317594733, 0.7157842860912638, 0.5392902493576879, 0.27949326840295363)
+
 val b: Answer = Answer(0.007453088971694388,Vector(Vector(0, 4, 6), Vector(1, 5, 7, 9), Vector(2, 3, 8, 10, 11)),Vector(2.304081919484184, 2.2980468515167005, 2.305499940488395))</code></pre>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>b<span class="op">.</span>value</span></code></pre></div>
