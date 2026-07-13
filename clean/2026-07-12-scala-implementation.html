@@ -180,8 +180,7 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">reduceStep</span><span class="op">(</span>current<span class="op">)</span> <span class="cf">match</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>          <span class="cf">case</span> <span class="bu">Some</span><span class="op">(</span>next<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">loop</span><span class="op">(</span>next<span class="op">,</span> currentDepth <span class="op">+</span> <span class="dv">1</span><span class="op">)</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>          <span class="cf">case</span> <span class="bu">None</span>       <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span>current<span class="op">)</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span></code></pre></div>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>          <span class="cf">case</span> <span class="bu">None</span>       <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span>current<span class="op">)</span></span></code></pre></div>
 <h2 id="syntax-free-magmas-and-abstract-grammars">Syntax: Free Magmas
 and Abstract Grammars</h2>
 <p>Before we evaluate, we need syntax. The raw syntax of <span
@@ -201,37 +200,38 @@ class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">Leaf</span><span class="op">(</span>value<span class="op">:</span> A<span class="op">)</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>left<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">],</span> right<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">])</span></span></code></pre></div>
 <p>Next, the SKI-calculus:</p>
-<pre><code>object SKICalculus extends Calculus:
-  enum SKI:
-    case S, K, I
-    
-  type Expr = FreeMagma[SKI]
-  val S: Expr = FreeMagma.Leaf(SKI.S)
-  val K: Expr = FreeMagma.Leaf(SKI.K)
-  val I: Expr = FreeMagma.Leaf(SKI.I)
-  
-  def app(left: Expr, right: Expr): Expr = FreeMagma.App(left, right)
-  def reduceStep(expr: Expr): Option[Expr] = expr match
-    case FreeMagma.App(FreeMagma.Leaf(SKI.I), x) =&gt; 
-      Some(x)
-    case FreeMagma.App(FreeMagma.App(FreeMagma.Leaf(SKI.K), x), y) =&gt; 
-      Some(x)
-    case FreeMagma.App(FreeMagma.App(FreeMagma.App(FreeMagma.Leaf(SKI.S), x), y), z) =&gt; 
-      Some(app(app(x, z), app(y, z)))
-    case FreeMagma.App(left, right) =&gt;
-      reduceStep(left).map(app(_, right)).orElse(reduceStep(right).map(app(left, _)))
-    case _ =&gt; None</code></pre>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> SKICalculus <span class="kw">extends</span> Calculus<span class="op">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  enum SKI<span class="op">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> S<span class="op">,</span> K<span class="op">,</span> I</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> Expr <span class="op">=</span> FreeMagma<span class="op">[</span>SKI<span class="op">]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> S<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>S<span class="op">)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> K<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>K<span class="op">)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> I<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>I<span class="op">)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>left<span class="op">:</span> Expr<span class="op">,</span> right<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">reduceStep</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span> expr <span class="cf">match</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>I<span class="op">),</span> x<span class="op">)</span> <span class="op">=&gt;</span> </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span>x<span class="op">)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>K<span class="op">),</span> x<span class="op">),</span> y<span class="op">)</span> <span class="op">=&gt;</span> </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span>x<span class="op">)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>S<span class="op">),</span> x<span class="op">),</span> y<span class="op">),</span> z<span class="op">)</span> <span class="op">=&gt;</span> </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>x<span class="op">,</span> z<span class="op">),</span> <span class="fu">app</span><span class="op">(</span>y<span class="op">,</span> z<span class="op">)))</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span> <span class="op">=&gt;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">reduceStep</span><span class="op">(</span>left<span class="op">).</span><span class="fu">map</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>_<span class="op">,</span> right<span class="op">)).</span><span class="fu">orElse</span><span class="op">(</span><span class="fu">reduceStep</span><span class="op">(</span>right<span class="op">).</span><span class="fu">map</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>left<span class="op">,</span> _<span class="op">)))</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="op">=&gt;</span> <span class="bu">None</span></span></code></pre></div>
 <p>And the <span class="math inline">\(\iota\)</span>-calculus</p>
-<pre><code>object IotaCalculus extends Calculus:
-  enum IotaGen:
-    case Iota
-    
-  type Expr = FreeMagma[IotaGen]
-  val i: Expr = FreeMagma.Leaf(IotaGen.Iota)
-  
-  def app(left: Expr, right: Expr): Expr = FreeMagma.App(left, right)
-  def reduceStep(expr: Expr): Option[Expr] = None
-</code></pre>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> IotaCalculus <span class="kw">extends</span> Calculus<span class="op">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  enum IotaGen<span class="op">:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Iota</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> Expr <span class="op">=</span> FreeMagma<span class="op">[</span>IotaGen<span class="op">]</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> i<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>IotaGen<span class="op">.</span>Iota<span class="op">)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>left<span class="op">:</span> Expr<span class="op">,</span> right<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">reduceStep</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span> <span class="bu">None</span></span></code></pre></div>
 <p>However, the untyped <span
 class="math inline">\(\lambda\)</span>-calculus is not simply a free
 magma; its abstract syntax tree consists of variables, abstractions, and
@@ -455,13 +455,6 @@ verifying native reduction within the <span
 class="math inline">\(\lambda\)</span>-calculus, and then proving that
 our <code>LambdaToSKI</code> homomorphism preserves computational
 behavior by lifting the term into the SKI magma.</p>
-<h2 id="examples-observing-the-calculi-in-action-1">Examples: Observing
-the Calculi in Action</h2>
-<p>To observe this algebraic structure in motion, we can evaluate terms
-across our distinct calculi. The Scala implementation executes the
-formal reductions step-by-step until normal forms are reached, or
-translates them across homomorphic boundaries to verify structural
-equivalence.</p>
 <h3 id="church-booleans-in-lambda-calculus">Church Booleans in <span
 class="math inline">\(\lambda\)</span>-Calculus</h3>
 <p>To see how the structural translation handles variable binding, we
@@ -517,6 +510,9 @@ of structural homomorphisms.</p>
 </html>
 </section><div class="navigate">
 <h2 id="older-posts">Older Posts</h2>
+<p>[<strong>2026-06-30</strong>] <a
+href="clean/2026-06-30-equipartitions-with-comparible-sums.html">Partitions
+with minimum range of sums</a></p>
 <p>[<strong>2026-06-17</strong>] <a
 href="clean/2026-06-17-typed-recursion.html">The Geometry of Typed
 Calculi: Magmoids, Paths, and Diagonal Closure</a></p>
