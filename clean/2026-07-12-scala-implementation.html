@@ -122,390 +122,340 @@
   type="text/javascript"></script>
 </head>
 <body>
-<h1 id="applicative-calculi-in-scala">Applicative Calculi in Scala</h1>
-<p>In previous explorations, I described how the syntax of applicative
-calculi can be organized by magmas and catamorphisms. We saw that
-computation unfolds as a coalgebraic observation of states. We then
-stripped this down to a minimal, foundational perspective: a calculus is
-fundamentally a formal language, a sublanguage of reduced terms, and a
-partial reduction map.</p>
-<p>But how do we formally translate between completely different
-computational universes—like moving from the single-combinator <span
-class="math inline">\(\iota\)</span>-calculus to the full untyped <span
-class="math inline">\(\lambda\)</span>-calculus—while preserving their
-mathematical structure? In this post, I will walk through a Scala
-framework to model the category of applicative calculi and the
-homomorphisms that bridge them.</p>
-<h2 id="the-algebraic-core">The Algebraic Core</h2>
-<p>To formalize our calculi, we start with the core algebraic
-definition.</p>
-<ul>
-<li>An applicative language calculus is defined as a triple <span
-class="math inline">\(\mathcal{C}=(L,R,\beta)\)</span>.</li>
-<li>The component <span class="math inline">\(L\)</span> is a pointed
-partial-magmatic language.</li>
-<li>The component <span class="math inline">\(R \subseteq L\)</span>
-represents the pointed sublanguage of reduced terms.</li>
-<li>Finally, the map <span class="math inline">\(\beta: L \to R\)</span>
-is a totalized reduction map.</li>
-</ul>
-<p>The defining axiom for this map is its strict compatibility with
-application: reducing either input before forming an application must
-not change the reduced result. In other words, for any terms <span
-class="math inline">\(a, b \in L\)</span>, the partial expressions <span
-class="math inline">\(\beta(ab)\)</span>, <span
-class="math inline">\(\beta(\beta(a)b)\)</span>, <span
-class="math inline">\(\beta(a\beta(b))\)</span>, and <span
-class="math inline">\(\beta(\beta(a)\beta(b))\)</span> must all be
-strongly Kleene equal. This referential transparency ensures that our
-evaluation logic is structurally sound.</p>
-<p>Let us encode this universal evaluation engine in Scala. By defining
-a generic <code>Calculus</code> trait, we decouple the evaluation loop
-from the specific reduction rules of any given language.</p>
+<h1
+id="formalizing-combinatorial-rewriting-systems-in-scala">Formalizing
+Combinatorial Rewriting Systems in Scala</h1>
+<p>Abstract rewriting systems are frequently viewed through the lens of
+operational semantics—a set of terms governed by directed reduction
+relations. However, when implementing translations between heterogeneous
+calculi, such as compiling the Lambda calculus into SKI combinators, one
+is forced to reconcile this purely behavioral view with a rigid,
+algebraic one.</p>
+<p>While sketching out some ideas recently, I architected a formal,
+type-safe Scala 3 framework that cleanly decouples term syntax
+(topology), semantic reduction (axioms), and evaluation strategies
+(traversal).</p>
+<p>Here is an overview of the implementation and the mathematical
+justification behind it.</p>
+<h2 id="the-engine-leibniz-traversal">The Engine: Leibniz Traversal</h2>
+<p>To prevent the normalization engine from being tightly coupled to
+specific ASTs, the evaluation strategy is abstracted using a
+<code>Leibniz</code> typeclass.</p>
+<p>The traversal mechanism mathematically mimics the Leibniz product
+rule for derivation: <span class="math inline">\((fg)&#39; = f&#39;g +
+fg&#39;\)</span>. Just as differentiation distributes across a product,
+our <code>Derivation</code> engine visits each subterm of a composite
+structure to propagate state changes.</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Calculus<span class="op">:</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> Expr</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>left<span class="op">:</span> Expr<span class="op">,</span> right<span class="op">:</span> Expr<span class="op">):</span> Expr</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extension</span> <span class="op">(</span>left<span class="op">:</span> Expr<span class="op">)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">apply</span><span class="op">(</span>right<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> <span class="fu">app</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">reduceStep</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> scala<span class="op">.</span>annotation<span class="op">.</span>tailrec</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">final</span> <span class="kw">def</span> <span class="fu">normalize</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">,</span> depthLimit<span class="op">:</span> <span class="ex">Option</span><span class="op">[</span><span class="bu">Int</span><span class="op">]</span> <span class="op">=</span> <span class="bu">None</span><span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    @tailrec <span class="kw">def</span> <span class="fu">loop</span><span class="op">(</span>current<span class="op">:</span> Expr<span class="op">,</span> currentDepth<span class="op">:</span> <span class="bu">Int</span><span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> depthLimit<span class="op">.</span><span class="fu">exists</span><span class="op">(</span>limit <span class="op">=&gt;</span> currentDepth <span class="op">&gt;</span> limit<span class="op">)</span> then <span class="bu">None</span> </span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">reduceStep</span><span class="op">(</span>current<span class="op">)</span> <span class="cf">match</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>          <span class="cf">case</span> <span class="bu">Some</span><span class="op">(</span>next<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">loop</span><span class="op">(</span>next<span class="op">,</span> currentDepth <span class="op">+</span> <span class="dv">1</span><span class="op">)</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>          <span class="cf">case</span> <span class="bu">None</span>       <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span>current<span class="op">)</span></span></code></pre></div>
-<h2 id="syntax-free-magmas-and-abstract-grammars">Syntax: Free Magmas
-and Abstract Grammars</h2>
-<p>Before we evaluate, we need syntax. The raw syntax of <span
-class="math inline">\(\lambda\)</span>-terms before any notion of
-reduction can be modeled by the free magma freely generated by the set
-of atomic terms, and within this magmatic structure, the binary
-operation corresponds directly to application.</p>
-<p>For combinatory logic, this is perfectly literal. SKI terms are the
-free magma on the three generators <span class="math inline">\(\{S, K,
-I\}\)</span>, and iota terms are the free magma on the single generator
-<span class="math inline">\(\{\iota\}\)</span>. By building off a
-generic <code>FreeMagma</code>, we can define both calculi simply by
-providing their alphabets.</p>
-<p>Let us start with the free magma (binary trees):</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Rewriting</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> ReWriting<span class="op">[</span>T<span class="op">]:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">step</span><span class="op">(</span>term<span class="op">:</span> T<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>T<span class="op">]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Bounded iteration to prevent Turing divergence.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  @annotation<span class="op">.</span>tailrec</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">final</span> <span class="kw">def</span> <span class="fu">normalize</span><span class="op">(</span>x<span class="op">:</span> <span class="ex">Option</span><span class="op">[</span>T<span class="op">],</span> depth<span class="op">:</span> <span class="bu">Int</span> <span class="op">=</span> <span class="dv">1000</span><span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>T<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> depth <span class="op">&lt;</span> <span class="dv">1</span> then <span class="bu">None</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> x<span class="op">.</span><span class="fu">flatMap</span><span class="op">(</span>step<span class="op">)</span> <span class="cf">match</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> <span class="bu">Some</span><span class="op">(</span>next<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span>next<span class="op">),</span> depth <span class="op">-</span> <span class="dv">1</span><span class="op">)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> <span class="bu">None</span>       <span class="op">=&gt;</span> x   </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Leibniz structures</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Leibniz<span class="op">[</span>T<span class="op">]:</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">derive</span><span class="op">(</span>term<span class="op">:</span> T<span class="op">,</span> d<span class="op">:</span> T <span class="op">=&gt;</span> <span class="ex">Option</span><span class="op">[</span>T<span class="op">]):</span> <span class="ex">Option</span><span class="op">[</span>T<span class="op">]</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> Derivation<span class="op">:</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> apply<span class="op">[</span>T<span class="op">](</span>base<span class="op">:</span> ReWriting<span class="op">[</span>T<span class="op">])(</span>using topology<span class="op">:</span> Leibniz<span class="op">[</span>T<span class="op">]):</span> ReWriting<span class="op">[</span>T<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> ReWriting<span class="op">[</span>T<span class="op">]:</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>      <span class="kw">def</span> <span class="fu">step</span><span class="op">(</span>term<span class="op">:</span> T<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>T<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        base<span class="op">.</span><span class="fu">step</span><span class="op">(</span>term<span class="op">).</span><span class="fu">orElse</span><span class="op">(</span>topology<span class="op">.</span><span class="fu">derive</span><span class="op">(</span>term<span class="op">,</span> step<span class="op">))</span></span></code></pre></div>
+<p>By passing <code>Leibniz</code> as a given topology, we elevate a
+localized “head” rewriting rule into a deep structural derivation.</p>
+<h2 id="syntax-as-free-magmas">Syntax as Free Magmas</h2>
+<p>For pure combinatory logic systems like SKI and Iota, the syntactic
+structures strictly utilize binary application. Topologically, these can
+be elegantly modeled as a <code>FreeMagma</code>.</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode scala"><code class="sourceCode scala"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>enum FreeMagma<span class="op">[</span>A<span class="op">]:</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">Leaf</span><span class="op">(</span>value<span class="op">:</span> A<span class="op">)</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>left<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">],</span> right<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">])</span></span></code></pre></div>
-<p>Next, the SKI-calculus:</p>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">Gen</span><span class="op">(</span>a<span class="op">:</span> A<span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>left<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">],</span> right<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">])</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>given <span class="op">[</span>A<span class="op">]:</span> Leibniz<span class="op">[</span>FreeMagma<span class="op">[</span>A<span class="op">]]</span> <span class="kw">with</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">derive</span><span class="op">(</span>term<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">],</span> d<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">]</span> <span class="op">=&gt;</span> <span class="ex">Option</span><span class="op">[</span>FreeMagma<span class="op">[</span>A<span class="op">]]):</span> <span class="ex">Option</span><span class="op">[</span>FreeMagma<span class="op">[</span>A<span class="op">]]</span> <span class="op">=</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    term <span class="cf">match</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">d</span><span class="op">(</span>l<span class="op">).</span><span class="fu">map</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>_<span class="op">,</span> r<span class="op">)).</span><span class="fu">orElse</span><span class="op">(</span><span class="fu">d</span><span class="op">(</span>r<span class="op">).</span><span class="fu">map</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> _<span class="op">)))</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">Gen</span><span class="op">(</span>_<span class="op">)</span>    <span class="op">=&gt;</span> <span class="bu">None</span></span></code></pre></div>
+<p>With the topology defined, we can now explicitly declare the
+alphabets and semantic reduction axioms for both the SKI and Iota
+calculi:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> SKICalculus <span class="kw">extends</span> Calculus<span class="op">:</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  enum SKI<span class="op">:</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> S<span class="op">,</span> K<span class="op">,</span> I</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> Expr <span class="op">=</span> FreeMagma<span class="op">[</span>SKI<span class="op">]</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> S<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>S<span class="op">)</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> K<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>K<span class="op">)</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> I<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>I<span class="op">)</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>left<span class="op">:</span> Expr<span class="op">,</span> right<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">reduceStep</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>I<span class="op">),</span> x<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span>x<span class="op">)</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>K<span class="op">),</span> x<span class="op">),</span> y<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span>x<span class="op">)</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>SKI<span class="op">.</span>S<span class="op">),</span> x<span class="op">),</span> y<span class="op">),</span> z<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>x<span class="op">,</span> z<span class="op">),</span> <span class="fu">app</span><span class="op">(</span>y<span class="op">,</span> z<span class="op">)))</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span> <span class="op">=&gt;</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">reduceStep</span><span class="op">(</span>left<span class="op">).</span><span class="fu">map</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>_<span class="op">,</span> right<span class="op">)).</span><span class="fu">orElse</span><span class="op">(</span><span class="fu">reduceStep</span><span class="op">(</span>right<span class="op">).</span><span class="fu">map</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>left<span class="op">,</span> _<span class="op">)))</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="op">=&gt;</span> <span class="bu">None</span></span></code></pre></div>
-<p>And the <span class="math inline">\(\iota\)</span>-calculus</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// SKI Calculus Implementation</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>enum SKIAlphabet<span class="op">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> S<span class="op">,</span> K<span class="op">,</span> I</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> SKIAxioms <span class="kw">extends</span> ReWriting<span class="op">[</span>FreeMagma<span class="op">[</span>SKIAlphabet<span class="op">]]:</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> FreeMagma<span class="op">.{</span>App<span class="op">,</span> Gen<span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> SKIAlphabet<span class="op">.*</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> s <span class="op">=</span> <span class="fu">Gen</span><span class="op">(</span>S<span class="op">);</span> <span class="kw">val</span> k <span class="op">=</span> <span class="fu">Gen</span><span class="op">(</span>K<span class="op">);</span> <span class="kw">val</span> i <span class="op">=</span> <span class="fu">Gen</span><span class="op">(</span>I<span class="op">)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">step</span><span class="op">(</span>term<span class="op">:</span> FreeMagma<span class="op">[</span>SKIAlphabet<span class="op">]):</span> <span class="ex">Option</span><span class="op">[</span>FreeMagma<span class="op">[</span>SKIAlphabet<span class="op">]]</span> <span class="op">=</span> term <span class="cf">match</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>`i`<span class="op">,</span> x<span class="op">)</span>                 <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span>x<span class="op">)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>`k`<span class="op">,</span> x<span class="op">),</span> _<span class="op">)</span>         <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span>x<span class="op">)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>`s`<span class="op">,</span> x<span class="op">),</span> y<span class="op">),</span> z<span class="op">)</span> <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>x<span class="op">,</span> z<span class="op">),</span> <span class="fu">App</span><span class="op">(</span>y<span class="op">,</span> z<span class="op">)))</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _                           <span class="op">=&gt;</span> <span class="bu">None</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> SKICalculus <span class="op">=</span> <span class="fu">Derivation</span><span class="op">(</span>SKIAxioms<span class="op">)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Iota Calculus Implementation</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>enum IotaAlphabet<span class="op">:</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> Iota</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> IotaAxioms <span class="kw">extends</span> ReWriting<span class="op">[</span>FreeMagma<span class="op">[</span>IotaAlphabet<span class="op">]]:</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> FreeMagma<span class="op">.{</span>App<span class="op">,</span> Gen<span class="op">}</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> IotaAlphabet<span class="op">.</span>Iota</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> i <span class="op">=</span> <span class="fu">Gen</span><span class="op">(</span>Iota<span class="op">)</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> k_iota <span class="op">=</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> i<span class="op">)))</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> s_iota <span class="op">=</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> <span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> i<span class="op">))))</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">step</span><span class="op">(</span>term<span class="op">:</span> FreeMagma<span class="op">[</span>IotaAlphabet<span class="op">]):</span> <span class="ex">Option</span><span class="op">[</span>FreeMagma<span class="op">[</span>IotaAlphabet<span class="op">]]</span> <span class="op">=</span> term <span class="cf">match</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>`i`<span class="op">,</span> x<span class="op">)</span> <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>x<span class="op">,</span> s_iota<span class="op">),</span> k_iota<span class="op">))</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _           <span class="op">=&gt;</span> <span class="bu">None</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> IotaCalculus <span class="op">=</span> <span class="fu">Derivation</span><span class="op">(</span>IotaAxioms<span class="op">)</span></span></code></pre></div>
+<p>Because the primitive SKI combinators are terminal, evaluation relies
+entirely on pattern matching their geometric arrangement. Iota is
+particularly interesting here; while SKI primitives terminate cleanly,
+Iota’s localized relation <span class="math inline">\(\iota x \to x
+\iota_{S} \iota_{K}\)</span> inherently triggers massive macro
+expansions. These infinite expansions are handled safely by conflating
+undefined inputs with fuel exhaustion in our bounded
+<code>normalize</code> iteration.</p>
+<h2 id="untyped-lambda-calculus-via-de-bruijn-indices">Untyped Lambda
+Calculus via De Bruijn Indices</h2>
+<p>Unlike SKI, the Lambda calculus introduces a unary geometry: the
+variable binder. To ensure type safety and eliminate alpha-equivalence
+complexities, the calculus uses a De Bruijn encoding with
+<code>Var</code>, <code>Abs</code>, and <code>App</code>
+constructors.</p>
+<p>To power the evaluation, we define core substitution mechanics and
+wrap them in the standard <span
+class="math inline">\(\beta\)</span>-reduction axioms:</p>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> IotaCalculus <span class="kw">extends</span> Calculus<span class="op">:</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  enum IotaGen<span class="op">:</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> Iota</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> Expr <span class="op">=</span> FreeMagma<span class="op">[</span>IotaGen<span class="op">]</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">val</span> i<span class="op">:</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>IotaGen<span class="op">.</span>Iota<span class="op">)</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>left<span class="op">:</span> Expr<span class="op">,</span> right<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">reduceStep</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span> <span class="bu">None</span></span></code></pre></div>
-<p>However, the untyped <span
-class="math inline">\(\lambda\)</span>-calculus is not simply a free
-magma; its abstract syntax tree consists of variables, abstractions, and
-applications. Because our <code>Calculus</code> trait leaves the
-<code>Expr</code> type abstract, we can seamlessly define
-<code>LambdaCalculus</code> with its own native grammar alongside our
-magmas.</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>enum Lambda<span class="op">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">Var</span><span class="op">(</span>index<span class="op">:</span> <span class="bu">Int</span><span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">Abs</span><span class="op">(</span>body<span class="op">:</span> Lambda<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>left<span class="op">:</span> Lambda<span class="op">,</span> right<span class="op">:</span> Lambda<span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>given Leibniz<span class="op">[</span>Lambda<span class="op">]</span> <span class="kw">with</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">derive</span><span class="op">(</span>term<span class="op">:</span> Lambda<span class="op">,</span> d<span class="op">:</span> Lambda <span class="op">=&gt;</span> <span class="ex">Option</span><span class="op">[</span>Lambda<span class="op">]):</span> <span class="ex">Option</span><span class="op">[</span>Lambda<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    term <span class="cf">match</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> Lambda<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">d</span><span class="op">(</span>l<span class="op">).</span><span class="fu">map</span><span class="op">(</span>Lambda<span class="op">.</span><span class="fu">App</span><span class="op">(</span>_<span class="op">,</span> r<span class="op">)).</span><span class="fu">orElse</span><span class="op">(</span><span class="fu">d</span><span class="op">(</span>r<span class="op">).</span><span class="fu">map</span><span class="op">(</span>Lambda<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> _<span class="op">)))</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> Lambda<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>body<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">d</span><span class="op">(</span>body<span class="op">).</span><span class="fu">map</span><span class="op">(</span>Lambda<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>_<span class="op">))</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> Lambda<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>_<span class="op">)</span>    <span class="op">=&gt;</span> <span class="bu">None</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> LambdaCore<span class="op">:</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> Lambda<span class="op">.*</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">shift</span><span class="op">(</span>term<span class="op">:</span> Lambda<span class="op">,</span> d<span class="op">:</span> <span class="bu">Int</span><span class="op">,</span> c<span class="op">:</span> <span class="bu">Int</span> <span class="op">=</span> <span class="dv">0</span><span class="op">):</span> Lambda <span class="op">=</span> term <span class="cf">match</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Var</span><span class="op">(</span>k<span class="op">)</span>    <span class="op">=&gt;</span> <span class="cf">if</span> k <span class="op">&lt;</span> c then <span class="fu">Var</span><span class="op">(</span>k<span class="op">)</span> <span class="cf">else</span> <span class="fu">Var</span><span class="op">(</span>k <span class="op">+</span> d<span class="op">)</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Abs</span><span class="op">(</span>body<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">shift</span><span class="op">(</span>body<span class="op">,</span> d<span class="op">,</span> c <span class="op">+</span> <span class="dv">1</span><span class="op">))</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">App</span><span class="op">(</span><span class="fu">shift</span><span class="op">(</span>l<span class="op">,</span> d<span class="op">,</span> c<span class="op">),</span> <span class="fu">shift</span><span class="op">(</span>r<span class="op">,</span> d<span class="op">,</span> c<span class="op">))</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">subst</span><span class="op">(</span>term<span class="op">:</span> Lambda<span class="op">,</span> j<span class="op">:</span> <span class="bu">Int</span><span class="op">,</span> sub<span class="op">:</span> Lambda<span class="op">):</span> Lambda <span class="op">=</span> term <span class="cf">match</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Var</span><span class="op">(</span>k<span class="op">)</span> <span class="op">=&gt;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> k <span class="op">==</span> j then sub</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span> <span class="cf">if</span> k <span class="op">&gt;</span> j then <span class="fu">Var</span><span class="op">(</span>k <span class="op">-</span> <span class="dv">1</span><span class="op">)</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span> <span class="fu">Var</span><span class="op">(</span>k<span class="op">)</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Abs</span><span class="op">(</span>body<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">subst</span><span class="op">(</span>body<span class="op">,</span> j <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> <span class="fu">shift</span><span class="op">(</span>sub<span class="op">,</span> <span class="dv">1</span><span class="op">)))</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">App</span><span class="op">(</span><span class="fu">subst</span><span class="op">(</span>l<span class="op">,</span> j<span class="op">,</span> sub<span class="op">),</span> <span class="fu">subst</span><span class="op">(</span>r<span class="op">,</span> j<span class="op">,</span> sub<span class="op">))</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> LambdaAxioms <span class="kw">extends</span> ReWriting<span class="op">[</span>Lambda<span class="op">]:</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> Lambda<span class="op">.*</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">step</span><span class="op">(</span>term<span class="op">:</span> Lambda<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Lambda<span class="op">]</span> <span class="op">=</span> term <span class="cf">match</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span><span class="fu">Abs</span><span class="op">(</span>body<span class="op">),</span> arg<span class="op">)</span> <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span>LambdaCore<span class="op">.</span><span class="fu">subst</span><span class="op">(</span>body<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> arg<span class="op">))</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _                   <span class="op">=&gt;</span> <span class="bu">None</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> LambdaCalculus <span class="op">=</span> <span class="fu">Derivation</span><span class="op">(</span>LambdaAxioms<span class="op">)</span></span></code></pre></div>
+<h2 id="translations-as-morphisms-of-lawvere-theories">Translations as
+Morphisms of Lawvere Theories</h2>
+<p>This is where the theoretical friction usually occurs. If we treat
+the calculus strictly as an Abstract Rewriting System (ARS), a
+translation must only preserve the reduction relation: <span
+class="math inline">\(x \to_{\Lambda}^* y \implies h(x) \to_{SKI}^*
+h(y)\)</span>.</p>
+<p>However, compiling compositionally requires structural recursion,
+forcing us into the realm of Universal Algebra. To bridge the differing
+arities—Lambda’s unary abstraction node versus SKI’s pure binary
+application—we must abandon a strict <span
+class="math inline">\(\Sigma\)</span>-algebra homomorphism. Instead, we
+conceptualize the mappings as morphisms of Lawvere theories (or
+operads).</p>
+<p>Bracket Abstraction does exactly this. It maps the structural arity-1
+node into a dynamically generated, derived polynomial operation within
+the SKI magma.</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> LambdaCalculus <span class="kw">extends</span> Calculus<span class="op">:</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  enum LambdaExpr<span class="op">:</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Var</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Abs</span><span class="op">(</span>param<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> body<span class="op">:</span> LambdaExpr<span class="op">)</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>func<span class="op">:</span> LambdaExpr<span class="op">,</span> arg<span class="op">:</span> LambdaExpr<span class="op">)</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">type</span> Expr <span class="op">=</span> LambdaExpr</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">app</span><span class="op">(</span>func<span class="op">:</span> Expr<span class="op">,</span> arg<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> LambdaExpr<span class="op">.</span><span class="fu">App</span><span class="op">(</span>func<span class="op">,</span> arg<span class="op">)</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">def</span> <span class="fu">freeVars</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Set</span><span class="op">[</span><span class="ex">String</span><span class="op">]</span> <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span> <span class="op">=&gt;</span> <span class="ex">Set</span><span class="op">(</span>name<span class="op">)</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> body<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">freeVars</span><span class="op">(</span>body<span class="op">)</span> <span class="op">-</span> param</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">App</span><span class="op">(</span>func<span class="op">,</span> arg<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">freeVars</span><span class="op">(</span>func<span class="op">)</span> <span class="op">++</span> <span class="fu">freeVars</span><span class="op">(</span>arg<span class="op">)</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">def</span> <span class="fu">substitute</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">,</span> target<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> replacement<span class="op">:</span> Expr<span class="op">):</span> Expr <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> name <span class="op">==</span> target then replacement <span class="cf">else</span> expr</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">App</span><span class="op">(</span>func<span class="op">,</span> arg<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="fu">app</span><span class="op">(</span><span class="fu">substitute</span><span class="op">(</span>func<span class="op">,</span> target<span class="op">,</span> replacement<span class="op">),</span> <span class="fu">substitute</span><span class="op">(</span>arg<span class="op">,</span> target<span class="op">,</span> replacement<span class="op">))</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> body<span class="op">)</span> <span class="op">=&gt;</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> param <span class="op">==</span> target then </span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The bound variable shadows the target; do not substitute inside</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        expr </span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span> <span class="cf">if</span> <span class="fu">freeVars</span><span class="op">(</span>replacement<span class="op">).</span><span class="fu">contains</span><span class="op">(</span>param<span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu">freeVars</span><span class="op">(</span>body<span class="op">).</span><span class="fu">contains</span><span class="op">(</span>target<span class="op">)</span> then</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Name collision: α-rename the bound variable to a fresh name</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> freshParam <span class="op">=</span> param <span class="op">+</span> <span class="st">&quot;&#39;&quot;</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> renamedBody <span class="op">=</span> <span class="fu">substitute</span><span class="op">(</span>body<span class="op">,</span> param<span class="op">,</span> LambdaExpr<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>freshParam<span class="op">))</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>freshParam<span class="op">,</span> <span class="fu">substitute</span><span class="op">(</span>renamedBody<span class="op">,</span> target<span class="op">,</span> replacement<span class="op">))</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Safe to substitute directly</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> <span class="fu">substitute</span><span class="op">(</span>body<span class="op">,</span> target<span class="op">,</span> replacement<span class="op">))</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">reduceStep</span><span class="op">(</span>expr<span class="op">:</span> Expr<span class="op">):</span> <span class="ex">Option</span><span class="op">[</span>Expr<span class="op">]</span> <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Beta Reduction</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">App</span><span class="op">(</span>LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> body<span class="op">),</span> arg<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>      <span class="bu">Some</span><span class="op">(</span><span class="fu">substitute</span><span class="op">(</span>body<span class="op">,</span> param<span class="op">,</span> arg<span class="op">))</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Evaluate the function position first</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">App</span><span class="op">(</span>func<span class="op">,</span> arg<span class="op">)</span> <span class="op">=&gt;</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>      <span class="fu">reduceStep</span><span class="op">(</span>func<span class="op">)</span> <span class="cf">match</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="bu">Some</span><span class="op">(</span>reducedFunc<span class="op">)</span> <span class="op">=&gt;</span> <span class="bu">Some</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>reducedFunc<span class="op">,</span> arg<span class="op">))</span></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="bu">None</span> <span class="op">=&gt;</span> <span class="fu">reduceStep</span><span class="op">(</span>arg<span class="op">).</span><span class="fu">map</span><span class="op">(</span><span class="fu">app</span><span class="op">(</span>func<span class="op">,</span> _<span class="op">))</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>          </span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Evaluate inside abstractions</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> body<span class="op">)</span> <span class="op">=&gt;</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>      <span class="fu">reduceStep</span><span class="op">(</span>body<span class="op">).</span><span class="fu">map</span><span class="op">(</span>LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> _<span class="op">))</span></span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> _ <span class="op">=&gt;</span> <span class="bu">None</span></span></code></pre></div>
-<h2 id="homomorphisms-between-calculi">Homomorphisms Between
-Calculi</h2>
-<p>If we view calculi as objects in a category, we need morphisms to
-connect them. A morphism of behavioral applicative calculi must preserve
-the chosen reduction and the reduced applicative product up to
-behavioral equivalence. In simpler terms, a valid morphism between
-calculi must respect the reduced applicative structure.</p>
-<p>We can define a generic <code>Homomorphism</code> trait that acts as
-a structural translation between any two calculi. By mapping the
-generators (or AST nodes) of the source calculus to valid expressions in
-the target calculus, we preserve the algebraic operations across the
-boundary.</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> freeMagmaHom<span class="op">[</span>A<span class="op">,</span> B<span class="op">](</span>f<span class="op">:</span> A <span class="op">=&gt;</span> FreeMagma<span class="op">[</span>B<span class="op">]):</span> FreeMagma<span class="op">[</span>A<span class="op">]</span> <span class="op">=&gt;</span> FreeMagma<span class="op">[</span>B<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">go</span><span class="op">(</span>t<span class="op">:</span> FreeMagma<span class="op">[</span>A<span class="op">]):</span> FreeMagma<span class="op">[</span>B<span class="op">]</span> <span class="op">=</span> t <span class="cf">match</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">Gen</span><span class="op">(</span>a<span class="op">)</span>    <span class="op">=&gt;</span> <span class="fu">f</span><span class="op">(</span>a<span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span><span class="fu">go</span><span class="op">(</span>l<span class="op">),</span> <span class="fu">go</span><span class="op">(</span>r<span class="op">))</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  go</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> IotaToSKI<span class="op">:</span> FreeMagma<span class="op">[</span>IotaAlphabet<span class="op">]</span> <span class="op">=&gt;</span> FreeMagma<span class="op">[</span>SKIAlphabet<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> SKIAxioms<span class="op">.{</span>s<span class="op">,</span> k<span class="op">,</span> i<span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  freeMagmaHom <span class="op">{</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> IotaAlphabet<span class="op">.</span>Iota <span class="op">=&gt;</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>s<span class="op">,</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>s<span class="op">,</span> i<span class="op">),</span> <span class="fu">App</span><span class="op">(</span>k<span class="op">,</span> s<span class="op">))),</span> <span class="fu">App</span><span class="op">(</span>k<span class="op">,</span> k<span class="op">))</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span></code></pre></div>
+<p>In the quotient partial-algebra defined by normal order reduction,
+these syntactical translations resolve back into strict, elegant
+homomorphisms.</p>
+<hr />
+<h2 id="verification-and-semantic-round-tripping">Verification and
+Semantic Round-Tripping</h2>
+<p>To prove the architecture is sound, we must test both the internal
+coherence of each calculus and the structural preservation of the
+homomorphisms. The suite verifies that when projected down into the
+quotient space via normal order reduction, the strict semantic mappings
+hold true.</p>
+<h3 id="ski-calculus">SKI Calculus</h3>
+<p>We assert that <span class="math inline">\(I x \to x\)</span> and
+that <span class="math inline">\(S K K x\)</span> semantically evaluates
+to <span class="math inline">\(x\)</span> (acting as <span
+class="math inline">\(I\)</span>).</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Homomorphism<span class="op">[</span>S <span class="op">&lt;:</span> Calculus<span class="op">,</span> T <span class="op">&lt;:</span> Calculus<span class="op">](</span><span class="kw">val</span> source<span class="op">:</span> S<span class="op">,</span> <span class="kw">val</span> target<span class="op">:</span> T<span class="op">):</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">apply</span><span class="op">(</span>expr<span class="op">:</span> source<span class="op">.</span>Expr<span class="op">):</span> target<span class="op">.</span>Expr</span></code></pre></div>
-<h3 id="translating-iota-to-ski">Translating <span
-class="math inline">\(\iota\)</span> to SKI</h3>
-<p>Mapping our pure <code>IotaCalculus</code> into
-<code>SKICalculus</code> space is a simple substitution of the
-generator, as <span class="math inline">\(\iota\)</span> maps cleanly to
-a predefined SKI topological tree.</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> IotaToSKI <span class="kw">extends</span> <span class="fu">Homomorphism</span><span class="op">(</span>IotaCalculus<span class="op">,</span> SKICalculus<span class="op">):</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> SKICalculus<span class="op">.{</span>S<span class="op">,</span> K<span class="op">,</span> I<span class="op">}</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">apply</span><span class="op">(</span>expr<span class="op">:</span> source<span class="op">.</span>Expr<span class="op">):</span> target<span class="op">.</span>Expr <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">Leaf</span><span class="op">(</span>IotaCalculus<span class="op">.</span>IotaGen<span class="op">.</span>Iota<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      <span class="co">// The mathematical translation of ι into SKI: S (S I (K S)) (K K)</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">S</span><span class="op">(</span><span class="fu">S</span><span class="op">(</span>I<span class="op">)(</span><span class="fu">K</span><span class="op">(</span>S<span class="op">)))(</span><span class="fu">K</span><span class="op">(</span>K<span class="op">))</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> FreeMagma<span class="op">.</span><span class="fu">App</span><span class="op">(</span>left<span class="op">,</span> right<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      SKICalculus<span class="op">.</span><span class="fu">app</span><span class="op">(</span><span class="kw">this</span><span class="op">.</span><span class="fu">apply</span><span class="op">(</span>left<span class="op">),</span> <span class="kw">this</span><span class="op">.</span><span class="fu">apply</span><span class="op">(</span>right<span class="op">))</span></span></code></pre></div>
-<h3 id="translating-lambda-to-ski-bracket-abstraction">Translating <span
-class="math inline">\(\lambda\)</span> to SKI (Bracket Abstraction)</h3>
-<p>Translating the <span class="math inline">\(\lambda\)</span>-calculus
-to SKI is more complex. We use bracket abstraction, which translates
-lambda terms to SKI terms. Because <span
-class="math inline">\(\lambda\)</span>-terms possess bound variables and
-pure SKI terms do not, we must algorithmically eliminate the variable
-bindings bottom-up. The bracket-abstraction theorem gives the exact
-comparison and equivalence between the two calculi.</p>
-<p>To implement this safely in Scala, we use a private intermediate AST
-(<code>SKIComp</code>) that temporarily holds variables while the
-bracket abstraction eliminates them, before extracting the pure,
-variable-free SKI tree.</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> SKIAxioms<span class="op">.{</span>s<span class="op">,</span> k<span class="op">,</span> i<span class="op">}</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> k<span class="op">)))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>k<span class="op">),</span> <span class="st">&quot;Identity failed&quot;</span><span class="op">)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>k<span class="op">,</span> i<span class="op">),</span> s<span class="op">)))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>i<span class="op">),</span> <span class="st">&quot;Constant K failed&quot;</span><span class="op">)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> skk_x <span class="op">=</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>s<span class="op">,</span> k<span class="op">),</span> k<span class="op">),</span> i<span class="op">)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span>skk_x<span class="op">))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>i<span class="op">),</span> <span class="st">&quot;S K K != I equivalence failed&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>1. Testing SKI Calculus...
+✓ SKI tests passed.
+</code></pre>
+<h3 id="iota-calculus">Iota Calculus</h3>
+<p>Because pure Iota diverges rapidly on macro expansion, we test its
+head evaluation and explicitly check that infinite combinatorial
+structures correctly exhaust the normalizer’s fuel limit.</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">object</span> LambdaToSKI <span class="kw">extends</span> <span class="fu">Homomorphism</span><span class="op">(</span>LambdaCalculus<span class="op">,</span> SKICalculus<span class="op">):</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> LambdaCalculus<span class="op">.</span>LambdaExpr</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> SKICalculus<span class="op">.{</span>S<span class="op">,</span> K<span class="op">,</span> I<span class="op">,</span> app<span class="op">}</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Intermediate AST to hold variables during bracket abstraction</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> enum SKIComp<span class="op">:</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Comb</span><span class="op">(</span>expr<span class="op">:</span> SKICalculus<span class="op">.</span>Expr<span class="op">)</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">Var</span><span class="op">(</span>name<span class="op">:</span> <span class="ex">String</span><span class="op">)</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="fu">App</span><span class="op">(</span>left<span class="op">:</span> SKIComp<span class="op">,</span> right<span class="op">:</span> SKIComp<span class="op">)</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">def</span> <span class="fu">freeVars</span><span class="op">(</span>expr<span class="op">:</span> SKIComp<span class="op">):</span> <span class="ex">Set</span><span class="op">[</span><span class="ex">String</span><span class="op">]</span> <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">Comb</span><span class="op">(</span>_<span class="op">)</span> <span class="op">=&gt;</span> <span class="ex">Set</span><span class="op">.</span>empty</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span> <span class="op">=&gt;</span> <span class="ex">Set</span><span class="op">(</span>name<span class="op">)</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">freeVars</span><span class="op">(</span>l<span class="op">)</span> <span class="op">++</span> <span class="fu">freeVars</span><span class="op">(</span>r<span class="op">)</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2. The Bracket Abstraction algorithm</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">def</span> <span class="fu">abstractVar</span><span class="op">(</span>param<span class="op">:</span> <span class="ex">String</span><span class="op">,</span> body<span class="op">:</span> SKIComp<span class="op">):</span> SKIComp <span class="op">=</span> </span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span><span class="fu">freeVars</span><span class="op">(</span>body<span class="op">).</span><span class="fu">contains</span><span class="op">(</span>param<span class="op">)</span> then</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>      <span class="co">// If x is not free in M, return K M</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>      SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span>SKIComp<span class="op">.</span><span class="fu">Comb</span><span class="op">(</span>K<span class="op">),</span> body<span class="op">)</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> body <span class="cf">match</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span> <span class="cf">if</span> name <span class="op">==</span> param <span class="op">=&gt;</span> </span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If M is just x, return I</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        SKIComp<span class="op">.</span><span class="fu">Comb</span><span class="op">(</span>I<span class="op">)</span></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> </span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If M is (U V), return S (abstract U) (abstract V)</span></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span>SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span>SKIComp<span class="op">.</span><span class="fu">Comb</span><span class="op">(</span>S<span class="op">),</span> <span class="fu">abstractVar</span><span class="op">(</span>param<span class="op">,</span> l<span class="op">)),</span> <span class="fu">abstractVar</span><span class="op">(</span>param<span class="op">,</span> r<span class="op">))</span></span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> _ <span class="op">=&gt;</span> </span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="ex">IllegalStateException</span><span class="op">(</span><span class="st">&quot;Invalid state in bracket abstraction&quot;</span><span class="op">)</span></span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 3. Compile Lambda AST to intermediate AST, eliminating lambdas bottom-up</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">def</span> <span class="fu">compile</span><span class="op">(</span>expr<span class="op">:</span> source<span class="op">.</span>Expr<span class="op">):</span> SKIComp <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span> <span class="op">=&gt;</span> SKIComp<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span></span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">App</span><span class="op">(</span>func<span class="op">,</span> arg<span class="op">)</span> <span class="op">=&gt;</span> SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span><span class="fu">compile</span><span class="op">(</span>func<span class="op">),</span> <span class="fu">compile</span><span class="op">(</span>arg<span class="op">))</span></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> LambdaExpr<span class="op">.</span><span class="fu">Abs</span><span class="op">(</span>param<span class="op">,</span> body<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">abstractVar</span><span class="op">(</span>param<span class="op">,</span> <span class="fu">compile</span><span class="op">(</span>body<span class="op">))</span></span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 4. Extract pure SKI tree (fails safely if open terms are provided)</span></span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">private</span> <span class="kw">def</span> <span class="fu">extract</span><span class="op">(</span>expr<span class="op">:</span> SKIComp<span class="op">):</span> target<span class="op">.</span>Expr <span class="op">=</span> expr <span class="cf">match</span></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">Comb</span><span class="op">(</span>e<span class="op">)</span> <span class="op">=&gt;</span> e</span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">App</span><span class="op">(</span>l<span class="op">,</span> r<span class="op">)</span> <span class="op">=&gt;</span> <span class="fu">app</span><span class="op">(</span><span class="fu">extract</span><span class="op">(</span>l<span class="op">),</span> <span class="fu">extract</span><span class="op">(</span>r<span class="op">))</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> SKIComp<span class="op">.</span><span class="fu">Var</span><span class="op">(</span>name<span class="op">)</span> <span class="op">=&gt;</span> <span class="cf">throw</span> <span class="kw">new</span> <span class="ex">IllegalArgumentException</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Unbound free variable: </span><span class="ss">$name&quot;</span><span class="op">)</span></span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">apply</span><span class="op">(</span>expr<span class="op">:</span> source<span class="op">.</span>Expr<span class="op">):</span> target<span class="op">.</span>Expr <span class="op">=</span> <span class="fu">extract</span><span class="op">(</span><span class="fu">compile</span><span class="op">(</span>expr<span class="op">))</span></span></code></pre></div>
-<h2 id="behavioral-localization">Behavioral Localization</h2>
-<p>Why define these strictly typed homomorphisms? Raw syntactic
-translation is an incomplete account of computation. We seek to formally
-identify systems that exhibit identical computational behavior, even
-when their underlying geometric representations differ. Analogous to the
-localization of weak equivalences in abstract homotopy theory, we define
-a behavioral weak equivalence as a behavior-respecting morphism that
-induces a bijection on behavioral quotients. In the Gabriel-Zisman
-localization of this category, these behavioral weak equivalences are
-inverted, becoming true isomorphisms.</p>
-<p>Within this localized setting, the standard equivalences among
-classical applicative and concatenative presentations are expressed as
-precise categorical weak equivalences. Specifically, bracket
-abstraction, lambda interpretation, and the iota encoding generate
-inverse behavior classes in the behavioral quotient. Consequently,
-presentations of the untyped <span
-class="math inline">\(\lambda\)</span>-calculus, SKI, and the <span
-class="math inline">\(\iota\)</span>-calculus become isomorphic in the
-behavioral localization of behaviorally diagonally closed applicative
-calculi.</p>
-<p>Through this framework, type safety ceases to be an external
-compilation step; it becomes a physical requirement of the magmoid
-structure itself. By decoupling language, semantics, and interpretation,
-we establish a mathematically rigorous and type-safe environment
-suitable for exploring the foundational topology of computation.</p>
-<h2 id="examples-observing-the-calculi-in-action">Examples: Observing
-the Calculi in Action</h2>
-<p>To observe this algebraic structure in motion, we can evaluate terms
-across our three distinct calculi. The Scala implementation executes the
-formal reductions step-by-step until normal forms are reached, or
-translates them across homomorphic boundaries.</p>
-<h3 id="ski-calculus-evaluation">SKI Calculus Evaluation</h3>
-<p>In the SKI calculus, we can test the standard identity reduction. The
-term <span class="math inline">\(S(K)(K)(I)\)</span> structurally routes
-the combinators to ultimately collapse into the pure identity combinator
-<span class="math inline">\(I\)</span>. Applying our normalizer
-perfectly tracks the reduction rules until the free magma tree resolves
-to the final state.</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> SKICalculus<span class="op">.{</span>S<span class="op">,</span> K<span class="op">,</span> I<span class="op">,</span> apply<span class="op">}</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> skiExpr <span class="op">=</span> <span class="fu">S</span><span class="op">(</span>K<span class="op">)(</span>K<span class="op">)(</span>I<span class="op">)</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> skiResult <span class="op">=</span> SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span>skiExpr<span class="op">,</span> <span class="bu">Some</span><span class="op">(</span><span class="dv">100</span><span class="op">))</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Result:     </span><span class="ss">${</span>skiResult<span class="op">.</span>get<span class="ss">}&quot;</span><span class="op">)</span></span></code></pre></div>
-<pre class="text"><code>Result:     Leaf(I)</code></pre>
-<h3 id="homomorphic-evaluation-of-iota-calculus">Homomorphic Evaluation
-of <span class="math inline">\(\iota\)</span>-Calculus</h3>
-<p>The pure <span class="math inline">\(\iota\)</span>-calculus is
-evaluated homomorphically. Since pure <span
-class="math inline">\(\iota\)</span> has no stable single-step
-reductions without diverging into infinite macro-expansions, we bypass
-the issue by utilizing our localized weak equivalences. We construct the
-identity term <span class="math inline">\(\iota(\iota)\)</span>, map it
-through the <code>IotaToSKI</code> homomorphism into the SKI evaluation
-engine, reduce it safely there, and seamlessly map the normal form back
-to <span class="math inline">\(\iota\)</span>. The massive resulting
-<span class="math inline">\(\iota\)</span>-tree is the strictly closed
-mathematical result of the computation.</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> IotaCalculus<span class="op">.</span>i</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> iotaExpr <span class="op">=</span> <span class="fu">i</span><span class="op">(</span>i<span class="op">)</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> mappedToSKI <span class="op">=</span> <span class="fu">IotaToSKI</span><span class="op">(</span>iotaExpr<span class="op">)</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> evaluatedSKI <span class="op">=</span> SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span>mappedToSKI<span class="op">,</span> <span class="bu">Some</span><span class="op">(</span><span class="dv">100</span><span class="op">))</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> resultIota <span class="op">=</span> evaluatedSKI<span class="op">.</span><span class="fu">map</span><span class="op">(</span>SKIToIota<span class="op">.</span>apply<span class="op">)</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Result:     </span><span class="ss">${</span>resultIota<span class="op">.</span>get<span class="ss">}&quot;</span><span class="op">)</span></span></code></pre></div>
-<pre class="text"><code>Result:     App(App(App(Leaf(Iota),App(Leaf(Iota),App(Leaf(Iota),App(Leaf(Iota),Leaf(Iota))))),App(Leaf(Iota),App(Leaf(Iota),App(Leaf(Iota),Leaf(Iota))))),App(App(Leaf(Iota),App(Leaf(Iota),App(Leaf(Iota),Leaf(Iota)))),App(Leaf(Iota),App(Leaf(Iota),App(Leaf(Iota),Leaf(Iota))))))</code></pre>
-<p>Here is the rewritten section. I have added a narrative that frames
-these examples as a demonstration of the framework’s power: first
-verifying native reduction within the <span
-class="math inline">\(\lambda\)</span>-calculus, and then proving that
-our <code>LambdaToSKI</code> homomorphism preserves computational
-behavior by lifting the term into the SKI magma.</p>
-<h3 id="church-booleans-in-lambda-calculus">Church Booleans in <span
-class="math inline">\(\lambda\)</span>-Calculus</h3>
-<p>To see how the structural translation handles variable binding, we
-employ Church Booleans. These encodings allow us to represent logical
-values as higher-order functions within the untyped <span
-class="math inline">\(\lambda\)</span>-calculus. We define the logical
-<code>NOT</code> operator and apply it to <code>TRUE</code>. The engine
-applies <span class="math inline">\(\beta\)</span>-reduction with
-capture-avoiding substitution to traverse the abstract syntax tree and
-reduce the expression to its canonical form, demonstrating the soundness
-of our <span class="math inline">\(\lambda\)</span>-calculus
-normalization rules[cite: 5].</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> LambdaCalculus<span class="op">.*</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> True <span class="op">=</span> <span class="fu">lam</span><span class="op">(</span><span class="st">&quot;x&quot;</span><span class="op">,</span> <span class="fu">lam</span><span class="op">(</span><span class="st">&quot;y&quot;</span><span class="op">,</span> <span class="fu">v</span><span class="op">(</span><span class="st">&quot;x&quot;</span><span class="op">)))</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> False <span class="op">=</span> <span class="fu">lam</span><span class="op">(</span><span class="st">&quot;x&quot;</span><span class="op">,</span> <span class="fu">lam</span><span class="op">(</span><span class="st">&quot;y&quot;</span><span class="op">,</span> <span class="fu">v</span><span class="op">(</span><span class="st">&quot;y&quot;</span><span class="op">)))</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> Not <span class="op">=</span> <span class="fu">lam</span><span class="op">(</span><span class="st">&quot;p&quot;</span><span class="op">,</span> <span class="fu">v</span><span class="op">(</span><span class="st">&quot;p&quot;</span><span class="op">)(</span>False<span class="op">)(</span>True<span class="op">))</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> lambdaExpr <span class="op">=</span> <span class="fu">Not</span><span class="op">(</span>True<span class="op">)</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> lambdaResult <span class="op">=</span> LambdaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span>lambdaExpr<span class="op">,</span> <span class="bu">Some</span><span class="op">(</span><span class="dv">100</span><span class="op">))</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Result:     </span><span class="ss">${</span>lambdaResult<span class="op">.</span>get<span class="ss">}&quot;</span><span class="op">)</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Matches Church FALSE? </span><span class="ss">${</span>lambdaResult<span class="op">.</span>get <span class="op">==</span> False<span class="ss">}&quot;</span><span class="op">)</span></span></code></pre></div>
-<pre class="text"><code>Result:     Abs(x,Abs(y,Var(y)))
-Matches Church FALSE? true</code></pre>
-<h3 id="homomorphic-translation-to-ski">Homomorphic Translation to
-SKI</h3>
-<p>The true strength of our categorical framework lies in its ability to
-translate across different computational universes. The
-<code>LambdaToSKI</code> homomorphism uses the bracket-abstraction
-algorithm to compile variable-dependent <span
-class="math inline">\(\lambda\)</span>-terms into pure, variable-free
-combinatory logic trees.</p>
-<p>By translating <code>lambdaExpr</code> into the SKI magma and
-normalizing it there, we verify that our translation is a behavioral
-weak equivalence. Because both the <span
-class="math inline">\(\lambda\)</span>-calculus and SKI are
-combinatorially complete and behaviorally diagonally closed, the result
-of the converted reduction must be behaviorally equivalent to our
-initial native result.</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> lambdaConverted <span class="op">=</span> <span class="fu">LambdaToSKI</span><span class="op">(</span>lambdaExpr<span class="op">)</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> resultConverted <span class="op">=</span> SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span>lambdaConverted<span class="op">)</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Converted AST: </span><span class="ss">${</span>lambdaConverted<span class="ss">}&quot;</span><span class="op">)</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">println</span><span class="op">(</span><span class="ss">s&quot;</span><span class="st">Normalization successful: </span><span class="ss">${</span>resultConverted<span class="op">.</span>isDefined<span class="ss">}&quot;</span><span class="op">)</span></span></code></pre></div>
-<pre class="text"><code>Converted: App(App(App(Leaf(S),App(App(Leaf(S),Leaf(I)),App(Leaf(K),App(Leaf(K),Leaf(I)))),App(Leaf(K),App(App(Leaf(S),App(Leaf(K),Leaf(K))),Leaf(I)))),App(App(Leaf(S),App(Leaf(K),Leaf(K))),Leaf(I)))
-Normalization successful: true</code></pre>
-<p>These examples confirm the theoretical core of the framework:
-different syntax, same computational behavior, mapped through the prism
-of structural homomorphisms.</p>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> IotaAxioms<span class="op">.{</span>i as iota<span class="op">,</span> s_iota<span class="op">,</span> k_iota<span class="op">}</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> expectedOneStep <span class="op">=</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>iota<span class="op">,</span> s_iota<span class="op">),</span> k_iota<span class="op">)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>IotaCalculus<span class="op">.</span><span class="fu">step</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>iota<span class="op">,</span> iota<span class="op">))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>expectedOneStep<span class="op">),</span> <span class="st">&quot;Iota head evaluation failed&quot;</span><span class="op">)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>IotaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>iota<span class="op">,</span> iota<span class="op">)),</span> depth <span class="op">=</span> <span class="dv">50</span><span class="op">)</span> <span class="op">==</span> <span class="bu">None</span><span class="op">,</span> <span class="st">&quot;Divergence check failed: Fuel was not exhausted&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>2. Testing Iota Calculus...
+✓ Iota tests passed.
+</code></pre>
+<h3 id="lambda-calculus-de-bruijn">Lambda Calculus (De Bruijn)</h3>
+<p>We ensure the untyped lambda calculus structural evaluation
+accurately resolves the Identity function and Church encodings for
+booleans.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> Lambda<span class="op">.*</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> id <span class="op">=</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">Var</span><span class="op">(</span><span class="dv">0</span><span class="op">))</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>LambdaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>id<span class="op">,</span> id<span class="op">)))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>id<span class="op">),</span> <span class="st">&quot;Lambda Identity failed&quot;</span><span class="op">)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> churchTrue <span class="op">=</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">Abs</span><span class="op">(</span><span class="fu">Var</span><span class="op">(</span><span class="dv">1</span><span class="op">)))</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> termA <span class="op">=</span> <span class="fu">Var</span><span class="op">(</span><span class="dv">10</span><span class="op">)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> termB <span class="op">=</span> <span class="fu">Var</span><span class="op">(</span><span class="dv">20</span><span class="op">)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> trueApp <span class="op">=</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>churchTrue<span class="op">,</span> termA<span class="op">),</span> termB<span class="op">)</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>LambdaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span>trueApp<span class="op">))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>termA<span class="op">),</span> <span class="st">&quot;Church Boolean TRUE failed&quot;</span><span class="op">)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> churchFalse <span class="op">=</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">Abs</span><span class="op">(</span><span class="fu">Var</span><span class="op">(</span><span class="dv">0</span><span class="op">)))</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> falseApp <span class="op">=</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>churchFalse<span class="op">,</span> termA<span class="op">),</span> termB<span class="op">)</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>LambdaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span>falseApp<span class="op">))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>termB<span class="op">),</span> <span class="st">&quot;Church Boolean FALSE failed&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>3. Testing Lambda Calculus (De Bruijn)...
+✓ Lambda tests passed.
+</code></pre>
+<h3 id="iota-ski-homomorphism">Iota → SKI Homomorphism</h3>
+<p>Barker’s <span class="math inline">\(\iota\)</span> behaves
+semantically as <span class="math inline">\(\lambda x.\ x S K\)</span>.
+We verify that the encoded translation dynamically maps evaluation to
+the equivalent SKI primitives.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> IotaAxioms<span class="op">.</span>i as iota</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> SKIAxioms<span class="op">.{</span>s<span class="op">,</span> k<span class="op">,</span> i<span class="op">}</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">// (encoded ι) x should reduce to x S K.  Test with x = I.</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> lhs <span class="op">=</span> SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">IotaToSKI</span><span class="op">(</span>iota<span class="op">),</span> i<span class="op">)))</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> rhs <span class="op">=</span> SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>i<span class="op">,</span> s<span class="op">),</span> k<span class="op">)))</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>lhs <span class="op">==</span> rhs<span class="op">,</span> <span class="ss">s&quot;</span><span class="st">IotaToSKI: ι x should reduce to x S K (got </span><span class="ss">$lhs</span><span class="st"> vs </span><span class="ss">$rhs</span><span class="st">)</span><span class="ss">&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>4. Testing Iota → SKI translation...
+✓ Iota → SKI tests passed.
+</code></pre>
+<h3 id="ski-iota-homomorphism">SKI → Iota Homomorphism</h3>
+<p>Because Iota calculus inherently diverges, we test the encoding
+syntactically rather than semantically, verifying that SKI generators
+map perfectly to their deep Iota tree equivalents.</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> SKIAxioms<span class="op">.{</span>s<span class="op">,</span> k<span class="op">,</span> i<span class="op">}</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> IotaAxioms<span class="op">.{</span>s_iota<span class="op">,</span> k_iota<span class="op">}</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span><span class="fu">SKIToIota</span><span class="op">(</span>s<span class="op">)</span> <span class="op">==</span> s_iota<span class="op">,</span> <span class="st">&quot;SKIToIota(S) should be Barker&#39;s s_iota&quot;</span><span class="op">)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span><span class="fu">SKIToIota</span><span class="op">(</span>k<span class="op">)</span> <span class="op">==</span> k_iota<span class="op">,</span> <span class="st">&quot;SKIToIota(K) should be Barker&#39;s k_iota&quot;</span><span class="op">)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span><span class="fu">SKIToIota</span><span class="op">(</span>i<span class="op">)</span> <span class="op">==</span> <span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>s_iota<span class="op">,</span> k_iota<span class="op">),</span> k_iota<span class="op">),</span> <span class="st">&quot;SKIToIota(I) should be (encoded S) K K&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>5. Testing SKI → Iota translation...
+✓ SKI → Iota tests passed.
+</code></pre>
+<h3 id="ski-lambda-homomorphism">SKI → Lambda Homomorphism</h3>
+<p>This mapping pulls the combinators back into a binding geometry. We
+test that <span class="math inline">\(K\)</span> properly drops
+arguments through <span class="math inline">\(\beta\)</span>-reduction
+and that the encoded <span class="math inline">\(S K K\)</span> operates
+perfectly as a lambda identity.</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> SKIAxioms<span class="op">.{</span>s<span class="op">,</span> k<span class="op">,</span> i<span class="op">}</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> termA <span class="op">=</span> Lambda<span class="op">.</span><span class="fu">Var</span><span class="op">(</span><span class="dv">10</span><span class="op">)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> termB <span class="op">=</span> Lambda<span class="op">.</span><span class="fu">Var</span><span class="op">(</span><span class="dv">20</span><span class="op">)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">// K applied to two arguments β-reduces to the first.</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> K_lam <span class="op">=</span> <span class="fu">SKIToLambda</span><span class="op">(</span>k<span class="op">)</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> kApp <span class="op">=</span> Lambda<span class="op">.</span><span class="fu">App</span><span class="op">(</span>Lambda<span class="op">.</span><span class="fu">App</span><span class="op">(</span>K_lam<span class="op">,</span> termA<span class="op">),</span> termB<span class="op">)</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>LambdaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span>kApp<span class="op">))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>termA<span class="op">),</span> <span class="st">&quot;SKIToLambda(K) should behave as K&quot;</span><span class="op">)</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co">// SKK applied to any argument β-reduces to that argument (it&#39;s I).</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> SKK_lam <span class="op">=</span> <span class="fu">SKIToLambda</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>s<span class="op">,</span> k<span class="op">),</span> k<span class="op">))</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> skkApp <span class="op">=</span> Lambda<span class="op">.</span><span class="fu">App</span><span class="op">(</span>SKK_lam<span class="op">,</span> termA<span class="op">)</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>LambdaCalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span>skkApp<span class="op">))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>termA<span class="op">),</span> <span class="st">&quot;SKIToLambda(SKK) should behave as I&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>6. Testing SKI → Lambda translation...
+✓ SKI → Lambda tests passed.
+</code></pre>
+<h3 id="lambda-ski-homomorphism-bracket-abstraction">Lambda → SKI
+Homomorphism (Bracket Abstraction)</h3>
+<p>The most mathematically complex mapping is validated by applying
+translated Church booleans to SKI primitives and observing exact
+semantic reduction.</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> Lambda<span class="op">.{</span>Abs<span class="op">,</span> Var<span class="op">}</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> SKIAxioms<span class="op">.{</span>s<span class="op">,</span> k<span class="op">,</span> i<span class="op">}</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> FreeMagma<span class="op">.</span>App</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">// λx. x, translated and applied to K, reduces to K.</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> id      <span class="op">=</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">Var</span><span class="op">(</span><span class="dv">0</span><span class="op">))</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> idSKI   <span class="op">=</span> <span class="fu">LambdaToSKI</span><span class="op">(</span>id<span class="op">)</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>idSKI<span class="op">,</span> k<span class="op">)))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>k<span class="op">),</span> <span class="st">&quot;LambdaToSKI(λx.x) applied to K should be K&quot;</span><span class="op">)</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">// λx y. x (Church true), translated and applied to S, I, reduces to S.</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> churchTrue <span class="op">=</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">Abs</span><span class="op">(</span><span class="fu">Var</span><span class="op">(</span><span class="dv">1</span><span class="op">)))</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> trueSKI    <span class="op">=</span> <span class="fu">LambdaToSKI</span><span class="op">(</span>churchTrue<span class="op">)</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>trueSKI<span class="op">,</span> s<span class="op">),</span> i<span class="op">)))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>s<span class="op">),</span> <span class="st">&quot;LambdaToSKI(λxy.x) applied to S, I should be S&quot;</span><span class="op">)</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co">// λx y. y (Church false), translated and applied to S, I, reduces to I.</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> churchFalse <span class="op">=</span> <span class="fu">Abs</span><span class="op">(</span><span class="fu">Abs</span><span class="op">(</span><span class="fu">Var</span><span class="op">(</span><span class="dv">0</span><span class="op">)))</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> falseSKI    <span class="op">=</span> <span class="fu">LambdaToSKI</span><span class="op">(</span>churchFalse<span class="op">)</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="fu">assert</span><span class="op">(</span>SKICalculus<span class="op">.</span><span class="fu">normalize</span><span class="op">(</span><span class="bu">Some</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span><span class="fu">App</span><span class="op">(</span>falseSKI<span class="op">,</span> s<span class="op">),</span> i<span class="op">)))</span> <span class="op">==</span> <span class="bu">Some</span><span class="op">(</span>i<span class="op">),</span> <span class="st">&quot;LambdaToSKI(λxy.y) applied to S, I should be I&quot;</span><span class="op">)</span></span></code></pre></div>
+<pre class="text"><code>7. Testing Lambda → SKI translation...
+✓ Lambda → SKI tests passed.
+</code></pre>
 </body>
 </html>
 </section><div class="navigate">
