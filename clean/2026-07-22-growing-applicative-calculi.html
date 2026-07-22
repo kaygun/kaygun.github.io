@@ -396,12 +396,11 @@ extending that generator map.</p>
 <p>For example, suppose <code>lamS</code>, <code>lamK</code>, and
 <code>lamI</code> are the usual de Bruijn lambda encodings. Then:</p>
 <div class="sourceCode" id="cb13"><pre
-class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> skiToLam<span class="op">:</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">PartialFunction</span><span class="op">[</span>SK <span class="op">|</span> IComb <span class="op">|</span> Var<span class="op">,</span> Magma<span class="op">[</span>Lambda <span class="op">|</span> Var<span class="op">]]</span> <span class="op">=</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> SK<span class="op">.</span>S    <span class="op">=&gt;</span> lamS</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> SK<span class="op">.</span>K    <span class="op">=&gt;</span> lamK</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> IComb<span class="op">.</span>I <span class="op">=&gt;</span> lamI</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> v<span class="op">:</span> Var  <span class="op">=&gt;</span> Magma<span class="op">.</span><span class="fu">Gen</span><span class="op">(</span>v<span class="op">)</span></span></code></pre></div>
+class="sourceCode scala"><code class="sourceCode scala"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> skiToLam<span class="op">:</span> <span class="bu">PartialFunction</span><span class="op">[</span>SK <span class="op">|</span> IComb <span class="op">|</span> Var<span class="op">,</span> Magma<span class="op">[</span>Lambda <span class="op">|</span> Var<span class="op">]]</span> <span class="op">=</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> SK<span class="op">.</span>S    <span class="op">=&gt;</span> lamS</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> SK<span class="op">.</span>K    <span class="op">=&gt;</span> lamK</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> IComb<span class="op">.</span>I <span class="op">=&gt;</span> lamI</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> v<span class="op">:</span> Var  <span class="op">=&gt;</span> Magma<span class="op">.</span><span class="fu">Gen</span><span class="op">(</span>v<span class="op">)</span></span></code></pre></div>
 <p>Because the recursive extension preserves application exactly, this
 is a structural translation. It preserves the parsing coalgebra only
 laxly: a source generator such as <code>S</code> is sent to a composite
